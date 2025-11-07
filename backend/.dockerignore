@@ -1,0 +1,11 @@
+dist
+
+.env*
+
+.git
+.gitignore
+
+Dockerfile
+.dockerignore
+docker-compose.yml
+
