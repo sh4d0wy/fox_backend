@@ -12,7 +12,7 @@ export function validatePublicKey(publicKey: string): boolean {
     try {
         new PublicKey(publicKey);
     } catch (error) {
-        throw new Error("Invalid public key: " + publicKey);
+        throw "Invalid public key";
     }
     return PublicKey.isOnCurve(new PublicKey(publicKey).toBytes());
 }
@@ -34,7 +34,7 @@ export async function verifySignature(publicKey: string,signature: string,messag
         const signatureBytes = bs58.decode(signature);
         const isVerified = nacl.sign.detached.verify(messageBytes, signatureBytes, publicKeyBytes);
         if (!isVerified) {
-            throw new Error("Invalid signature");
+            throw "ERROR: Invalid signature";
         }   
         return {walletAddress:publicKey, verified:true};   
 }
@@ -42,20 +42,15 @@ export async function verifySignature(publicKey: string,signature: string,messag
 export async function verifyNonce(nonce:string,publicKey:string): Promise<boolean> {
         const cachedNonce = await getCacheData(`nonce:${publicKey}`);
         if (cachedNonce !== nonce || !cachedNonce) {
-            throw new Error("Nonce invalid")
+            throw "ERROR: Nonce invalid"
         }
         await deleteCacheData(`nonce:${publicKey}`);
         return true;
 }
 
-export async function generateJwt(publicKey:string,userId:string): Promise<string> {
-    try {        
+export async function generateJwt(publicKey:string,userId:string): Promise<string> {    
         const token = jwt.sign({publicKey, userId}, process.env.JWT_SECRET as string, {expiresIn: "1d"});
         return token;
-    } catch (error) {
-        logger.error(error  );
-        throw new Error("Failed to generate JWT: " + error);
-    }
 }
 
 export async function findOrCreateUser(publicKey:string): Promise<{user:User, token:string}> {
@@ -80,6 +75,6 @@ export async function findOrCreateUser(publicKey:string): Promise<{user:User, to
         return {user,token};
     } catch (error) {
         logger.error("DB error: "+error);
-        throw new Error("Failed to find or create user");
+        throw "ERROR: Failed to find or create user";
     }
 }

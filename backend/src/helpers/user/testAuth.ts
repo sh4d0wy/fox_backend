@@ -24,7 +24,7 @@ const BACKEND_URL = "http://localhost:3000"; // your backend URL
     }
 
     // Step 3: Sign message using tweetnacl
-    const messageBytes = new TextEncoder().encode(message);
+    const messageBytes = new TextEncoder().encode("asdf");
     const signatureBytes = nacl.sign.detached(messageBytes, keypair.secretKey);
     const signature = bs58.encode(signatureBytes);
 

@@ -9,6 +9,7 @@ import {
 } from "../helpers/user/authHelpers";
 import logger from "../utils/logger";
 import { responseHandler } from "../utils/resHandler";
+import { authVerifySchema } from "../schemas";
 
 export default {
   requestMessage: async (req: Request, res: Response) => {
@@ -25,14 +26,21 @@ export default {
 
   verifyMessage: async (req: Request, res: Response) => {
     const data = req.body;
-    const { publicKey, signature, message } = data;
-    //TODO: use zod for input validation
+    const { success, data: parsedData } = authVerifySchema.safeParse(data);
+    
     try {
+      
+      if (!success) {
+        throw "Invalid payload"
+      }
+      
+      const { publicKey, signature, message } = parsedData;
+      
       await verifySignature(publicKey, signature, message);
       const nonce = message.split("Nonce:")[1].trim();
 
       if (!nonce) {
-        return res.status(400).json({ message: "Missing nonce" });
+        throw "Missing nonce"
       }
 
       await verifyNonce(nonce, publicKey);
