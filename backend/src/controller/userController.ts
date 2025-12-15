@@ -45,12 +45,12 @@ export default {
 
       await verifyNonce(nonce, publicKey);
 
-      const { user, token } = await findOrCreateUser(publicKey);
-
+      const { user,token } = await findOrCreateUser(publicKey);
+      
       return responseHandler.success(res,{
         message: "Signature verified",
         error: null,
-        token: token,
+        token,
         user,
       });
     } catch (e) {
