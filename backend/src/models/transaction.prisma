@@ -1,8 +1,13 @@
 enum TransactionType {
-  DEPOSIT
-  CLAIM
-  PURCHASE
-  REFUND
+  RAFFLE_CREATION
+  RAFFLE_ENTRY
+  RAFFLE_WIN
+  RAFFLE_CANCEL
+  RAFFLE_END
+  RAFFLE_CLAIM
+  RAFFLE_REFUND
+  RAFFLE_PURCHASE
+  RAFFLE_DEPOSIT
 }
 
 model Transaction {
@@ -14,7 +19,7 @@ model Transaction {
   createdAt     DateTime        @default(now())
   amount        BigInt
   isNft         Boolean         @default(false)
-  mintAddress    String          //a unified field for both token and nft transactions
+  mintAddress   String          //a unified field for both token and nft transactions
 
   user          User            @relation(fields: [sender], references: [walletAddress])
   @@map("transactions")

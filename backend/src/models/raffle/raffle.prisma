@@ -1,44 +1,44 @@
-enum RaffleState{
-    None
-    Initialized
-    Active
-    Cancelled
-    SuccessEnded
-    FailedEnded
+enum RaffleState {
+  None
+  Initialized
+  Active
+  Cancelled
+  SuccessEnded
+  FailedEnded
 }
 
 model Raffle {
-  id             String   @id @default(uuid())
-  raffle         String   @unique
-  createdAt      DateTime @default(now())
-  endsAt         DateTime
-  state          RaffleState @default(None)
-  createdBy      String
-  ticketPrice    Float
-  ticketTokenAddress    String @default("So11111111111111111111111111111111111111112")
-  ticketSupply   Int
-  ticketSold     Int      @default(0)
-  claimed        Int      @default(0)
-  numberOfWinners Int      @default(1)
-  winnerPicked   Boolean  @default(false)
-  floor          Float?
-  val            Float?
-  ttv            Float
-  roi            Float
-  entriesAddress String
-  prize          String
-  maxEntries     Int
-  totalEntries   Int      @default(0)
+  id                 String      @id @default(uuid())
+  raffle             String?      @unique //raffle address to be fetched later
+  createdAt          DateTime    @default(now())
+  endsAt             DateTime
+  state              RaffleState @default(None)
+  createdBy          String
+  ticketPrice        Float
+  ticketTokenSymbol  String      @default("Sol")
+  ticketTokenAddress String      @default("So11111111111111111111111111111111111111112")
+  ticketSupply       Int
+  ticketSold         Int         @default(0)
+  claimed            Int         @default(0)
+  numberOfWinners    Int         @default(1)
+  winnerPicked       Boolean     @default(false)
+  floor              Float?
+  val                Float?
+  ttv                Float
+  roi                Float
+  entriesAddress     String? //entries address to be fetched later
+  prize              String? //pize address to be fetched later
+  maxEntries         Int
+  totalEntries       Int         @default(0)
 
-  creator      User        @relation("RaffleCreator", fields: [createdBy], references: [walletAddress], onDelete: Cascade)
-  favouritedBy User[]      @relation("FavouriteRaffle")
-  winners      User[]      @relation("RaffleWinner")
-  prizeData    PrizeData[]
-  raffleEntries Entry[]      @relation("RaffleEntries")
+  creator       User        @relation("RaffleCreator", fields: [createdBy], references: [walletAddress], onDelete: Cascade)
+  favouritedBy  User[]      @relation("FavouriteRaffle")
+  winners       User[]      @relation("RaffleWinner")
+  raffleEntries Entry[]     @relation("RaffleEntries")
+  prizeData     PrizeData[] @relation("RafflePrize")
 
   @@index([createdBy])
   @@index([raffle])
   @@index([endsAt])
   @@map("raffles")
 }
-

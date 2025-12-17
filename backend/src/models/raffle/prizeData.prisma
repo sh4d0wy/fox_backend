@@ -17,8 +17,7 @@ model PrizeData {
   floor       Float?
   raffleId    String
 
-  raffle      Raffle  @relation(fields: [raffleId], references: [id], onDelete: Cascade)
-
+  raffle      Raffle  @relation("RafflePrize", fields: [raffleId], references: [id], onDelete: Cascade)
   @@map("prize_data")
   @@index([raffleId])
   @@index([mint])
