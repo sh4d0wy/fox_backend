@@ -14,6 +14,7 @@ model Entry {
   id           String @id @default(uuid())
   userAddress  String
   raffleId     String
+  quantity     Int    @default(1)
 
   user         User   @relation("UserEntries", fields: [userAddress], references: [walletAddress], onDelete: Cascade, map: "entries_user_fkey")
   raffle       Raffle @relation("RaffleEntries", fields: [raffleId], references: [id], onDelete: Cascade, map: "entries_raffle_fkey")
@@ -21,6 +22,7 @@ model Entry {
   @@map("entries")
   @@index([userAddress])
   @@index([raffleId])
+  @@unique([userAddress, raffleId])
 }
 
 model PrizeData {
@@ -39,12 +41,12 @@ model PrizeData {
   description String?
   externalUrl String?
   properties  Json?
-  floor       Float?
-  raffleId    String
+  raffleId    String  @unique
+  amount      Float? //amount for SPL tokens
+  floor       Float? //floor price for nft
 
   raffle      Raffle  @relation("RafflePrize", fields: [raffleId], references: [id], onDelete: Cascade)
   @@map("prize_data")
-  @@index([raffleId])
   @@index([mint])
   @@index([creator])
 }
@@ -86,7 +88,7 @@ model Raffle {
   favouritedBy  User[]      @relation("FavouriteRaffle")
   winners       User[]      @relation("RaffleWinner")
   raffleEntries Entry[]     @relation("RaffleEntries")
-  prizeData     PrizeData[] @relation("RafflePrize")
+  prizeData     PrizeData?  @relation("RafflePrize")
 
   @@index([createdBy])
   @@index([raffle])
@@ -115,7 +117,7 @@ model Transaction {
   createdAt     DateTime        @default(now())
   amount        BigInt
   isNft         Boolean         @default(false)
-  mintAddress    String          //a unified field for both token and nft transactions
+  mintAddress   String          //a unified field for both token and nft transactions
 
   user          User            @relation(fields: [sender], references: [walletAddress])
   @@map("transactions")

@@ -2,6 +2,7 @@ model Entry {
   id           String @id @default(uuid())
   userAddress  String
   raffleId     String
+  quantity     Int    @default(1)
 
   user         User   @relation("UserEntries", fields: [userAddress], references: [walletAddress], onDelete: Cascade, map: "entries_user_fkey")
   raffle       Raffle @relation("RaffleEntries", fields: [raffleId], references: [id], onDelete: Cascade, map: "entries_raffle_fkey")
@@ -9,5 +10,6 @@ model Entry {
   @@map("entries")
   @@index([userAddress])
   @@index([raffleId])
+  @@unique([userAddress, raffleId])
 }
 

@@ -12,8 +12,6 @@ export const verifyTransaction = async (txSignature: string) => {
 
   const tx = res.value[0];
 
-  console.log("tx", tx);
-
   if (!tx || tx.err) return false;
 
   return (

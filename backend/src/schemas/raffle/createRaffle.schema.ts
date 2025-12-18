@@ -1,5 +1,24 @@
 import { z } from "zod";
 
+export const prizeDataSchema = z.object({
+    address: z.string().min(1),
+    mintAddress: z.string().min(1),
+    mint: z.string().min(1),
+    name: z.string().min(1),
+    verified: z.boolean().optional().default(true),
+    symbol: z.string().min(1),
+    decimals: z.number().int().optional(),
+    image: z.string().min(1),
+    attributes: z.any().optional(),
+    collection: z.string().optional(),
+    creator: z.string().optional(),
+    description: z.string().optional(),
+    externalUrl: z.string().optional(),
+    properties: z.any().optional(),
+    amount: z.number().gt(0).optional(),
+    floor: z.number().gt(0).optional(),
+});
+
 export const raffleSchema = z.object({
     raffle: z.string().min(1).optional(),
     createdAt: z.coerce.date().optional(),
@@ -16,6 +35,7 @@ export const raffleSchema = z.object({
     prize: z.string().min(1).optional(),
     maxEntries: z.number().gt(0),
     numberOfWinners: z.number().gt(0),
+    prizeData: prizeDataSchema,
 });
 
 export const confirmRaffleCreationSchema = z.object({

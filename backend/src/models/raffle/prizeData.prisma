@@ -14,12 +14,12 @@ model PrizeData {
   description String?
   externalUrl String?
   properties  Json?
-  floor       Float?
-  raffleId    String
+  raffleId    String  @unique
+  amount      Float? //amount for SPL tokens
+  floor       Float? //floor price for nft
 
   raffle      Raffle  @relation("RafflePrize", fields: [raffleId], references: [id], onDelete: Cascade)
   @@map("prize_data")
-  @@index([raffleId])
   @@index([mint])
   @@index([creator])
 }

@@ -35,7 +35,7 @@ model Raffle {
   favouritedBy  User[]      @relation("FavouriteRaffle")
   winners       User[]      @relation("RaffleWinner")
   raffleEntries Entry[]     @relation("RaffleEntries")
-  prizeData     PrizeData[] @relation("RafflePrize")
+  prizeData     PrizeData?  @relation("RafflePrize")
 
   @@index([createdBy])
   @@index([raffle])
