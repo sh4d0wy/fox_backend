@@ -630,6 +630,7 @@ const claimPrize = async (req: Request, res: Response) => {
           receiver: raffle.raffle || raffleId.toString(),
           amount: amount,
           mintAddress: raffle.prizeData?.mintAddress || "unknown",
+          raffleId: raffleId,
         },
       });
     });
@@ -645,6 +646,32 @@ const claimPrize = async (req: Request, res: Response) => {
   }
 };
 
+const getWinnersClaimedPrizes = async(req: Request, res: Response) => {
+  const params = req.params;
+  const raffleId = parseInt(params.raffleId);
+  if (!raffleId) {
+    return responseHandler.error(res, "Raffle ID is required");
+  }
+  const prizesClaimed = await prismaClient.transaction.findMany({
+    where: {
+      type: "RAFFLE_CLAIM",
+      raffleId: raffleId,
+    },
+    select:{
+      sender: true,
+    }
+    
+  });
+  console.log(prizesClaimed);
+  if (!prizesClaimed) {
+    return responseHandler.error(res, "Prizes not claimed");
+  }
+  responseHandler.success(res, {
+    message: "Winners data fetched successfully",
+    error: null,
+    prizesClaimed: prizesClaimed,
+  });
+}
 //TODO: create a cron job to end the raffle
 //TODO: Create a function to draw the winners by a user
 //TODO: Create a function to end the raffle by a user
@@ -659,4 +686,5 @@ export default {
   buyTicket,
   claimPrize,
   deleteRaffle,
+  getWinnersClaimedPrizes,
 };
