@@ -4,6 +4,197 @@ import logger from "../utils/logger";
 import { announceWinners } from "./solanaconnector";
 import { PublicKey } from "@solana/web3.js";
 
+// ============== AUCTION CRON FUNCTIONS ==============
+
+async function processAuctionsToStart(): Promise<void> {
+  const now = new Date();
+
+  try {
+    const auctionsToStart = await prismaClient.auction.findMany({
+      where: {
+        status: "INITIALIZED",
+        startsAt: {
+          lte: now,
+        },
+      },
+    });
+
+    if (auctionsToStart.length === 0) {
+      return;
+    }
+
+    logger.log(
+      `[CRON] Found ${auctionsToStart.length} auction(s) to start`
+    );
+
+    for (const auction of auctionsToStart) {
+      try {
+        await prismaClient.auction.update({
+          where: { id: auction.id },
+          data: {
+            status: "ACTIVE",
+          },
+        });
+        logger.log(`[CRON] Auction ${auction.id} started successfully`);
+      } catch (error) {
+        logger.error(`[CRON] Error starting auction ${auction.id}:`, error);
+      }
+    }
+  } catch (error) {
+    logger.error("[CRON] Error fetching auctions to start:", error);
+  }
+}
+
+async function processAuctionsToEnd(): Promise<void> {
+  const now = new Date();
+
+  try {
+    const auctionsToEnd = await prismaClient.auction.findMany({
+      where: {
+        status: "ACTIVE",
+        endsAt: {
+          lte: now,
+        },
+      },
+      include: {
+        bids: true,
+      },
+    });
+
+    if (auctionsToEnd.length === 0) {
+      return;
+    }
+
+    logger.log(
+      `[CRON] Found ${auctionsToEnd.length} auction(s) to end`
+    );
+
+    for (const auction of auctionsToEnd) {
+      try {
+        if (!auction.hasAnyBid || auction.bids.length === 0) {
+          await prismaClient.auction.update({
+            where: { id: auction.id },
+            data: {
+              status: "COMPLETED_FAILED",
+              completedAt: now,
+            },
+          });
+          logger.log(
+            `[CRON] Auction ${auction.id} ended as COMPLETED_FAILED (no bids)`
+          );
+        } else {
+          await prismaClient.auction.update({
+            where: { id: auction.id },
+            data: {
+              status: "COMPLETED_SUCCESSFULLY",
+              completedAt: now,
+              finalPrice: auction.highestBidAmount,
+            },
+          });
+          logger.log(
+            `[CRON] Auction ${auction.id} ended as COMPLETED_SUCCESSFULLY with highest bid: ${auction.highestBidAmount}`
+          );
+        }
+      } catch (error) {
+        logger.error(`[CRON] Error ending auction ${auction.id}:`, error);
+      }
+    }
+  } catch (error) {
+    logger.error("[CRON] Error fetching auctions to end:", error);
+  }
+}
+
+// ============== GUMBALL CRON FUNCTIONS ==============
+
+async function processGumballsToStart(): Promise<void> {
+  const now = new Date();
+
+  try {
+    const gumballsToStart = await prismaClient.gumball.findMany({
+      where: {
+        status: "INITIALIZED",
+        manualStart: false,
+        startTime: {
+          lte: now,
+        },
+      },
+    });
+
+    if (gumballsToStart.length === 0) {
+      return;
+    }
+
+    logger.log(
+      `[CRON] Found ${gumballsToStart.length} gumball(s) to start`
+    );
+
+    for (const gumball of gumballsToStart) {
+      try {
+        await prismaClient.gumball.update({
+          where: { id: gumball.id },
+          data: {
+            status: "ACTIVE",
+            activatedAt: now,
+          },
+        });
+        logger.log(`[CRON] Gumball ${gumball.id} started successfully`);
+      } catch (error) {
+        logger.error(`[CRON] Error starting gumball ${gumball.id}:`, error);
+      }
+    }
+  } catch (error) {
+    logger.error("[CRON] Error fetching gumballs to start:", error);
+  }
+}
+
+async function processGumballsToEnd(): Promise<void> {
+  const now = new Date();
+  console.log("now",now.toISOString());
+
+  try {
+    const gumballsToEnd = await prismaClient.gumball.findMany({
+      where: {
+        status: "ACTIVE",
+        endTime: {
+          lte: now,
+        },
+      },
+    });
+
+    if (gumballsToEnd.length === 0) {
+      return;
+    }
+
+    logger.log(
+      `[CRON] Found ${gumballsToEnd.length} gumball(s) to end`
+    );
+
+    for (const gumball of gumballsToEnd) {
+      try {
+        const status = gumball.ticketsSold > 0 
+          ? "COMPLETED_SUCCESSFULLY" 
+          : "COMPLETED_FAILED";
+
+        await prismaClient.gumball.update({
+          where: { id: gumball.id },
+          data: {
+            status: status,
+            endedAt: now,
+          },
+        });
+        logger.log(
+          `[CRON] Gumball ${gumball.id} ended as ${status} (tickets sold: ${gumball.ticketsSold})`
+        );
+      } catch (error) {
+        logger.error(`[CRON] Error ending gumball ${gumball.id}:`, error);
+      }
+    }
+  } catch (error) {
+    logger.error("[CRON] Error fetching gumballs to end:", error);
+  }
+}
+
+// ============== RAFFLE FUNCTIONS ==============
 
 function selectRandomWinners(
   entries: { userAddress: string; quantity: number }[],
@@ -78,9 +269,7 @@ async function processExpiredRaffles(): Promise<void> {
     for (const raffle of expiredRaffles) {
       try {
         await prismaClient.$transaction(async (tx) => {
-          // Check if raffle has any entries
           if (raffle.raffleEntries.length === 0 || raffle.ticketSold === 0) {
-            // No entries - raffle failed
             await tx.raffle.update({
               where: { id: raffle.id },
               data: {
@@ -94,7 +283,6 @@ async function processExpiredRaffles(): Promise<void> {
             return;
           }
 
-          // Select random winners based on entry weights
           const winnerAddresses = selectRandomWinners(
             raffle.raffleEntries,
             raffle.numberOfWinners
@@ -125,7 +313,6 @@ async function processExpiredRaffles(): Promise<void> {
               throw new Error("Transaction of announce winner failed");
             }
           
-          // Update raffle with winners
           await tx.raffle.update({
             where: { id: raffle.id },
             data: {
@@ -180,7 +367,41 @@ export function startRaffleCronJob(): void {
   logger.log("[CRON] Raffle cron job started - checking every minute");
 }
 
+export function startAuctionCronJob(): void {
+  cron.schedule("* * * * *", async () => {
+    logger.log("[CRON] Checking for auctions to start/end...");
+    await processAuctionsToStart();
+    await processAuctionsToEnd();
+  });
+
+  logger.log("[CRON] Auction cron job started - checking every minute");
+}
+
+export function startGumballCronJob(): void {
+  cron.schedule("* * * * *", async () => {
+    logger.log("[CRON] Checking for gumballs to start/end...");
+    await processGumballsToStart();
+    await processGumballsToEnd();
+  });
+
+  logger.log("[CRON] Gumball cron job started - checking every minute");
+}
+
+export function startAllCronJobs(): void {
+  startRaffleCronJob();
+  startAuctionCronJob();
+  startGumballCronJob();
+  logger.log("[CRON] All cron jobs started successfully");
+}
+
 export default {
   startRaffleCronJob,
+  startAuctionCronJob,
+  startGumballCronJob,
+  startAllCronJobs,
   processExpiredRaffles,
+  processAuctionsToStart,
+  processAuctionsToEnd,
+  processGumballsToStart,
+  processGumballsToEnd,
 };
