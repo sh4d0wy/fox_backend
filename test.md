@@ -1465,7 +1465,7 @@ GET /api/gumball/789/stats
 ---
 
 ### Gumball Management
-
+DONE
 #### POST /api/gumball/create
 **Description:** Create a new gumball machine  
 **Headers:**  
@@ -1513,7 +1513,7 @@ GET /api/gumball/789/stats
 ```
 
 ---
-
+DONE
 #### POST /api/gumball/confirm/:gumballId
 **Description:** Confirm gumball creation after on-chain transaction  
 **Headers:**  
@@ -1561,7 +1561,7 @@ GET /api/gumball/789/stats
 ```
 
 ---
-
+DONE
 #### POST /api/gumball/addprize/:gumballId
 **Description:** Add a single prize to gumball  
 **Headers:**  
@@ -1596,7 +1596,7 @@ GET /api/gumball/789/stats
 ```
 
 ---
-
+DONE
 #### POST /api/gumball/addprizes/:gumballId
 **Description:** Add multiple prizes to gumball  
 **Headers:**  
@@ -1649,6 +1649,7 @@ GET /api/gumball/789/stats
 ```
 
 ---
+
 
 #### POST /api/gumball/buyback/:gumballId
 **Description:** Update buy back settings  

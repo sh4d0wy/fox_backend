@@ -14,6 +14,7 @@ import { verifyTransaction } from "../utils/verifyTransaction";
 import prismaClient from "../database/client";
 import logger from "../utils/logger";
 
+//TODO: Creating cron to schedule the activation of gumballs
 const createGumball = async (req: Request, res: Response) => {
   const body = req.body;
   const { success, data: parsedData, error } = gumballSchema.safeParse(body);
@@ -165,10 +166,10 @@ const activateGumball = async (req: Request, res: Response) => {
           message: "Gumball not found or not owned by user",
         };
       }
-      if (gumball.status !== "INITIALIZED") {
+      if (gumball.status === "ACTIVE") {
         throw {
           code: "DB_ERROR",
-          message: "Gumball must be in INITIALIZED state to activate",
+          message: "Gumbal already activated",
         };
       }
       if (gumball.prizesAdded < gumball.minPrizes) {
@@ -307,6 +308,8 @@ const addPrize = async (req: Request, res: Response) => {
       return responseHandler.error(res, "Transaction not confirmed");
     }
 
+    let assignedPrizeIndex: number;
+
     await prismaClient.$transaction(async (tx) => {
       const existingTransaction = await tx.transaction.findUnique({
         where: {
@@ -345,27 +348,15 @@ const addPrize = async (req: Request, res: Response) => {
         };
       }
 
-      const existingPrize = await tx.gumballPrize.findUnique({
-        where: {
-          gumballId_prizeIndex: {
-            gumballId: gumballId,
-            prizeIndex: parsedData.prizeIndex,
-          },
-        },
-      });
-      if (existingPrize) {
-        throw {
-          code: "DB_ERROR",
-          message: "Prize with this index already exists",
-        };
-      }
+      // Calculate prizeIndex based on current prizes count
+      assignedPrizeIndex = gumball.prizesAdded;
 
       const prizeAmount = BigInt(parsedData.totalAmount);
 
       await tx.gumballPrize.create({
         data: {
           gumballId: gumballId,
-          prizeIndex: parsedData.prizeIndex,
+          prizeIndex: assignedPrizeIndex,
           isNft: parsedData.isNft,
           mint: parsedData.mint,
           name: parsedData.name,
@@ -406,7 +397,7 @@ const addPrize = async (req: Request, res: Response) => {
           isNft: parsedData.isNft,
           gumballId: gumballId,
           metadata: {
-            prizeIndex: parsedData.prizeIndex,
+            prizeIndex: assignedPrizeIndex,
             quantity: parsedData.quantity,
             name: parsedData.name,
             symbol: parsedData.symbol,
@@ -419,6 +410,7 @@ const addPrize = async (req: Request, res: Response) => {
       message: "Prize added successfully",
       error: null,
       gumballId: gumballId,
+      prizeIndex: assignedPrizeIndex!,
     });
   } catch (error) {
     logger.error(error);
@@ -443,6 +435,8 @@ const addMultiplePrizes = async (req: Request, res: Response) => {
     if (!isTransactionConfirmed) {
       return responseHandler.error(res, "Transaction not confirmed");
     }
+
+    let assignedPrizeIndices: number[] = [];
 
     await prismaClient.$transaction(async (tx) => {
       const existingTransaction = await tx.transaction.findUnique({
@@ -483,31 +477,17 @@ const addMultiplePrizes = async (req: Request, res: Response) => {
       }
 
       let totalAddedValue = BigInt(0);
+      // Start prizeIndex from current prizes count
+      let currentPrizeIndex = gumball.prizesAdded;
 
       for (const prize of parsedData.prizes) {
-        // Check if prize index already exists
-        const existingPrize = await tx.gumballPrize.findUnique({
-          where: {
-            gumballId_prizeIndex: {
-              gumballId: gumballId,
-              prizeIndex: prize.prizeIndex,
-            },
-          },
-        });
-        if (existingPrize) {
-          throw {
-            code: "DB_ERROR",
-            message: `Prize with index ${prize.prizeIndex} already exists`,
-          };
-        }
-
         const prizeAmount = BigInt(prize.totalAmount);
         totalAddedValue += prizeAmount;
 
         await tx.gumballPrize.create({
           data: {
             gumballId: gumballId,
-            prizeIndex: prize.prizeIndex,
+            prizeIndex: currentPrizeIndex,
             isNft: prize.isNft,
             mint: prize.mint,
             name: prize.name,
@@ -520,6 +500,9 @@ const addMultiplePrizes = async (req: Request, res: Response) => {
             floorPrice: prize.floorPrice ? BigInt(prize.floorPrice) : null,
           },
         });
+
+        assignedPrizeIndices.push(currentPrizeIndex);
+        currentPrizeIndex++;
       }
 
       // Calculate max ROI
@@ -550,8 +533,8 @@ const addMultiplePrizes = async (req: Request, res: Response) => {
           gumballId: gumballId,
           metadata: {
             prizesCount: parsedData.prizes.length,
-            prizes: parsedData.prizes.map(p => ({
-              prizeIndex: p.prizeIndex,
+            prizes: parsedData.prizes.map((p, index) => ({
+              prizeIndex: assignedPrizeIndices[index],
               mint: p.mint,
               quantity: p.quantity,
             })),
@@ -565,6 +548,68 @@ const addMultiplePrizes = async (req: Request, res: Response) => {
       error: null,
       gumballId: gumballId,
       prizesAdded: parsedData.prizes.length,
+      prizeIndices: assignedPrizeIndices,
+    });
+  } catch (error) {
+    logger.error(error);
+    responseHandler.error(res, error);
+  }
+};
+
+const prepareSpin = async (req: Request, res: Response) => {
+  const params = req.params;
+  const gumballId = parseInt(params.gumballId);
+
+  try {
+    const gumball = await prismaClient.gumball.findUnique({
+      where: {
+        id: gumballId,
+      },
+    });
+    if (!gumball) {
+      return responseHandler.error(res, "Gumball not found");
+    }
+    if (gumball.status !== "ACTIVE") {
+      return responseHandler.error(res, "Gumball is not active");
+    }
+    if (!gumball.manualStart && new Date() < gumball.startTime) {
+      return responseHandler.error(res, "Gumball has not started yet");
+    }
+    if (new Date() > gumball.endTime) {
+      return responseHandler.error(res, "Gumball has ended");
+    }
+    if (gumball.ticketsSold >= gumball.totalTickets) {
+      return responseHandler.error(res, "All tickets have been sold");
+    }
+
+    // Get all prizes for this gumball
+    const allPrizes = await prismaClient.gumballPrize.findMany({
+      where: {
+        gumballId: gumballId,
+      },
+    });
+
+    // Filter prizes that still have remaining quantity
+    const prizesWithRemaining = allPrizes.filter(
+      (p) => p.quantityClaimed < p.quantity
+    );
+
+    if (prizesWithRemaining.length === 0) {
+      return responseHandler.error(res, "No prizes available");
+    }
+
+    // Randomly select a prize from available prizes
+    const randomIndex = Math.floor(Math.random() * prizesWithRemaining.length);
+    const selectedPrize = prizesWithRemaining[randomIndex];
+
+    responseHandler.success(res, {
+      message: "Spin prepared successfully",
+      error: null,
+      gumballId: gumballId,
+      prizeIndex: selectedPrize.prizeIndex,
+      ticketPrice: gumball.ticketPrice.toString(),
+      ticketMint: gumball.ticketMint,
+      isTicketSol: gumball.isTicketSol,
     });
   } catch (error) {
     logger.error(error);
@@ -640,28 +685,29 @@ const spin = async (req: Request, res: Response) => {
         };
       }
 
-      // Get all prizes for this gumball
-      const allPrizes = await tx.gumballPrize.findMany({
+      // Find the prize by prizeIndex
+      const prize = await tx.gumballPrize.findUnique({
         where: {
-          gumballId: gumballId,
+          gumballId_prizeIndex: {
+            gumballId: gumballId,
+            prizeIndex: parsedData.prizeIndex,
+          },
         },
       });
 
-      // Filter prizes that still have remaining quantity
-      const prizesWithRemaining = allPrizes.filter(
-        (p) => p.quantityClaimed < p.quantity
-      );
-
-      if (prizesWithRemaining.length === 0) {
+      if (!prize) {
         throw {
           code: "DB_ERROR",
-          message: "No prizes available",
+          message: `Prize with index ${parsedData.prizeIndex} not found`,
         };
       }
 
-      // Randomly select a prize from available prizes
-      const randomIndex = Math.floor(Math.random() * prizesWithRemaining.length);
-      const prize = prizesWithRemaining[randomIndex];
+      if (prize.quantityClaimed >= prize.quantity) {
+        throw {
+          code: "DB_ERROR",
+          message: "This prize is no longer available",
+        };
+      }
 
       const existingSpin = await tx.gumballSpin.findFirst({
         where: {
@@ -714,6 +760,7 @@ const spin = async (req: Request, res: Response) => {
           gumballSpinId: spinRecord.id,
           metadata: {
             prizeId: prize.id,
+            prizeIndex: parsedData.prizeIndex,
             prizeAmount: prize.prizeAmount.toString(),
             prizeName: prize.name,
           },
@@ -723,6 +770,7 @@ const spin = async (req: Request, res: Response) => {
       spinResult = {
         spinId: spinRecord.id,
         prizeId: prize.id,
+        prizeIndex: parsedData.prizeIndex,
         prizeAmount: prize.prizeAmount.toString(),
         prizeName: prize.name,
         prizeSymbol: prize.symbol,
@@ -1125,6 +1173,9 @@ const deleteGumball = async (req: Request, res: Response) => {
   const userAddress = req.user as string;
 
   try {
+    if(!gumballId){
+      return responseHandler.error(res, "Gumball ID is required");
+    }
     const gumball = await prismaClient.gumball.findUnique({
       where: {
         id: gumballId,
@@ -1211,6 +1262,7 @@ export default {
   updateBuyBackSettings,
   addPrize,
   addMultiplePrizes,
+  prepareSpin,
   spin,
   claimPrize,
   cancelGumball,

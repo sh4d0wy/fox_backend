@@ -497,6 +497,9 @@ const deleteAuction = async (req: Request, res: Response) => {
   const auctionId = parseInt(params.auctionId);
   const userAddress = req.user as string;
   try {
+    if(!auctionId){
+      return responseHandler.error(res, "Auction ID is required");
+    }
     const auction = await prismaClient.auction.findUnique({
       where: {
         id: auctionId,

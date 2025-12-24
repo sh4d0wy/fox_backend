@@ -23,6 +23,7 @@ gumballRouter.post("/buyback/:gumballId", authMiddleware, gumballController.upda
 gumballRouter.post("/cancel/:gumballId", authMiddleware, gumballController.cancelGumball);
 
 // Authenticated routes - user actions
+gumballRouter.get("/prepare-spin/:gumballId", authMiddleware, gumballController.prepareSpin);
 gumballRouter.post("/spin/:gumballId", authMiddleware, gumballController.spin);
 gumballRouter.post("/claim/:gumballId", authMiddleware, gumballController.claimPrize);
 
