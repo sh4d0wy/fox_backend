@@ -1,7 +1,7 @@
 import cron from "node-cron";
 import prismaClient from "../database/client";
 import logger from "../utils/logger";
-import { announceWinners } from "./solanaconnector";
+import { announceWinners, startAuction, endAuction, startGumball, endGumball } from "./solanaconnector";
 import { PublicKey } from "@solana/web3.js";
 
 // ============== AUCTION CRON FUNCTIONS ==============
@@ -35,6 +35,9 @@ async function processAuctionsToStart(): Promise<void> {
             status: "ACTIVE",
           },
         });
+
+        await startAuction(auction.id);
+
         logger.log(`[CRON] Auction ${auction.id} started successfully`);
       } catch (error) {
         logger.error(`[CRON] Error starting auction ${auction.id}:`, error);
@@ -72,6 +75,8 @@ async function processAuctionsToEnd(): Promise<void> {
     for (const auction of auctionsToEnd) {
       try {
         if (!auction.hasAnyBid || auction.bids.length === 0) {
+          endAuction(auction.id);
+
           await prismaClient.auction.update({
             where: { id: auction.id },
             data: {
@@ -79,10 +84,13 @@ async function processAuctionsToEnd(): Promise<void> {
               completedAt: now,
             },
           });
+
           logger.log(
             `[CRON] Auction ${auction.id} ended as COMPLETED_FAILED (no bids)`
           );
         } else {
+          endAuction(auction.id);
+
           await prismaClient.auction.update({
             where: { id: auction.id },
             data: {
@@ -91,6 +99,7 @@ async function processAuctionsToEnd(): Promise<void> {
               finalPrice: auction.highestBidAmount,
             },
           });
+
           logger.log(
             `[CRON] Auction ${auction.id} ended as COMPLETED_SUCCESSFULLY with highest bid: ${auction.highestBidAmount}`
           );
@@ -130,6 +139,8 @@ async function processGumballsToStart(): Promise<void> {
 
     for (const gumball of gumballsToStart) {
       try {
+        await startGumball(gumball.id);
+
         await prismaClient.gumball.update({
           where: { id: gumball.id },
           data: {
@@ -137,6 +148,7 @@ async function processGumballsToStart(): Promise<void> {
             activatedAt: now,
           },
         });
+
         logger.log(`[CRON] Gumball ${gumball.id} started successfully`);
       } catch (error) {
         logger.error(`[CRON] Error starting gumball ${gumball.id}:`, error);
@@ -149,7 +161,7 @@ async function processGumballsToStart(): Promise<void> {
 
 async function processGumballsToEnd(): Promise<void> {
   const now = new Date();
-  console.log("now",now.toISOString());
+  console.log("now", now.toISOString());
 
   try {
     const gumballsToEnd = await prismaClient.gumball.findMany({
@@ -171,8 +183,10 @@ async function processGumballsToEnd(): Promise<void> {
 
     for (const gumball of gumballsToEnd) {
       try {
-        const status = gumball.ticketsSold > 0 
-          ? "COMPLETED_SUCCESSFULLY" 
+        await endGumball(gumball.id);
+
+        const status = gumball.ticketsSold > 0
+          ? "COMPLETED_SUCCESSFULLY"
           : "COMPLETED_FAILED";
 
         await prismaClient.gumball.update({
@@ -301,18 +315,18 @@ async function processExpiredRaffles(): Promise<void> {
             );
             return;
           }
-          await new Promise( (resolve) => setTimeout(resolve,5000));
+          await new Promise((resolve) => setTimeout(resolve, 5000));
           const signature = await announceWinners(
-              {
-                raffleId: raffle.id,
-                winners: winnerAddresses.map((address) => new PublicKey(address)),
-              }
-            );
-            if(!signature){
-              console.error(`[CRON] Transaction of announce winner failed for raffle ${raffle.id}`);
-              throw new Error("Transaction of announce winner failed");
+            {
+              raffleId: raffle.id,
+              winners: winnerAddresses.map((address) => new PublicKey(address)),
             }
-          
+          );
+          if (!signature) {
+            console.error(`[CRON] Transaction of announce winner failed for raffle ${raffle.id}`);
+            throw new Error("Transaction of announce winner failed");
+          }
+
           await tx.raffle.update({
             where: { id: raffle.id },
             data: {
@@ -325,7 +339,7 @@ async function processExpiredRaffles(): Promise<void> {
               },
             },
           });
-          
+
           await tx.transaction.create({
             data: {
               raffleId: raffle.id,
