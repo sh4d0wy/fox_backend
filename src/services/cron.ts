@@ -1,7 +1,7 @@
 import cron from "node-cron";
 import prismaClient from "../database/client";
 import logger from "../utils/logger";
-import { announceWinners, startAuction, endAuction } from "./solanaconnector";
+import { announceWinners, startAuction, endAuction, startGumball, endGumball } from "./solanaconnector";
 import { PublicKey } from "@solana/web3.js";
 
 // ============== AUCTION CRON FUNCTIONS ==============
@@ -75,6 +75,8 @@ async function processAuctionsToEnd(): Promise<void> {
     for (const auction of auctionsToEnd) {
       try {
         if (!auction.hasAnyBid || auction.bids.length === 0) {
+          endAuction(auction.id, auction.createdBy, null);
+
           await prismaClient.auction.update({
             where: { id: auction.id },
             data: {
@@ -83,12 +85,12 @@ async function processAuctionsToEnd(): Promise<void> {
             },
           });
 
-          endAuction(auction.id, auction.createdBy, null);
-
           logger.log(
             `[CRON] Auction ${auction.id} ended as COMPLETED_FAILED (no bids)`
           );
         } else {
+          endAuction(auction.id, auction.createdBy, auction.highestBidderWallet);
+
           await prismaClient.auction.update({
             where: { id: auction.id },
             data: {
@@ -97,8 +99,6 @@ async function processAuctionsToEnd(): Promise<void> {
               finalPrice: auction.highestBidAmount,
             },
           });
-
-          endAuction(auction.id, auction.createdBy, auction.highestBidderWallet);
 
           logger.log(
             `[CRON] Auction ${auction.id} ended as COMPLETED_SUCCESSFULLY with highest bid: ${auction.highestBidAmount}`
@@ -139,6 +139,8 @@ async function processGumballsToStart(): Promise<void> {
 
     for (const gumball of gumballsToStart) {
       try {
+        await startGumball(gumball.id);
+
         await prismaClient.gumball.update({
           where: { id: gumball.id },
           data: {
@@ -146,6 +148,7 @@ async function processGumballsToStart(): Promise<void> {
             activatedAt: now,
           },
         });
+
         logger.log(`[CRON] Gumball ${gumball.id} started successfully`);
       } catch (error) {
         logger.error(`[CRON] Error starting gumball ${gumball.id}:`, error);
@@ -180,6 +183,8 @@ async function processGumballsToEnd(): Promise<void> {
 
     for (const gumball of gumballsToEnd) {
       try {
+        await endGumball(gumball.id);
+
         const status = gumball.ticketsSold > 0
           ? "COMPLETED_SUCCESSFULLY"
           : "COMPLETED_FAILED";

@@ -422,4 +422,128 @@ async function endAuction(auctionId: number, creator: string, winner: string | n
     }
 }
 
-export { announceWinners, startAuction, endAuction, connection, provider, ADMIN_KEYPAIR };
+// Gumball Functions
+
+const gumballPda = (gumballId: number): PublicKey => {
+    return PublicKey.findProgramAddressSync(
+        [
+            Buffer.from("gumball"),
+            new anchor.BN(gumballId).toArrayLike(Buffer, "le", 4),
+        ],
+        GUMBALL_PROGRAM_ID
+    )[0];
+};
+
+const gumballConfigPda = PublicKey.findProgramAddressSync(
+    [Buffer.from("gumball")],
+    GUMBALL_PROGRAM_ID
+)[0];
+
+async function startGumball(gumballId: number) {
+    try {
+        const tx = new Transaction();
+
+        const ix = await gumballProgram.methods.activateGumball(gumballId)
+            .accounts({
+                gumballAdmin: ADMIN_KEYPAIR.publicKey,
+            })
+            .instruction();
+
+        tx.add(ix);
+
+        const signature = await sendAndConfirmTransaction(
+            connection,
+            tx,
+            [ADMIN_KEYPAIR],
+            { commitment: "confirmed" }
+        );
+
+        console.log("Gumball started:", signature);
+        return signature;
+
+    } catch (error) {
+        console.error("Start gumball failed:", error);
+        throw error;
+    }
+}
+
+async function endGumball(gumballId: number) {
+    try {
+        const tx = new Transaction();
+
+        const gumballAddress = gumballPda(gumballId);
+
+        const gumballState = await gumballProgram.account.gumballMachine.fetch(gumballAddress);
+
+        const ticketMint: PublicKey | null = gumballState.ticketMint;
+
+        const ticketTokenProgram = ticketMint
+            ? await getTokenProgramFromMint(connection, ticketMint)
+            : TOKEN_PROGRAM_ID;
+
+        let ticketEscrow;
+        let ticketFeeEscrowAta;
+        let creatorTicketAta;
+
+        if (ticketMint) {
+            ticketEscrow = await getAtaAddress(connection, ticketMint, gumballAddress, true);
+
+            const feeTreasuryRes = await ensureAtaIx({
+                connection,
+                mint: ticketMint,
+                owner: gumballConfigPda,
+                payer: wallet.publicKey,
+                tokenProgram: ticketTokenProgram,
+                allowOwnerOffCurve: true, // PDA owner
+            });
+
+            ticketFeeEscrowAta = feeTreasuryRes.ata;
+            if (feeTreasuryRes.ix) tx.add(feeTreasuryRes.ix);
+
+            const creatorTicketRes = await ensureAtaIx({
+                connection,
+                mint: ticketMint,
+                owner: gumballState.creator,
+                payer: wallet.publicKey,
+                tokenProgram: ticketTokenProgram,
+            });
+
+            creatorTicketAta = creatorTicketRes.ata;
+            if (creatorTicketRes.ix) tx.add(creatorTicketRes.ix);
+        }
+
+        if (ticketEscrow === undefined || ticketFeeEscrowAta === undefined || creatorTicketAta === undefined) {
+            throw new Error("Required ATA or escrow account could not be determined");
+        }
+
+        const ix = await gumballProgram.methods
+            .endGumball(gumballId)
+            .accounts({
+                gumballAdmin: ADMIN_KEYPAIR.publicKey,
+                creator: gumballState.creator,
+
+                ticketMint: ticketMint!,
+
+                ticketEscrow,
+                ticketFeeEscrowAta,
+                creatorTicketAta,
+
+                ticketTokenProgram,
+            })
+            .instruction();
+
+        tx.add(ix);
+
+        const signature = await provider.sendAndConfirm(tx, [
+            ADMIN_KEYPAIR,
+        ]);
+
+        console.log("Gumball ended:", signature);
+        return signature;
+    } catch (error) {
+        console.error("End gumball failed:", error);
+        throw error;
+    }
+}
+
+export { announceWinners, startAuction, endAuction, startGumball, endGumball, connection, provider, ADMIN_KEYPAIR };
