@@ -1,7 +1,7 @@
 import cron from "node-cron";
 import prismaClient from "../database/client";
 import logger from "../utils/logger";
-import { announceWinners, startAuction } from "./solanaconnector";
+import { announceWinners, startAuction, endAuction } from "./solanaconnector";
 import { PublicKey } from "@solana/web3.js";
 
 // ============== AUCTION CRON FUNCTIONS ==============
@@ -82,6 +82,9 @@ async function processAuctionsToEnd(): Promise<void> {
               completedAt: now,
             },
           });
+
+          endAuction(auction.id, auction.createdBy, null);
+
           logger.log(
             `[CRON] Auction ${auction.id} ended as COMPLETED_FAILED (no bids)`
           );
@@ -94,6 +97,9 @@ async function processAuctionsToEnd(): Promise<void> {
               finalPrice: auction.highestBidAmount,
             },
           });
+
+          endAuction(auction.id, auction.createdBy, auction.highestBidderWallet);
+
           logger.log(
             `[CRON] Auction ${auction.id} ended as COMPLETED_SUCCESSFULLY with highest bid: ${auction.highestBidAmount}`
           );

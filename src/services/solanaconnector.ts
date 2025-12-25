@@ -5,8 +5,8 @@ import {
     Keypair,
     sendAndConfirmTransaction,
 } from "@solana/web3.js";
-import { Program, AnchorProvider, Wallet } from "@coral-xyz/anchor";
-import { getAssociatedTokenAddress, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { AnchorProvider, Wallet } from "@coral-xyz/anchor";
+import { ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddress, getAssociatedTokenAddressSync, TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import * as anchor from "@coral-xyz/anchor";
 import raffleIdl from "../types/raffle.json";
 import auctionIdl from "../types/auction.json";
@@ -38,9 +38,6 @@ const auctionProgram = new anchor.Program<Auction>(auctionIdl as anchor.Idl, pro
 
 const GUMBALL_PROGRAM_ID = new anchor.web3.PublicKey(gumballIdl.address);
 const gumballProgram = new anchor.Program<Gumball>(gumballIdl as anchor.Idl, provider);
-
-const FAKE_MINT = new PublicKey("So11111111111111111111111111111111111111112");
-const FAKE_ATA = new PublicKey("B9W4wPFWjTbZ9ab1okzB4D3SsGY7wntkrBKwpp5RC1Uv");
 
 function rafflePda(raffleId: number): PublicKey {
     const idBuffer = Buffer.alloc(4);
@@ -80,6 +77,35 @@ async function getTokenProgramFromMint(
     }
 
     return TOKEN_PROGRAM_ID;
+}
+
+async function getAtaAddress(
+    connection: Connection,
+    mint: PublicKey,
+    owner: PublicKey,
+    allowOwnerOffCurve = true
+): Promise<PublicKey> {
+    const mintAccountInfo = await connection.getAccountInfo(mint);
+    if (!mintAccountInfo) {
+        throw new Error("Mint account not found");
+    }
+
+    const tokenProgramId = mintAccountInfo.owner;
+
+    if (
+        !tokenProgramId.equals(TOKEN_PROGRAM_ID) &&
+        !tokenProgramId.equals(TOKEN_2022_PROGRAM_ID)
+    ) {
+        throw new Error("Unsupported token program");
+    }
+
+    return getAssociatedTokenAddressSync(
+        mint,
+        owner,
+        allowOwnerOffCurve,
+        tokenProgramId,
+        ASSOCIATED_TOKEN_PROGRAM_ID
+    );
 }
 
 async function ensureAtaIx(params: {
@@ -134,15 +160,15 @@ async function announceWinners(
             raffleAccountPda
         );
 
-        const ticketMint = raffleData.ticketMint ?? FAKE_MINT;
+        const ticketMint = raffleData.ticketMint;
 
         const ticketTokenProgram = await getTokenProgramFromMint(
             connection,
             ticketMint
         );
 
-        let ticketEscrow = FAKE_ATA;
-        let ticketFeeTreasury = FAKE_ATA;
+        let ticketEscrow;
+        let ticketFeeTreasury;
 
         if (raffleData.ticketMint !== null) {
             const escrowRes = await ensureAtaIx({
@@ -168,6 +194,10 @@ async function announceWinners(
 
             ticketFeeTreasury = treasuryRes.ata;
             if (treasuryRes.ix) tx.add(treasuryRes.ix);
+        }
+
+        if (ticketEscrow === undefined || ticketFeeTreasury === undefined) {
+            throw new Error("Required ATA or escrow account could not be determined");
         }
 
         const ix = await raffleProgram.methods
@@ -199,6 +229,23 @@ async function announceWinners(
     }
 }
 
+// Auction Functions
+
+const auctionPda = (auctionId: number): PublicKey => {
+    return PublicKey.findProgramAddressSync(
+        [
+            Buffer.from("auction"),
+            new anchor.BN(auctionId).toArrayLike(Buffer, "le", 4), // u32
+        ],
+        AUCTION_PROGRAM_ID
+    )[0];
+};
+
+const auctionConfigPda = PublicKey.findProgramAddressSync(
+    [Buffer.from("auction")],
+    AUCTION_PROGRAM_ID
+)[0];
+
 async function startAuction(auctionId: number) {
     try {
         const tx = new Transaction();
@@ -227,4 +274,152 @@ async function startAuction(auctionId: number) {
     }
 }
 
-export { announceWinners, startAuction, connection, provider, ADMIN_KEYPAIR };
+async function endAuction(auctionId: number, creator: string, winner: string | null) {
+    try {
+        const tx = new Transaction();
+
+        /* ---------------- PDAs ---------------- */
+        const auctionAccountPda = auctionPda(auctionId);
+        const auctionData = await auctionProgram.account.auction.fetch(
+            auctionAccountPda
+        );
+
+        const prizeMint = auctionData.prizeMint;
+        const bidMint = auctionData.bidMint;
+
+        /* ---------------- Prize escrow (already exists) ---------------- */
+        const prizeEscrow = await getAtaAddress(
+            connection,
+            prizeMint,
+            auctionAccountPda,
+            true
+        );
+
+        /* ---------------- Creator prize ATA (already exists) ---------------- */
+        const creatorPrizeAta = await getAtaAddress(
+            connection,
+            prizeMint,
+            auctionData.creator
+        );
+
+        /* ---------------- Winner prize ATA (MUST ensure) ---------------- */
+        let winnerPrizeAta;
+
+        if (!auctionData.highestBidder.equals(PublicKey.default)) {
+            const prizeTokenProgram = await getTokenProgramFromMint(
+                connection,
+                prizeMint
+            );
+
+            const res = await ensureAtaIx({
+                connection,
+                mint: prizeMint,
+                owner: auctionData.highestBidder,
+                payer: ADMIN_KEYPAIR.publicKey,
+                tokenProgram: prizeTokenProgram,
+            });
+
+            winnerPrizeAta = res.ata;
+            if (res.ix) tx.add(res.ix);
+        }
+
+        const prizeTokenProgram = await getTokenProgramFromMint(
+            connection,
+            prizeMint
+        );
+
+        const bidTokenProgram = await getTokenProgramFromMint(
+            connection,
+            bidMint!
+        );
+
+        let bidEscrow;
+        let bidFeeTreasuryAta;
+        let creatorBidAta;
+
+        if (auctionData.bidMint !== null) {
+            bidEscrow = await getAtaAddress(
+                connection,
+                bidMint!,
+                auctionAccountPda,
+                true
+            );
+
+            const feeTreasuryRes = await ensureAtaIx({
+                connection,
+                mint: bidMint!,
+                owner: auctionConfigPda,
+                payer: ADMIN_KEYPAIR.publicKey,
+                tokenProgram: bidTokenProgram,
+                allowOwnerOffCurve: true, // PDA owner
+            });
+
+            bidFeeTreasuryAta = feeTreasuryRes.ata;
+            if (feeTreasuryRes.ix) {
+                tx.add(feeTreasuryRes.ix);
+            }
+
+            const creatorBidRes = await ensureAtaIx({
+                connection,
+                mint: bidMint!,
+                owner: auctionData.creator,
+                payer: ADMIN_KEYPAIR.publicKey,
+                tokenProgram: bidTokenProgram,
+            });
+
+            creatorBidAta = creatorBidRes.ata;
+            if (creatorBidRes.ix) {
+                tx.add(creatorBidRes.ix);
+            }
+        }
+
+        if (bidEscrow === undefined || bidFeeTreasuryAta === undefined || creatorBidAta === undefined || winnerPrizeAta === undefined) {
+            throw new Error("Required ATA or escrow account could not be determined");
+        }
+
+        if (winner === null) {
+            winner = auctionData.creator.toString();
+        }
+
+        const ix = await auctionProgram.methods.completeAuction(auctionId)
+            .accounts({
+                auctionAdmin: ADMIN_KEYPAIR.publicKey,
+                creator: new PublicKey(creator),
+                winner: new PublicKey(winner),
+
+                prizeMint,
+                bidMint: bidMint!,
+
+                prizeEscrow,
+                bidEscrow,
+
+                creatorPrizeAta,
+                winnerPrizeAta,
+
+                bidFeeTreasuryAta,
+                creatorBidAta,
+
+                prizeTokenProgram,
+                bidTokenProgram,
+            })
+            .instruction();
+
+        tx.add(ix);
+
+        const signature = await sendAndConfirmTransaction(
+            connection,
+            tx,
+            [ADMIN_KEYPAIR],
+            { commitment: "confirmed" }
+        );
+
+        console.log("Auction ended:", signature);
+        return signature;
+
+    } catch (error) {
+        console.error("End auction failed:", error);
+        throw error;
+    }
+}
+
+export { announceWinners, startAuction, endAuction, connection, provider, ADMIN_KEYPAIR };
