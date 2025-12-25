@@ -1,0 +1,1301 @@
+{
+  "address": "HDW5Huoqz7Us3yiMgxAEkekHUfGvggUPLEz7WZ8uSTBY",
+  "metadata": {
+    "name": "auction",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Created with Anchor"
+  },
+  "docs": ["Sysvar for token mint and ATA creation"],
+  "instructions": [
+    {
+      "name": "cancel_auction",
+      "discriminator": [156, 43, 197, 110, 218, 105, 143, 182],
+      "accounts": [
+        {
+          "name": "auction_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [97, 117, 99, 116, 105, 111, 110]
+              }
+            ]
+          }
+        },
+        {
+          "name": "auction",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [97, 117, 99, 116, 105, 111, 110]
+              },
+              {
+                "kind": "arg",
+                "path": "auction_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "creator",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "auction_admin",
+          "signer": true
+        },
+        {
+          "name": "prize_mint"
+        },
+        {
+          "name": "prize_escrow",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "auction"
+              },
+              {
+                "kind": "account",
+                "path": "prize_token_program"
+              },
+              {
+                "kind": "account",
+                "path": "prize_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140, 151, 37, 143, 78, 36, 137, 241, 187, 61, 16, 41, 20, 142,
+                13, 131, 11, 90, 19, 153, 218, 255, 16, 132, 4, 142, 123, 216,
+                219, 233, 248, 89
+              ]
+            }
+          }
+        },
+        {
+          "name": "creator_prize_ata",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "creator"
+              },
+              {
+                "kind": "account",
+                "path": "prize_token_program"
+              },
+              {
+                "kind": "account",
+                "path": "prize_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140, 151, 37, 143, 78, 36, 137, 241, 187, 61, 16, 41, 20, 142,
+                13, 131, 11, 90, 19, 153, 218, 255, 16, 132, 4, 142, 123, 216,
+                219, 233, 248, 89
+              ]
+            }
+          }
+        },
+        {
+          "name": "prize_token_program"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "auction_id",
+          "type": "u32"
+        }
+      ]
+    },
+    {
+      "name": "complete_auction",
+      "discriminator": [89, 120, 196, 134, 103, 28, 192, 83],
+      "accounts": [
+        {
+          "name": "auction_config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [97, 117, 99, 116, 105, 111, 110]
+              }
+            ]
+          }
+        },
+        {
+          "name": "auction",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [97, 117, 99, 116, 105, 111, 110]
+              },
+              {
+                "kind": "arg",
+                "path": "auction_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "auction_admin",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "creator",
+          "writable": true
+        },
+        {
+          "name": "winner",
+          "docs": ["audit: there is no check for winner and hisghest bidder"],
+          "writable": true
+        },
+        {
+          "name": "prize_mint"
+        },
+        {
+          "name": "bid_mint"
+        },
+        {
+          "name": "prize_escrow",
+          "writable": true
+        },
+        {
+          "name": "bid_escrow",
+          "writable": true
+        },
+        {
+          "name": "creator_prize_ata",
+          "writable": true
+        },
+        {
+          "name": "winner_prize_ata",
+          "writable": true
+        },
+        {
+          "name": "bid_fee_treasury_ata",
+          "writable": true
+        },
+        {
+          "name": "creator_bid_ata",
+          "writable": true
+        },
+        {
+          "name": "prize_token_program"
+        },
+        {
+          "name": "bid_token_program"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "auction_id",
+          "type": "u32"
+        }
+      ]
+    },
+    {
+      "name": "create_auction",
+      "discriminator": [234, 6, 201, 246, 47, 219, 176, 107],
+      "accounts": [
+        {
+          "name": "auction_config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [97, 117, 99, 116, 105, 111, 110]
+              }
+            ]
+          }
+        },
+        {
+          "name": "auction",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [97, 117, 99, 116, 105, 111, 110]
+              },
+              {
+                "kind": "account",
+                "path": "auction_config.auction_count",
+                "account": "AuctionConfig"
+              }
+            ]
+          }
+        },
+        {
+          "name": "creator",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "auction_admin",
+          "signer": true
+        },
+        {
+          "name": "prize_mint"
+        },
+        {
+          "name": "bid_mint"
+        },
+        {
+          "name": "creator_prize_ata",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "creator"
+              },
+              {
+                "kind": "account",
+                "path": "prize_token_program"
+              },
+              {
+                "kind": "account",
+                "path": "prize_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140, 151, 37, 143, 78, 36, 137, 241, 187, 61, 16, 41, 20, 142,
+                13, 131, 11, 90, 19, 153, 218, 255, 16, 132, 4, 142, 123, 216,
+                219, 233, 248, 89
+              ]
+            }
+          }
+        },
+        {
+          "name": "prize_escrow",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "auction"
+              },
+              {
+                "kind": "account",
+                "path": "prize_token_program"
+              },
+              {
+                "kind": "account",
+                "path": "prize_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140, 151, 37, 143, 78, 36, 137, 241, 187, 61, 16, 41, 20, 142,
+                13, 131, 11, 90, 19, 153, 218, 255, 16, 132, 4, 142, 123, 216,
+                219, 233, 248, 89
+              ]
+            }
+          }
+        },
+        {
+          "name": "prize_token_program"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "start_time",
+          "type": "i64"
+        },
+        {
+          "name": "end_time",
+          "type": "i64"
+        },
+        {
+          "name": "start_immediately",
+          "type": "bool"
+        },
+        {
+          "name": "is_bid_mint_sol",
+          "type": "bool"
+        },
+        {
+          "name": "base_bid",
+          "type": "u64"
+        },
+        {
+          "name": "min_increment",
+          "type": "u64"
+        },
+        {
+          "name": "time_extension",
+          "type": "u32"
+        }
+      ]
+    },
+    {
+      "name": "initialize_auction_config",
+      "discriminator": [94, 1, 96, 31, 46, 102, 88, 102],
+      "accounts": [
+        {
+          "name": "auction_config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [97, 117, 99, 116, 105, 111, 110]
+              }
+            ]
+          }
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "auction_owner",
+          "type": "pubkey"
+        },
+        {
+          "name": "auction_admin",
+          "type": "pubkey"
+        },
+        {
+          "name": "creation_fee_lamports",
+          "type": "u64"
+        },
+        {
+          "name": "commission_bps",
+          "type": "u16"
+        },
+        {
+          "name": "minimum_auction_period",
+          "type": "u32"
+        },
+        {
+          "name": "maximum_auction_period",
+          "type": "u32"
+        },
+        {
+          "name": "minimum_time_extension",
+          "type": "u32"
+        },
+        {
+          "name": "maximum_time_extension",
+          "type": "u32"
+        }
+      ]
+    },
+    {
+      "name": "place_bid",
+      "discriminator": [238, 77, 148, 91, 200, 151, 92, 146],
+      "accounts": [
+        {
+          "name": "auction_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [97, 117, 99, 116, 105, 111, 110]
+              }
+            ]
+          }
+        },
+        {
+          "name": "auction",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [97, 117, 99, 116, 105, 111, 110]
+              },
+              {
+                "kind": "arg",
+                "path": "auction_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "bidder",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "auction_admin",
+          "signer": true
+        },
+        {
+          "name": "prev_bidder_account",
+          "writable": true
+        },
+        {
+          "name": "bid_mint"
+        },
+        {
+          "name": "current_bidder_ata",
+          "writable": true
+        },
+        {
+          "name": "prev_bidder_ata",
+          "writable": true
+        },
+        {
+          "name": "bid_escrow",
+          "writable": true
+        },
+        {
+          "name": "bid_token_program"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "auction_id",
+          "type": "u32"
+        },
+        {
+          "name": "bid_amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "start_auction",
+      "discriminator": [255, 2, 149, 136, 148, 125, 65, 195],
+      "accounts": [
+        {
+          "name": "auction_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [97, 117, 99, 116, 105, 111, 110]
+              }
+            ]
+          }
+        },
+        {
+          "name": "auction",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [97, 117, 99, 116, 105, 111, 110]
+              },
+              {
+                "kind": "arg",
+                "path": "auction_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "auction_admin",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "auction_id",
+          "type": "u32"
+        }
+      ]
+    },
+    {
+      "name": "update_auction",
+      "discriminator": [8, 87, 207, 233, 254, 160, 120, 224],
+      "accounts": [
+        {
+          "name": "auction_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [97, 117, 99, 116, 105, 111, 110]
+              }
+            ]
+          }
+        },
+        {
+          "name": "auction",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [97, 117, 99, 116, 105, 111, 110]
+              },
+              {
+                "kind": "arg",
+                "path": "auction_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "creator",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "auction_admin",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "auction_id",
+          "type": "u32"
+        },
+        {
+          "name": "start_time",
+          "type": "i64"
+        },
+        {
+          "name": "end_time",
+          "type": "i64"
+        },
+        {
+          "name": "start_immediately",
+          "type": "bool"
+        },
+        {
+          "name": "base_bid",
+          "type": "u64"
+        },
+        {
+          "name": "min_increment",
+          "type": "u64"
+        },
+        {
+          "name": "time_extension",
+          "type": "u32"
+        }
+      ]
+    },
+    {
+      "name": "update_auction_admin",
+      "discriminator": [87, 207, 78, 103, 211, 63, 186, 41],
+      "accounts": [
+        {
+          "name": "auction_config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [97, 117, 99, 116, 105, 111, 110]
+              }
+            ]
+          }
+        },
+        {
+          "name": "auction_owner",
+          "writable": true,
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "new_auction_admin",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "update_auction_owner",
+      "discriminator": [47, 212, 42, 241, 5, 24, 209, 206],
+      "accounts": [
+        {
+          "name": "auction_config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [97, 117, 99, 116, 105, 111, 110]
+              }
+            ]
+          }
+        },
+        {
+          "name": "auction_owner",
+          "writable": true,
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "new_auction_owner",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "update_config_data",
+      "discriminator": [106, 17, 111, 79, 128, 247, 197, 100],
+      "accounts": [
+        {
+          "name": "auction_config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [97, 117, 99, 116, 105, 111, 110]
+              }
+            ]
+          }
+        },
+        {
+          "name": "auction_owner",
+          "writable": true,
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "creation_fee_lamports",
+          "type": "u64"
+        },
+        {
+          "name": "commission_bps",
+          "type": "u16"
+        },
+        {
+          "name": "minimum_auction_period",
+          "type": "u32"
+        },
+        {
+          "name": "maximum_auction_period",
+          "type": "u32"
+        },
+        {
+          "name": "minimum_time_extension",
+          "type": "u32"
+        },
+        {
+          "name": "maximum_time_extension",
+          "type": "u32"
+        }
+      ]
+    },
+    {
+      "name": "update_pause_and_unpause",
+      "discriminator": [124, 65, 236, 137, 103, 20, 115, 240],
+      "accounts": [
+        {
+          "name": "auction_config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [97, 117, 99, 116, 105, 111, 110]
+              }
+            ]
+          }
+        },
+        {
+          "name": "auction_owner",
+          "writable": true,
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "new_pause_flags",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "withdraw_sol_fees",
+      "discriminator": [191, 53, 166, 97, 124, 212, 228, 219],
+      "accounts": [
+        {
+          "name": "auction_config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [97, 117, 99, 116, 105, 111, 110]
+              }
+            ]
+          }
+        },
+        {
+          "name": "owner",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "receiver",
+          "writable": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "withdraw_spl_fees",
+      "discriminator": [67, 45, 141, 82, 211, 167, 149, 115],
+      "accounts": [
+        {
+          "name": "auction_config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [97, 117, 99, 116, 105, 111, 110]
+              }
+            ]
+          }
+        },
+        {
+          "name": "owner",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "fee_mint"
+        },
+        {
+          "name": "fee_treasury_ata",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "auction_config"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6, 221, 246, 225, 215, 101, 161, 147, 217, 203, 225, 70, 206,
+                  235, 121, 172, 28, 180, 133, 237, 95, 91, 55, 145, 58, 140,
+                  245, 133, 126, 255, 0, 169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "fee_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140, 151, 37, 143, 78, 36, 137, 241, 187, 61, 16, 41, 20, 142,
+                13, 131, 11, 90, 19, 153, 218, 255, 16, 132, 4, 142, 123, 216,
+                219, 233, 248, 89
+              ]
+            }
+          }
+        },
+        {
+          "name": "receiver_fee_ata",
+          "writable": true
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "Auction",
+      "discriminator": [218, 94, 247, 242, 126, 233, 131, 81]
+    },
+    {
+      "name": "AuctionConfig",
+      "discriminator": [195, 54, 8, 51, 28, 231, 33, 142]
+    }
+  ],
+  "events": [
+    {
+      "name": "AuctionCancelled",
+      "discriminator": [22, 32, 51, 83, 215, 194, 171, 209]
+    },
+    {
+      "name": "AuctionCompleted",
+      "discriminator": [44, 102, 119, 201, 251, 46, 178, 67]
+    },
+    {
+      "name": "AuctionCreated",
+      "discriminator": [133, 190, 194, 65, 172, 0, 70, 178]
+    },
+    {
+      "name": "AuctionStarted",
+      "discriminator": [126, 97, 193, 56, 72, 162, 162, 64]
+    },
+    {
+      "name": "AuctionUpdated",
+      "discriminator": [67, 35, 50, 236, 108, 230, 253, 111]
+    },
+    {
+      "name": "BidPlaced",
+      "discriminator": [135, 53, 176, 83, 193, 69, 108, 61]
+    },
+    {
+      "name": "FeesWithdrawn",
+      "discriminator": [234, 15, 0, 119, 148, 241, 40, 21]
+    },
+    {
+      "name": "SplFeesWithdrawn",
+      "discriminator": [201, 164, 201, 96, 70, 233, 240, 251]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "TokenTransferFailed",
+      "msg": "Token transfer failed"
+    },
+    {
+      "code": 6001,
+      "name": "SolTransferFailed",
+      "msg": "SOL transfer failed"
+    },
+    {
+      "code": 6002,
+      "name": "InsufficientTokenBalance",
+      "msg": "Insufficient SPL Token Balance"
+    },
+    {
+      "code": 6003,
+      "name": "InsufficientSolBalance",
+      "msg": "Insufficient SOL Balance"
+    }
+  ],
+  "types": [
+    {
+      "name": "Auction",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "auction_id",
+            "type": "u32"
+          },
+          {
+            "name": "creator",
+            "type": "pubkey"
+          },
+          {
+            "name": "prize_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "start_time",
+            "type": "i64"
+          },
+          {
+            "name": "end_time",
+            "type": "i64"
+          },
+          {
+            "name": "bid_mint",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "base_bid",
+            "type": "u64"
+          },
+          {
+            "name": "min_increment",
+            "type": "u64"
+          },
+          {
+            "name": "time_extension",
+            "type": "u32"
+          },
+          {
+            "name": "highest_bid_amount",
+            "type": "u64"
+          },
+          {
+            "name": "highest_bidder",
+            "type": "pubkey"
+          },
+          {
+            "name": "has_any_bid",
+            "type": "bool"
+          },
+          {
+            "name": "status",
+            "type": {
+              "defined": {
+                "name": "AuctionState"
+              }
+            }
+          },
+          {
+            "name": "auction_bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "AuctionCancelled",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "auction_id",
+            "type": "u32"
+          },
+          {
+            "name": "cancelled_by",
+            "type": "pubkey"
+          },
+          {
+            "name": "cancelled_time",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "AuctionCompleted",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "auction_id",
+            "type": "u32"
+          },
+          {
+            "name": "winner",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "final_price",
+            "type": "u64"
+          },
+          {
+            "name": "creator_amount",
+            "type": "u64"
+          },
+          {
+            "name": "fee_amount",
+            "type": "u64"
+          },
+          {
+            "name": "completed_at",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "AuctionConfig",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "auction_owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "auction_admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "creation_fee_lamports",
+            "type": "u64"
+          },
+          {
+            "name": "commission_bps",
+            "type": "u16"
+          },
+          {
+            "name": "minimum_auction_period",
+            "type": "u32"
+          },
+          {
+            "name": "maximum_auction_period",
+            "type": "u32"
+          },
+          {
+            "name": "minimum_time_extension",
+            "type": "u32"
+          },
+          {
+            "name": "maximum_time_extension",
+            "type": "u32"
+          },
+          {
+            "name": "auction_count",
+            "type": "u32"
+          },
+          {
+            "name": "pause_flags",
+            "type": "u8"
+          },
+          {
+            "name": "config_bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "AuctionCreated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "auction_id",
+            "type": "u32"
+          },
+          {
+            "name": "creator",
+            "type": "pubkey"
+          },
+          {
+            "name": "prize_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "start_time",
+            "type": "i64"
+          },
+          {
+            "name": "end_time",
+            "type": "i64"
+          },
+          {
+            "name": "created_at",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "AuctionStarted",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "auction_id",
+            "type": "u32"
+          },
+          {
+            "name": "started_at",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "AuctionState",
+      "repr": {
+        "kind": "rust"
+      },
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "None"
+          },
+          {
+            "name": "Initialized"
+          },
+          {
+            "name": "Active"
+          },
+          {
+            "name": "Cancelled"
+          },
+          {
+            "name": "CompletedSuccessfully"
+          },
+          {
+            "name": "CompletedFailed"
+          }
+        ]
+      }
+    },
+    {
+      "name": "AuctionUpdated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "auction_id",
+            "type": "u32"
+          },
+          {
+            "name": "start_time",
+            "type": "i64"
+          },
+          {
+            "name": "end_time",
+            "type": "i64"
+          },
+          {
+            "name": "base_bid",
+            "type": "u64"
+          },
+          {
+            "name": "min_increment",
+            "type": "u64"
+          },
+          {
+            "name": "time_extension",
+            "type": "u32"
+          },
+          {
+            "name": "updated_at",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "BidPlaced",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "auction_id",
+            "type": "u32"
+          },
+          {
+            "name": "bidder",
+            "type": "pubkey"
+          },
+          {
+            "name": "new_bid",
+            "type": "u64"
+          },
+          {
+            "name": "bid_time",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "FeesWithdrawn",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "receiver",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SplFeesWithdrawn",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "receiver",
+            "type": "pubkey"
+          }
+        ]
+      }
+    }
+  ],
+  "constants": [
+    {
+      "name": "FEE_MANTISSA",
+      "type": "u16",
+      "value": "10000"
+    }
+  ]
+}

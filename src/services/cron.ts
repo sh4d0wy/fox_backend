@@ -1,7 +1,7 @@
 import cron from "node-cron";
 import prismaClient from "../database/client";
 import logger from "../utils/logger";
-import { announceWinners } from "./solanaconnector";
+import { announceWinners, startAuction } from "./solanaconnector";
 import { PublicKey } from "@solana/web3.js";
 
 // ============== AUCTION CRON FUNCTIONS ==============
@@ -35,6 +35,9 @@ async function processAuctionsToStart(): Promise<void> {
             status: "ACTIVE",
           },
         });
+
+        await startAuction(auction.id);
+
         logger.log(`[CRON] Auction ${auction.id} started successfully`);
       } catch (error) {
         logger.error(`[CRON] Error starting auction ${auction.id}:`, error);
@@ -149,7 +152,7 @@ async function processGumballsToStart(): Promise<void> {
 
 async function processGumballsToEnd(): Promise<void> {
   const now = new Date();
-  console.log("now",now.toISOString());
+  console.log("now", now.toISOString());
 
   try {
     const gumballsToEnd = await prismaClient.gumball.findMany({
@@ -171,8 +174,8 @@ async function processGumballsToEnd(): Promise<void> {
 
     for (const gumball of gumballsToEnd) {
       try {
-        const status = gumball.ticketsSold > 0 
-          ? "COMPLETED_SUCCESSFULLY" 
+        const status = gumball.ticketsSold > 0
+          ? "COMPLETED_SUCCESSFULLY"
           : "COMPLETED_FAILED";
 
         await prismaClient.gumball.update({
@@ -301,18 +304,18 @@ async function processExpiredRaffles(): Promise<void> {
             );
             return;
           }
-          await new Promise( (resolve) => setTimeout(resolve,5000));
+          await new Promise((resolve) => setTimeout(resolve, 5000));
           const signature = await announceWinners(
-              {
-                raffleId: raffle.id,
-                winners: winnerAddresses.map((address) => new PublicKey(address)),
-              }
-            );
-            if(!signature){
-              console.error(`[CRON] Transaction of announce winner failed for raffle ${raffle.id}`);
-              throw new Error("Transaction of announce winner failed");
+            {
+              raffleId: raffle.id,
+              winners: winnerAddresses.map((address) => new PublicKey(address)),
             }
-          
+          );
+          if (!signature) {
+            console.error(`[CRON] Transaction of announce winner failed for raffle ${raffle.id}`);
+            throw new Error("Transaction of announce winner failed");
+          }
+
           await tx.raffle.update({
             where: { id: raffle.id },
             data: {
@@ -325,7 +328,7 @@ async function processExpiredRaffles(): Promise<void> {
               },
             },
           });
-          
+
           await tx.transaction.create({
             data: {
               raffleId: raffle.id,
