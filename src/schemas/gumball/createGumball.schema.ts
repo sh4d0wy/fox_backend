@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 export const gumballSchema = z.object({
+  id: z.number().int().optional(),
   creatorAddress: z.string().min(1),
   
   // Basic info

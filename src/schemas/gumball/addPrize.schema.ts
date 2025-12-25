@@ -1,7 +1,8 @@
 import { z } from "zod";
 
-// Schema for a single prize (prizeIndex will be calculated server-side)
+// Schema for a single prize
 const prizeDataSchema = z.object({
+  prizeIndex: z.number().int().gte(0),
   isNft: z.boolean().default(false),
   
   // Token/NFT details
@@ -26,8 +27,9 @@ export const addPrizesSchema = z.object({
   txSignature: z.string().min(1),
 });
 
-// Keep single prize schema for backward compatibility (deprecated)
+// Single prize schema
 export const addPrizeSchema = z.object({
+  prizeIndex: z.number().int().gte(0),
   isNft: z.boolean().default(false),
   mint: z.string().min(1),
   name: z.string().optional(),

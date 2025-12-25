@@ -574,23 +574,15 @@ export default {
   getGumballStats: async (req: Request, res: Response) => {
     try {
       const { walletAddress } = req.params;
-
-      // Gumballs participated (unique)
-      const gumballsParticipated = await prismaClient.gumballSpin.groupBy({
-        by: ["gumballId"],
-        where: { spinnerAddress: walletAddress },
+      const gumballsCreated = await prismaClient.gumball.findMany({
+        where: { creatorAddress: walletAddress },
+        select: { ticketPrice: true },
       });
 
-      // Total spins
       const totalSpins = await prismaClient.gumballSpin.count({
         where: { spinnerAddress: walletAddress },
       });
-
-      // Total prizes won (where user is winner)
-      const prizesWon = await prismaClient.gumballSpin.count({
-        where: { winnerAddress: walletAddress },
-      });
-
+     
       // Total volume spent
       const spins = await prismaClient.gumballSpin.findMany({
         where: { spinnerAddress: walletAddress },
@@ -600,7 +592,7 @@ export default {
           },
         },
       });
-
+     
       const totalVolumeSpent = spins.reduce(
         (sum: number, s: { gumball: { ticketPrice: any; }; }) => sum + Number(s.gumball.ticketPrice),
         0
@@ -609,10 +601,9 @@ export default {
       return responseHandler.success(res, {
         message: "Gumball stats fetched successfully",
         stats: {
-          gumballsParticipated: gumballsParticipated.length,
-          totalSpins,
-          prizesWon,
-          totalVolumeSpent: totalVolumeSpent / 1e9, // Convert to SOL
+          gumballsCreated: gumballsCreated.length,
+          totalSpins: totalSpins,
+          totalVolumeSpent: totalVolumeSpent,
         },
       });
     } catch (error) {

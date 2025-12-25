@@ -32,6 +32,7 @@ const createGumball = async (req: Request, res: Response) => {
 
   const gumball = await prismaClient.gumball.create({
     data: {
+      id: parsedData.id,
       creatorAddress: parsedData.creatorAddress,
       name: parsedData.name,
       manualStart: parsedData.manualStart,
@@ -328,6 +329,13 @@ const addPrize = async (req: Request, res: Response) => {
           id: gumballId,
           creatorAddress: userAddress,
         },
+        include: {
+          prizes: {
+            select: {
+              quantity: true,
+            },
+          },
+        },
       });
       if (!gumball) {
         throw {
@@ -341,22 +349,25 @@ const addPrize = async (req: Request, res: Response) => {
           message: "Cannot add prizes to active or completed gumball",
         };
       }
-      if (gumball.prizesAdded >= gumball.maxPrizes) {
+
+      // Calculate total prize count including quantities
+      const currentTotalPrizeCount = gumball.prizes.reduce((acc, p) => acc + p.quantity, 0);
+      if (currentTotalPrizeCount + parsedData.quantity > gumball.maxPrizes) {
         throw {
           code: "DB_ERROR",
-          message: `Maximum number of prizes (${gumball.maxPrizes}) reached`,
+          message: `Adding this prize would exceed maximum prize count (${gumball.maxPrizes}). Current: ${currentTotalPrizeCount}, Adding: ${parsedData.quantity}`,
         };
       }
 
-      // Calculate prizeIndex based on current prizes count
-      assignedPrizeIndex = gumball.prizesAdded;
+      // Use prizeIndex from request
+      assignedPrizeIndex = parsedData.prizeIndex;
 
       const prizeAmount = BigInt(parsedData.totalAmount);
 
       await tx.gumballPrize.create({
         data: {
           gumballId: gumballId,
-          prizeIndex: assignedPrizeIndex,
+          prizeIndex: parsedData.prizeIndex,
           isNft: parsedData.isNft,
           mint: parsedData.mint,
           name: parsedData.name,
@@ -456,6 +467,13 @@ const addMultiplePrizes = async (req: Request, res: Response) => {
           id: gumballId,
           creatorAddress: userAddress,
         },
+        include: {
+          prizes: {
+            select: {
+              quantity: true,
+            },
+          },
+        },
       });
       if (!gumball) {
         throw {
@@ -469,16 +487,18 @@ const addMultiplePrizes = async (req: Request, res: Response) => {
           message: "Cannot add prizes to active or completed gumball",
         };
       }
-      if (gumball.prizesAdded + parsedData.prizes.length > gumball.maxPrizes) {
+
+      // Calculate total prize count including quantities
+      const currentTotalPrizeCount = gumball.prizes.reduce((acc, p) => acc + p.quantity, 0);
+      const newTotalQuantity = parsedData.prizes.reduce((acc, p) => acc + p.quantity, 0);
+      if (currentTotalPrizeCount + newTotalQuantity > gumball.maxPrizes) {
         throw {
           code: "DB_ERROR",
-          message: `Adding these prizes would exceed maximum (${gumball.maxPrizes})`,
+          message: `Adding these prizes would exceed maximum prize count (${gumball.maxPrizes}). Current: ${currentTotalPrizeCount}, Adding: ${newTotalQuantity}`,
         };
       }
 
       let totalAddedValue = BigInt(0);
-      // Start prizeIndex from current prizes count
-      let currentPrizeIndex = gumball.prizesAdded;
 
       for (const prize of parsedData.prizes) {
         const prizeAmount = BigInt(prize.totalAmount);
@@ -487,7 +507,7 @@ const addMultiplePrizes = async (req: Request, res: Response) => {
         await tx.gumballPrize.create({
           data: {
             gumballId: gumballId,
-            prizeIndex: currentPrizeIndex,
+            prizeIndex: prize.prizeIndex,
             isNft: prize.isNft,
             mint: prize.mint,
             name: prize.name,
@@ -501,8 +521,7 @@ const addMultiplePrizes = async (req: Request, res: Response) => {
           },
         });
 
-        assignedPrizeIndices.push(currentPrizeIndex);
-        currentPrizeIndex++;
+        assignedPrizeIndices.push(prize.prizeIndex);
       }
 
       // Calculate max ROI
@@ -607,6 +626,7 @@ const prepareSpin = async (req: Request, res: Response) => {
       error: null,
       gumballId: gumballId,
       prizeIndex: selectedPrize.prizeIndex,
+      prizeMint: selectedPrize.mint,
       ticketPrice: gumball.ticketPrice.toString(),
       ticketMint: gumball.ticketMint,
       isTicketSol: gumball.isTicketSol,
