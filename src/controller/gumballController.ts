@@ -484,10 +484,10 @@ const addMultiplePrizes = async (req: Request, res: Response) => {
           message: "Gumball not found or not owned by user",
         };
       }
-      if (gumball.status !== "INITIALIZED" && gumball.status !== "NONE") {
+      if (gumball.status !== "INITIALIZED" && gumball.status !== "NONE" && gumball.status !== "ACTIVE") {
         throw {
           code: "DB_ERROR",
-          message: "Cannot add prizes to active or completed gumball",
+          message: "Cannot add prizes to completed or cancelled gumball",
         };
       }
 
