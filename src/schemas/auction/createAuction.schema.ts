@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 export const auctionSchema = z.object({
+  id: z.number().optional(),
   createdBy: z.string().min(1),
 
   // Prize details

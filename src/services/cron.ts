@@ -128,7 +128,6 @@ async function processGumballsToStart(): Promise<void> {
         },
       },
     });
-
     if (gumballsToStart.length === 0) {
       return;
     }
@@ -161,7 +160,6 @@ async function processGumballsToStart(): Promise<void> {
 
 async function processGumballsToEnd(): Promise<void> {
   const now = new Date();
-  console.log("now", now.toISOString());
 
   try {
     const gumballsToEnd = await prismaClient.gumball.findMany({

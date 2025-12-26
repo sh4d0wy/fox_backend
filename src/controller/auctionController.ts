@@ -24,6 +24,7 @@ const createAuction = async (req: Request, res: Response) => {
 
   const auction = await prismaClient.auction.create({
     data: {
+      id: parsedData.id,
       createdBy: parsedData.createdBy,
       prizeMint: parsedData.prizeMint,
       prizeName: parsedData.prizeName,

@@ -49,7 +49,7 @@ export async function verifyNonce(nonce:string,publicKey:string): Promise<boolea
 }
 
 export async function generateJwt(publicKey:string,userId:string): Promise<string> {    
-        const token = jwt.sign({publicKey, userId}, process.env.JWT_SECRET as string, {expiresIn: "1d"});
+        const token = jwt.sign({publicKey, userId}, process.env.JWT_SECRET as string, {expiresIn: "7d"});
         return token;
 }
 

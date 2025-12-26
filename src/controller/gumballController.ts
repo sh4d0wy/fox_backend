@@ -104,13 +104,16 @@ const confirmGumballCreation = async (req: Request, res: Response) => {
           message: "Gumball not found",
         };
       }
-
+      let state = "INITIALIZED";
+      if(gumball.startTime<=new Date()){
+        state = "ACTIVE";
+      }
       await tx.gumball.update({
         where: {
           id: gumballId,
         },
         data: {
-          status: "INITIALIZED",
+          status: state as "INITIALIZED" | "ACTIVE",
         },
       });
 
@@ -656,7 +659,12 @@ const spin = async (req: Request, res: Response) => {
 
     let spinResult: any;
 
-    await prismaClient.$transaction(async (tx) => {
+    const MAX_RETRIES = 3;
+    let retryCount = 0;
+
+    while (retryCount < MAX_RETRIES) {
+      try {
+        await prismaClient.$transaction(async (tx) => {
       const existingTransaction = await tx.transaction.findUnique({
         where: {
           transactionId: parsedData.txSignature,
@@ -752,7 +760,7 @@ const spin = async (req: Request, res: Response) => {
           id: prize.id,
         },
         data: {
-          quantityClaimed: prize.quantityClaimed + 1,
+          quantityClaimed: { increment: 1 },
         },
       });
 
@@ -761,9 +769,9 @@ const spin = async (req: Request, res: Response) => {
           id: gumballId,
         },
         data: {
-          ticketsSold: gumball.ticketsSold + 1,
-          totalProceeds: gumball.totalProceeds + gumball.ticketPrice,
-          uniqueBuyers: isNewBuyer ? gumball.uniqueBuyers + 1 : gumball.uniqueBuyers,
+          ticketsSold: { increment: 1 },
+          totalProceeds: { increment: gumball.ticketPrice },
+          ...(isNewBuyer && { uniqueBuyers: { increment: 1 } }),
         },
       });
 
@@ -783,6 +791,8 @@ const spin = async (req: Request, res: Response) => {
             prizeIndex: parsedData.prizeIndex,
             prizeAmount: prize.prizeAmount.toString(),
             prizeName: prize.name,
+            prizeImage: prize.image,
+            prizeMint: prize.mint,
           },
         },
       });
@@ -798,7 +808,18 @@ const spin = async (req: Request, res: Response) => {
         prizeMint: prize.mint,
         isNft: prize.isNft,
       };
-    });
+        });
+
+        break;
+      } catch (txError: any) {
+        if (txError?.code === "P2034" && retryCount < MAX_RETRIES - 1) {
+          retryCount++;
+          await new Promise((resolve) => setTimeout(resolve, 50 * Math.pow(2, retryCount)));
+          continue;
+        }
+        throw txError;
+      }
+    }
 
     responseHandler.success(res, {
       message: "Spin successful",
@@ -1050,6 +1071,21 @@ const getGumballDetails = async (req: Request, res: Response) => {
             select: {
               walletAddress: true,
               twitterId: true,
+            },
+          },
+          transaction:{
+            where:{
+              type: "GUMBALL_SPIN",
+            },
+            select: {
+              transactionId: true,
+              type: true,
+              sender: true,
+              receiver: true,
+              amount: true,
+              mintAddress: true,
+              isNft: true,
+              metadata: true,
             },
           },
           prize: true,
