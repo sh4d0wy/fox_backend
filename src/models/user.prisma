@@ -7,6 +7,7 @@ model User {
   
   rafflesCreated    Raffle[]      @relation("RaffleCreator")
   favouriteRaffles  Raffle[]      @relation("FavouriteRaffle")
+  followedRaffles   Raffle[]      @relation("FollowRaffle")
   raffleEntries     Entry[]       @relation("UserEntries")
   transactions      Transaction[]
   raffleWinnings    Raffle[]      @relation("RaffleWinner")
@@ -14,9 +15,12 @@ model User {
   bidsPlaced        Bid[]         @relation("BidderBids")
   auctionsWon       Auction[]     @relation("AuctionWinner")
   favouriteAuctions Auction[]     @relation("FavouriteAuction")
+  followedAuctions  Auction[]     @relation("FollowAuction")
   gumballsCreated   Gumball[]     @relation("GumballCreator")
   gumballSpins      GumballSpin[] @relation("GumballSpinner")
   gumballWinnings   GumballSpin[] @relation("GumballWinner")
+  favouriteGumballs Gumball[]     @relation("FavouriteGumball")
+  followedGumballs  Gumball[]     @relation("FollowGumball")
 
   @@map("users")
   @@index([walletAddress])

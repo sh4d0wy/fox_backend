@@ -59,6 +59,8 @@ model Gumball {
   prizes          GumballPrize[]  @relation("GumballPrizes")
   spins           GumballSpin[]   @relation("GumballSpins")
   transactions    Transaction[]   @relation("TransactionGumball")
+  favouritedBy    User[]          @relation("FavouriteGumball")
+  followedBy      User[]          @relation("FollowGumball")
 
   @@map("gumballs")
   @@index([creatorAddress])

@@ -4,6 +4,7 @@ import {
     Transaction,
     Keypair,
     sendAndConfirmTransaction,
+    SystemProgram,
 } from "@solana/web3.js";
 import { AnchorProvider, Wallet } from "@coral-xyz/anchor";
 import { ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddress, getAssociatedTokenAddressSync, TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID } from "@solana/spl-token";
@@ -24,7 +25,7 @@ const connection = new Connection(
 const ADMIN_KEYPAIR = Keypair.fromSecretKey(
     Uint8Array.from(JSON.parse(process.env.ADMIN_PRIVATE_KEY || "[]"))
 );
-
+const RAFFLE_ADMIN_KEYPAIR = ADMIN_KEYPAIR;
 const wallet = new Wallet(ADMIN_KEYPAIR);
 const provider = new AnchorProvider(connection, wallet, {
     commitment: "confirmed",
@@ -160,17 +161,17 @@ async function announceWinners(
             raffleAccountPda
         );
 
-        const ticketMint = raffleData.ticketMint;
+        const isTicketSol = raffleData.ticketMint === null;
 
-        const ticketTokenProgram = await getTokenProgramFromMint(
-            connection,
-            ticketMint
-        );
-
+        let ticketTokenProgram;
+        let ticketMint;
         let ticketEscrow;
         let ticketFeeTreasury;
 
-        if (raffleData.ticketMint !== null) {
+        if (isTicketSol) {
+            ticketMint = new PublicKey("So11111111111111111111111111111111111111112");
+            ticketTokenProgram = TOKEN_PROGRAM_ID;
+
             const escrowRes = await ensureAtaIx({
                 connection,
                 mint: ticketMint,
@@ -194,10 +195,38 @@ async function announceWinners(
 
             ticketFeeTreasury = treasuryRes.ata;
             if (treasuryRes.ix) tx.add(treasuryRes.ix);
-        }
+            
+        } else {
+            ticketMint = raffleData.ticketMint;
+            
+            ticketTokenProgram = await getTokenProgramFromMint(
+                connection,
+                ticketMint
+            );
 
-        if (ticketEscrow === undefined || ticketFeeTreasury === undefined) {
-            throw new Error("Required ATA or escrow account could not be determined");
+            const escrowRes = await ensureAtaIx({
+                connection,
+                mint: ticketMint,
+                owner: raffleAccountPda,
+                payer: ADMIN_KEYPAIR.publicKey,
+                tokenProgram: ticketTokenProgram,
+                allowOwnerOffCurve: true,
+            });
+
+            ticketEscrow = escrowRes.ata;
+            if (escrowRes.ix) tx.add(escrowRes.ix);
+
+            const treasuryRes = await ensureAtaIx({
+                connection,
+                mint: ticketMint,
+                owner: raffleConfigPda,
+                payer: ADMIN_KEYPAIR.publicKey,
+                tokenProgram: ticketTokenProgram,
+                allowOwnerOffCurve: true,
+            });
+
+            ticketFeeTreasury = treasuryRes.ata;
+            if (treasuryRes.ix) tx.add(treasuryRes.ix);
         }
 
         const ix = await raffleProgram.methods
@@ -228,14 +257,11 @@ async function announceWinners(
         throw error;
     }
 }
-
-// Auction Functions
-
 const auctionPda = (auctionId: number): PublicKey => {
     return PublicKey.findProgramAddressSync(
         [
             Buffer.from("auction"),
-            new anchor.BN(auctionId).toArrayLike(Buffer, "le", 4), // u32
+            new anchor.BN(auctionId).toArrayLike(Buffer, "le", 4),
         ],
         AUCTION_PROGRAM_ID
     )[0];
@@ -278,7 +304,6 @@ async function endAuction(auctionId: number) {
     try {
         const tx = new Transaction();
 
-        /* ---------------- PDAs ---------------- */
         const auctionAccountPda = auctionPda(auctionId);
         const auctionData = await auctionProgram.account.auction.fetch(
             auctionAccountPda
@@ -287,7 +312,6 @@ async function endAuction(auctionId: number) {
         const prizeMint = auctionData.prizeMint;
         const bidMint = auctionData.bidMint;
 
-        /* ---------------- Prize escrow (already exists) ---------------- */
         const prizeEscrow = await getAtaAddress(
             connection,
             prizeMint,
@@ -295,14 +319,12 @@ async function endAuction(auctionId: number) {
             true
         );
 
-        /* ---------------- Creator prize ATA (already exists) ---------------- */
         const creatorPrizeAta = await getAtaAddress(
             connection,
             prizeMint,
             auctionData.creator
         );
 
-        /* ---------------- Winner prize ATA (MUST ensure) ---------------- */
         let winnerPrizeAta;
 
         if (!auctionData.highestBidder.equals(PublicKey.default)) {
@@ -351,7 +373,7 @@ async function endAuction(auctionId: number) {
                 owner: auctionConfigPda,
                 payer: ADMIN_KEYPAIR.publicKey,
                 tokenProgram: bidTokenProgram,
-                allowOwnerOffCurve: true, // PDA owner
+                allowOwnerOffCurve: true,
             });
 
             bidFeeTreasuryAta = feeTreasuryRes.ata;
@@ -417,8 +439,6 @@ async function endAuction(auctionId: number) {
         throw error;
     }
 }
-
-// Gumball Functions
 
 const gumballPda = (gumballId: number): PublicKey => {
     return PublicKey.findProgramAddressSync(
@@ -490,7 +510,7 @@ async function endGumball(gumballId: number) {
                 owner: gumballConfigPda,
                 payer: wallet.publicKey,
                 tokenProgram: ticketTokenProgram,
-                allowOwnerOffCurve: true, // PDA owner
+                allowOwnerOffCurve: true,
             });
 
             ticketFeeEscrowAta = feeTreasuryRes.ata;

@@ -6,13 +6,10 @@ import authMiddleware from "../middleware/authMiddleware";
 
 const userRouter = express.Router();
 
-// ==================== AUTH ROUTES ====================
-
 userRouter.get("/auth/request-message/:publicKey",userController.requestMessage)
 userRouter.post("/auth/verify",userController.verifyMessage);
 userRouter.post("/auth/refresh",userController.refreshToken);
 
-//Twitter Auth Routes
 userRouter.get("/auth/twitter/callback", (req,res,next)=>{
     console.log("request session after callback",req.sessionID);
 },passport.authenticate("twitter", {
@@ -45,59 +42,52 @@ userRouter.get("/auth/twitter/:walletAddress",(req, res, next) => {
     session: true,
 }));
 
-// ==================== PROFILE ROUTES ====================
 
-// Get authenticated user's own profile
 userRouter.get("/profile/me", authMiddleware, userController.getMyProfile);
 
-// Get user profile by wallet address (public)
 userRouter.get("/profile/:walletAddress", userController.getProfile);
 
-// ==================== RAFFLE PROFILE DATA ====================
-
-// Get raffles created by user
 userRouter.get("/profile/:walletAddress/raffles/created", userController.getRafflesCreated);
 
-// Get raffles purchased by user
 userRouter.get("/profile/:walletAddress/raffles/purchased", userController.getRafflesPurchased);
 
-// Get favourite raffles
 userRouter.get("/profile/:walletAddress/raffles/favourites", userController.getFavouriteRaffles);
 
-// Get raffle stats for user
 userRouter.get("/profile/:walletAddress/raffles/stats", userController.getRaffleStats);
 
-// ==================== AUCTION PROFILE DATA ====================
-
-// Get auctions created by user
 userRouter.get("/profile/:walletAddress/auctions/created", userController.getAuctionsCreated);
 
-// Get auctions participated by user
 userRouter.get("/profile/:walletAddress/auctions/participated", userController.getAuctionsParticipated);
 
-// Get favourite auctions
 userRouter.get("/profile/:walletAddress/auctions/favourites", userController.getFavouriteAuctions);
 
-// Get auction stats for user
 userRouter.get("/profile/:walletAddress/auctions/stats", userController.getAuctionStats);
 
-// ==================== GUMBALL PROFILE DATA ====================
-
-// Get gumballs created by user
 userRouter.get("/profile/:walletAddress/gumballs/created", userController.getGumballsCreated);
 
-// Get gumballs purchased by user
 userRouter.get("/profile/:walletAddress/gumballs/purchased", userController.getGumballsPurchased);
 
-// Get gumball stats for user
+userRouter.get("/profile/:walletAddress/gumballs/favourites", userController.getFavouriteGumballs);
+
 userRouter.get("/profile/:walletAddress/gumballs/stats", userController.getGumballStats);
 
-// ==================== FAVOURITES MANAGEMENT ====================
+userRouter.get("/profile/:walletAddress/raffles/followed", userController.getFollowedRaffles);
 
-// Toggle favourite raffle (requires auth)
+userRouter.get("/profile/:walletAddress/auctions/followed", userController.getFollowedAuctions);
+
+userRouter.get("/profile/:walletAddress/gumballs/followed", userController.getFollowedGumballs);
+
+
 userRouter.post("/favourites/raffle/:raffleId", authMiddleware, userController.toggleFavouriteRaffle);
 
-// Toggle favourite auction (requires auth)
 userRouter.post("/favourites/auction/:auctionId", authMiddleware, userController.toggleFavouriteAuction);
+
+userRouter.post("/favourites/gumball/:gumballId", authMiddleware, userController.toggleFavouriteGumball);
+
+userRouter.post("/follow/raffle/:raffleId", authMiddleware, userController.toggleFollowRaffle);
+
+userRouter.post("/follow/auction/:auctionId", authMiddleware, userController.toggleFollowAuction);
+
+userRouter.post("/follow/gumball/:gumballId", authMiddleware, userController.toggleFollowGumball);
 
 export default userRouter;

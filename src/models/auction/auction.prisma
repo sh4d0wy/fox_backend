@@ -46,6 +46,7 @@ model Auction {
   // Relations
   bids                Bid[]
   favouritedBy        User[]        @relation("FavouriteAuction")
+  followedBy          User[]        @relation("FollowAuction")
   creator             User          @relation("AuctionCreator", fields: [createdBy], references: [walletAddress])
   highestBidder       User?         @relation("AuctionWinner", fields: [highestBidderWallet], references: [walletAddress])
   transactions        Transaction[] @relation("TransactionAuction")

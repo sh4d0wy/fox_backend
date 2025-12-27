@@ -4,8 +4,6 @@ import logger from "../utils/logger";
 import { announceWinners, startAuction, endAuction, startGumball, endGumball } from "./solanaconnector";
 import { PublicKey } from "@solana/web3.js";
 
-// ============== AUCTION CRON FUNCTIONS ==============
-
 async function processAuctionsToStart(): Promise<void> {
   const now = new Date();
 
@@ -113,8 +111,6 @@ async function processAuctionsToEnd(): Promise<void> {
   }
 }
 
-// ============== GUMBALL CRON FUNCTIONS ==============
-
 async function processGumballsToStart(): Promise<void> {
   const now = new Date();
 
@@ -205,8 +201,6 @@ async function processGumballsToEnd(): Promise<void> {
     logger.error("[CRON] Error fetching gumballs to end:", error);
   }
 }
-
-// ============== RAFFLE FUNCTIONS ==============
 
 function selectRandomWinners(
   entries: { userAddress: string; quantity: number }[],

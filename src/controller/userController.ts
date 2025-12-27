@@ -1,4 +1,3 @@
-//userController
 import { Request, response, Response } from "express";
 import {
   validatePublicKey,
@@ -86,7 +85,6 @@ export default {
 
   },
 
-  // Get user profile by wallet address (public)
   getProfile: async (req: Request, res: Response) => {
     try {
       const { walletAddress } = req.params;
@@ -116,7 +114,6 @@ export default {
     }
   },
 
-  // Get authenticated user's own profile
   getMyProfile: async (req: Request, res: Response) => {
     try {
       const walletAddress = req.user as string;
@@ -146,9 +143,6 @@ export default {
     }
   },
 
-  // ==================== RAFFLE PROFILE DATA ====================
-
-  // Get raffles created by user
   getRafflesCreated: async (req: Request, res: Response) => {
     try {
       const { walletAddress } = req.params;
@@ -184,7 +178,6 @@ export default {
     }
   },
 
-  // Get raffles purchased/entered by user
   getRafflesPurchased: async (req: Request, res: Response) => {
     try {
       const { walletAddress } = req.params;
@@ -216,7 +209,6 @@ export default {
         where: { userAddress: walletAddress },
       });
 
-      // Transform to include win status
       const raffles = entries.map((entry: { raffle: { winners: any[]; }; quantity: any; }) => ({
         ...entry.raffle,
         ticketsBought: entry.quantity,
@@ -236,7 +228,6 @@ export default {
     }
   },
 
-  // Get favourite raffles
   getFavouriteRaffles: async (req: Request, res: Response) => {
     try {
       const { walletAddress } = req.params;
@@ -273,12 +264,10 @@ export default {
     }
   },
 
-  // Get raffle stats for user
   getRaffleStats: async (req: Request, res: Response) => {
     try {
       const { walletAddress } = req.params;
 
-      // Get entries data
       const entries = await prismaClient.entry.findMany({
         where: { userAddress: walletAddress },
         select: {
@@ -292,7 +281,6 @@ export default {
         },
       });
 
-      // Get winnings
       const winnings = await prismaClient.raffle.count({
         where: {
           winners: {
@@ -323,9 +311,6 @@ export default {
     }
   },
 
-  // ==================== AUCTION PROFILE DATA ====================
-
-  // Get auctions created by user
   getAuctionsCreated: async (req: Request, res: Response) => {
     try {
       const { walletAddress } = req.params;
@@ -360,13 +345,11 @@ export default {
     }
   },
 
-  // Get auctions participated (bids placed) by user
   getAuctionsParticipated: async (req: Request, res: Response) => {
     try {
       const { walletAddress } = req.params;
       const { page = 1, limit = 10 } = req.query;
 
-      // Get unique auctions user has bid on
       const bids = await prismaClient.bid.findMany({
         where: { bidderWallet: walletAddress },
         distinct: ["auctionId"],
@@ -402,7 +385,6 @@ export default {
     }
   },
 
-  // Get favourite auctions
   getFavouriteAuctions: async (req: Request, res: Response) => {
     try {
       const { walletAddress } = req.params;
@@ -438,23 +420,19 @@ export default {
     }
   },
 
-  // Get auction stats for user
   getAuctionStats: async (req: Request, res: Response) => {
     try {
       const { walletAddress } = req.params;
 
-      // Auctions participated (unique auctions bid on)
       const auctionsParticipated = await prismaClient.bid.groupBy({
         by: ["auctionId"],
         where: { bidderWallet: walletAddress },
       });
 
-      // Total bids placed
       const totalBids = await prismaClient.bid.count({
         where: { bidderWallet: walletAddress },
       });
 
-      // Auctions won
       const auctionsWon = await prismaClient.auction.count({
         where: {
           highestBidderWallet: walletAddress,
@@ -462,7 +440,6 @@ export default {
         },
       });
 
-      // Total volume bid
       const bids = await prismaClient.bid.findMany({
         where: { bidderWallet: walletAddress },
         select: { bidAmount: true },
@@ -488,9 +465,6 @@ export default {
     }
   },
 
-  // ==================== GUMBALL PROFILE DATA ====================
-
-  // Get gumballs created by user
   getGumballsCreated: async (req: Request, res: Response) => {
     try {
       const { walletAddress } = req.params;
@@ -526,13 +500,11 @@ export default {
     }
   },
 
-  // Get gumballs purchased (spins) by user
   getGumballsPurchased: async (req: Request, res: Response) => {
     try {
       const { walletAddress } = req.params;
       const { page = 1, limit = 10 } = req.query;
 
-      // Get unique gumballs user has spun
       const spins = await prismaClient.gumballSpin.findMany({
         where: { spinnerAddress: walletAddress },
         distinct: ["gumballId"],
@@ -570,7 +542,6 @@ export default {
     }
   },
 
-  // Get gumball stats for user
   getGumballStats: async (req: Request, res: Response) => {
     try {
       const { walletAddress } = req.params;
@@ -582,8 +553,7 @@ export default {
       const totalSpins = await prismaClient.gumballSpin.count({
         where: { spinnerAddress: walletAddress },
       });
-     
-      // Total volume spent
+
       const spins = await prismaClient.gumballSpin.findMany({
         where: { spinnerAddress: walletAddress },
         select: {
@@ -612,9 +582,149 @@ export default {
     }
   },
 
-  // ==================== FAVOURITES MANAGEMENT ====================
+  getFavouriteGumballs: async (req: Request, res: Response) => {
+    try {
+      const { walletAddress } = req.params;
+      const { page = 1, limit = 10 } = req.query;
 
-  // Toggle favourite raffle
+      const user = await prismaClient.user.findUnique({
+        where: { walletAddress },
+        select: {
+          favouriteGumballs: {
+            skip: (Number(page) - 1) * Number(limit),
+            take: Number(limit),
+            include: {
+              creator: {
+                select: { walletAddress: true, twitterId: true },
+              },
+              prizes: true,
+            },
+            orderBy: { createdAt: "desc" },
+          },
+        },
+      });
+
+      if (!user) {
+        return responseHandler.error(res, "User not found");
+      }
+
+      return responseHandler.success(res, {
+        message: "Favourite gumballs fetched successfully",
+        gumballs: user.favouriteGumballs,
+      });
+    } catch (error) {
+      logger.error(error);
+      return responseHandler.error(res, error);
+    }
+  },
+
+  getFollowedRaffles: async (req: Request, res: Response) => {
+    try {
+      const { walletAddress } = req.params;
+      const { page = 1, limit = 10 } = req.query;
+
+      const user = await prismaClient.user.findUnique({
+        where: { walletAddress },
+        select: {
+          followedRaffles: {
+            skip: (Number(page) - 1) * Number(limit),
+            take: Number(limit),
+            include: {
+              prizeData: true,
+              creator: {
+                select: { walletAddress: true, twitterId: true },
+              },
+            },
+            orderBy: { createdAt: "desc" },
+          },
+        },
+      });
+
+      if (!user) {
+        return responseHandler.error(res, "User not found");
+      }
+
+      return responseHandler.success(res, {
+        message: "Followed raffles fetched successfully",
+        raffles: user.followedRaffles,
+      });
+    } catch (error) {
+      logger.error(error);
+      return responseHandler.error(res, error);
+    }
+  },
+
+  getFollowedAuctions: async (req: Request, res: Response) => {
+    try {
+      const { walletAddress } = req.params;
+      const { page = 1, limit = 10 } = req.query;
+
+      const user = await prismaClient.user.findUnique({
+        where: { walletAddress },
+        select: {
+          followedAuctions: {
+            skip: (Number(page) - 1) * Number(limit),
+            take: Number(limit),
+            include: {
+              creator: {
+                select: { walletAddress: true, twitterId: true },
+              },
+            },
+            orderBy: { createdAt: "desc" },
+          },
+        },
+      });
+
+      if (!user) {
+        return responseHandler.error(res, "User not found");
+      }
+
+      return responseHandler.success(res, {
+        message: "Followed auctions fetched successfully",
+        auctions: user.followedAuctions,
+      });
+    } catch (error) {
+      logger.error(error);
+      return responseHandler.error(res, error);
+    }
+  },
+
+  getFollowedGumballs: async (req: Request, res: Response) => {
+    try {
+      const { walletAddress } = req.params;
+      const { page = 1, limit = 10 } = req.query;
+
+      const user = await prismaClient.user.findUnique({
+        where: { walletAddress },
+        select: {
+          followedGumballs: {
+            skip: (Number(page) - 1) * Number(limit),
+            take: Number(limit),
+            include: {
+              creator: {
+                select: { walletAddress: true, twitterId: true },
+              },
+              prizes: true,
+            },
+            orderBy: { createdAt: "desc" },
+          },
+        },
+      });
+
+      if (!user) {
+        return responseHandler.error(res, "User not found");
+      }
+
+      return responseHandler.success(res, {
+        message: "Followed gumballs fetched successfully",
+        gumballs: user.followedGumballs,
+      });
+    } catch (error) {
+      logger.error(error);
+      return responseHandler.error(res, error);
+    }
+  },
+
   toggleFavouriteRaffle: async (req: Request, res: Response) => {
     try {
       const walletAddress = req.user as string;
@@ -654,7 +764,6 @@ export default {
     }
   },
 
-  // Toggle favourite auction
   toggleFavouriteAuction: async (req: Request, res: Response) => {
     try {
       const walletAddress = req.user as string;
@@ -687,6 +796,162 @@ export default {
       return responseHandler.success(res, {
         message: isFavourite ? "Removed from favourites" : "Added to favourites",
         isFavourite: !isFavourite,
+      });
+    } catch (error) {
+      logger.error(error);
+      return responseHandler.error(res, error);
+    }
+  },
+
+  toggleFavouriteGumball: async (req: Request, res: Response) => {
+    try {
+      const walletAddress = req.user as string;
+      const { gumballId } = req.params;
+
+      const user = await prismaClient.user.findUnique({
+        where: { walletAddress },
+        select: {
+          favouriteGumballs: {
+            where: { id: Number(gumballId) },
+          },
+        },
+      });
+
+      if (!user) {
+        return responseHandler.error(res, "User not found");
+      }
+
+      const isFavourite = user.favouriteGumballs.length > 0;
+
+      await prismaClient.user.update({
+        where: { walletAddress },
+        data: {
+          favouriteGumballs: isFavourite
+            ? { disconnect: { id: Number(gumballId) } }
+            : { connect: { id: Number(gumballId) } },
+        },
+      });
+
+      return responseHandler.success(res, {
+        message: isFavourite ? "Removed from favourites" : "Added to favourites",
+        isFavourite: !isFavourite,
+      });
+    } catch (error) {
+      logger.error(error);
+      return responseHandler.error(res, error);
+    }
+  },
+
+  toggleFollowRaffle: async (req: Request, res: Response) => {
+    try {
+      const walletAddress = req.user as string;
+      const { raffleId } = req.params;
+
+      const user = await prismaClient.user.findUnique({
+        where: { walletAddress },
+        select: {
+          followedRaffles: {
+            where: { id: Number(raffleId) },
+          },
+        },
+      });
+
+      if (!user) {
+        return responseHandler.error(res, "User not found");
+      }
+
+      const isFollowing = user.followedRaffles.length > 0;
+
+      await prismaClient.user.update({
+        where: { walletAddress },
+        data: {
+          followedRaffles: isFollowing
+            ? { disconnect: { id: Number(raffleId) } }
+            : { connect: { id: Number(raffleId) } },
+        },
+      });
+
+      return responseHandler.success(res, {
+        message: isFollowing ? "Unfollowed raffle" : "Following raffle",
+        isFollowing: !isFollowing,
+      });
+    } catch (error) {
+      logger.error(error);
+      return responseHandler.error(res, error);
+    }
+  },
+
+  toggleFollowAuction: async (req: Request, res: Response) => {
+    try {
+      const walletAddress = req.user as string;
+      const { auctionId } = req.params;
+
+      const user = await prismaClient.user.findUnique({
+        where: { walletAddress },
+        select: {
+          followedAuctions: {
+            where: { id: Number(auctionId) },
+          },
+        },
+      });
+
+      if (!user) {
+        return responseHandler.error(res, "User not found");
+      }
+
+      const isFollowing = user.followedAuctions.length > 0;
+
+      await prismaClient.user.update({
+        where: { walletAddress },
+        data: {
+          followedAuctions: isFollowing
+            ? { disconnect: { id: Number(auctionId) } }
+            : { connect: { id: Number(auctionId) } },
+        },
+      });
+
+      return responseHandler.success(res, {
+        message: isFollowing ? "Unfollowed auction" : "Following auction",
+        isFollowing: !isFollowing,
+      });
+    } catch (error) {
+      logger.error(error);
+      return responseHandler.error(res, error);
+    }
+  },
+
+  toggleFollowGumball: async (req: Request, res: Response) => {
+    try {
+      const walletAddress = req.user as string;
+      const { gumballId } = req.params;
+
+      const user = await prismaClient.user.findUnique({
+        where: { walletAddress },
+        select: {
+          followedGumballs: {
+            where: { id: Number(gumballId) },
+          },
+        },
+      });
+
+      if (!user) {
+        return responseHandler.error(res, "User not found");
+      }
+
+      const isFollowing = user.followedGumballs.length > 0;
+
+      await prismaClient.user.update({
+        where: { walletAddress },
+        data: {
+          followedGumballs: isFollowing
+            ? { disconnect: { id: Number(gumballId) } }
+            : { connect: { id: Number(gumballId) } },
+        },
+      });
+
+      return responseHandler.success(res, {
+        message: isFollowing ? "Unfollowed gumball" : "Following gumball",
+        isFollowing: !isFollowing,
       });
     } catch (error) {
       logger.error(error);

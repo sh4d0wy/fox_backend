@@ -63,12 +63,30 @@ statsRouter.get("/analytics/tickets", statsController.getAverageTicketsSold);
  */
 statsRouter.get("/analytics/platform", statsController.getPlatformStats);
 
+/**
+ * GET /api/stats/analytics/unique-buyers
+ * Get unique buyers analytics over time
+ * Query params: timeframe (day|week|month|year)
+ */
+statsRouter.get("/analytics/unique-buyers", statsController.getUniqueBuyers);
+
+/**
+ * GET /api/stats/analytics/raffle-types
+ * Get raffle types (NFT vs Token) volume percentage
+ * Query params: timeframe (day|week|month|year)
+ */
+statsRouter.get("/analytics/raffle-types", statsController.getRaffleTypesVolume);
+
 // ==================== P&L (Profit & Loss) ROUTES ====================
 
 /**
  * GET /api/stats/pnl/bought
  * Get P&L for authenticated user (bought side - tickets purchased vs prizes won)
- * Query params: timeframe (daily|monthly|yearly), month, year, currency (USD|SOL), service (raffle|gumball|all)
+ * Raffle only
+ * Query params: timeframe (daily|monthly|yearly), month, year, currency (USD|SOL)
+ * - daily: shows daily data within a month (requires month & year)
+ * - monthly: shows monthly data within a year (requires year)
+ * - yearly: shows yearly data (all time)
  * Requires authentication
  */
 statsRouter.get("/pnl/bought", authMiddleware, statsController.getUserPnLBought);
@@ -76,7 +94,11 @@ statsRouter.get("/pnl/bought", authMiddleware, statsController.getUserPnLBought)
 /**
  * GET /api/stats/pnl/sold
  * Get P&L for authenticated user (sold side - for raffle creators)
- * Query params: timeframe (daily|monthly|yearly), month, year, currency (USD|SOL), service (raffle|gumball|all)
+ * Raffle only
+ * Query params: timeframe (daily|monthly|yearly), month, year, currency (USD|SOL)
+ * - daily: shows daily data within a month (requires month & year)
+ * - monthly: shows monthly data within a year (requires year)
+ * - yearly: shows yearly data (all time)
  * Requires authentication
  */
 statsRouter.get("/pnl/sold", authMiddleware, statsController.getUserPnLSold);
@@ -84,7 +106,8 @@ statsRouter.get("/pnl/sold", authMiddleware, statsController.getUserPnLSold);
 /**
  * GET /api/stats/pnl/export
  * Export P&L data as CSV
- * Query params: type (bought|sold), month, year, service (raffle|gumball|all)
+ * Raffle only
+ * Query params: type (bought|sold), month, year
  * Requires authentication
  */
 statsRouter.get("/pnl/export", authMiddleware, statsController.exportPnLCSV);

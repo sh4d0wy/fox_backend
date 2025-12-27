@@ -33,6 +33,7 @@ model Raffle {
 
   creator       User        @relation("RaffleCreator", fields: [createdBy], references: [walletAddress], onDelete: Cascade)
   favouritedBy  User[]      @relation("FavouriteRaffle")
+  followedBy    User[]      @relation("FollowRaffle")
   winners       User[]      @relation("RaffleWinner")
   raffleEntries Entry[]     @relation("RaffleEntries")
   prizeData     PrizeData?  @relation("RafflePrize")
