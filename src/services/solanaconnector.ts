@@ -18,6 +18,9 @@ import { Gumball } from "../types/gumball";
 import dotenv from "dotenv";
 dotenv.config();
 
+const FAKE_MINT = new PublicKey('So11111111111111111111111111111111111111112');
+const FAKE_ATA = new PublicKey('B9W4wPFWjTbZ9ab1okzB4D3SsGY7wntkrBKwpp5RC1Uv')
+
 const connection = new Connection(
     process.env.SOLANA_RPC_URL || "https://api.devnet.solana.com",
     "confirmed"
@@ -169,7 +172,7 @@ async function announceWinners(
         let ticketFeeTreasury;
 
         if (isTicketSol) {
-            ticketMint = new PublicKey("So11111111111111111111111111111111111111112");
+            ticketMint = FAKE_MINT;
             ticketTokenProgram = TOKEN_PROGRAM_ID;
 
             const escrowRes = await ensureAtaIx({
@@ -195,10 +198,10 @@ async function announceWinners(
 
             ticketFeeTreasury = treasuryRes.ata;
             if (treasuryRes.ix) tx.add(treasuryRes.ix);
-            
+
         } else {
             ticketMint = raffleData.ticketMint;
-            
+
             ticketTokenProgram = await getTokenProgramFromMint(
                 connection,
                 ticketMint
@@ -352,12 +355,12 @@ async function endAuction(auctionId: number) {
 
         const bidTokenProgram = await getTokenProgramFromMint(
             connection,
-            bidMint!
+            bidMint || FAKE_MINT
         );
 
-        let bidEscrow;
-        let bidFeeTreasuryAta;
-        let creatorBidAta;
+        let bidEscrow = FAKE_ATA;
+        let bidFeeTreasuryAta = FAKE_ATA;
+        let creatorBidAta = FAKE_ATA;
 
         if (auctionData.bidMint !== null) {
             bidEscrow = await getAtaAddress(
@@ -406,7 +409,7 @@ async function endAuction(auctionId: number) {
                 winner: auctionData.highestBidder,
 
                 prizeMint,
-                bidMint: bidMint!,
+                bidMint: bidMint || FAKE_MINT,
 
                 prizeEscrow,
                 bidEscrow,
@@ -497,9 +500,9 @@ async function endGumball(gumballId: number) {
             ? await getTokenProgramFromMint(connection, ticketMint)
             : TOKEN_PROGRAM_ID;
 
-        let ticketEscrow;
-        let ticketFeeEscrowAta;
-        let creatorTicketAta;
+        let ticketEscrow = FAKE_ATA;
+        let ticketFeeEscrowAta = FAKE_ATA;
+        let creatorTicketAta = FAKE_ATA;
 
         if (ticketMint) {
             ticketEscrow = await getAtaAddress(connection, ticketMint, gumballAddress, true);
@@ -538,7 +541,7 @@ async function endGumball(gumballId: number) {
                 gumballAdmin: ADMIN_KEYPAIR.publicKey,
                 creator: gumballState.creator,
 
-                ticketMint: ticketMint!,
+                ticketMint: ticketMint || FAKE_MINT,
 
                 ticketEscrow,
                 ticketFeeEscrowAta,
