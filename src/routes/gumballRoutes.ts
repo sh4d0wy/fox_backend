@@ -21,7 +21,7 @@ gumballRouter.post("/addprize/:gumballId", authMiddleware, gumballController.add
 gumballRouter.post("/addprizes/:gumballId", authMiddleware, gumballController.addMultiplePrizes);
 gumballRouter.post("/buyback/:gumballId", authMiddleware, gumballController.updateBuyBackSettings);
 gumballRouter.post("/cancel/:gumballId", authMiddleware, gumballController.cancelGumball);
-
+gumballRouter.post("/creator-claim/:gumballId", authMiddleware, gumballController.creatorClaimPrize);
 // Authenticated routes - user actions
 gumballRouter.get("/prepare-spin/:gumballId", authMiddleware, gumballController.prepareSpin);
 gumballRouter.post("/spin/:gumballId", authMiddleware, gumballController.spin);

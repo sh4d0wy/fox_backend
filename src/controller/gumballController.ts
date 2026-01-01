@@ -9,6 +9,7 @@ import {
 import { addPrizeSchema, addMultiplePrizesSchema } from "../schemas/gumball/addPrize.schema";
 import { spinSchema } from "../schemas/gumball/spin.schema";
 import { claimGumballPrizeSchema } from "../schemas/gumball/claimPrize.schema";
+import { creatorClaimPrizeSchema } from "../schemas/gumball/creatorClaimBack.schema";
 import { cancelGumballSchema } from "../schemas/gumball/cancelGumball.schema";
 import { verifyTransaction } from "../utils/verifyTransaction";
 import prismaClient from "../database/client";
@@ -1318,6 +1319,78 @@ const getGumballStats = async (req: Request, res: Response) => {
   });
 };
 
+const creatorClaimPrize = async (req: Request, res: Response) => {
+  const params = req.params;
+  const gumballId = parseInt(params.gumballId);
+  const userAddress = req.user as string;
+  const body = req.body;
+  const { success, data: parsedData } = creatorClaimPrizeSchema.safeParse(body);
+  if (!success) {
+    return responseHandler.error(res, "Invalid payload");
+  }
+
+  try {
+    const isTransactionConfirmed = await verifyTransaction(parsedData.txSignature);
+    if (!isTransactionConfirmed) {
+      return responseHandler.error(res, "Transaction not confirmed");
+    }
+
+    await prismaClient.$transaction(async (tx) => {
+    const gumball = await tx.gumball.findUnique({
+      where: {
+        id: gumballId,
+      },
+    });
+    if (!gumball) {
+      return responseHandler.error(res, "Gumball not found");
+    }
+    if (gumball.creatorAddress !== userAddress) {
+      return responseHandler.error(res, "You are not the creator of this gumball");
+    }
+    const prizes = await tx.gumballPrize.findMany({
+      where: {
+        gumballId: gumballId,
+      },
+    });
+    if (prizes.length === 0) {
+      return responseHandler.error(res, "No prizes found for this gumball");
+    }
+    for (const prize of prizes) {
+      if (prize.creatorClaimed) {
+        continue;
+      }
+      await tx.gumballPrize.update({
+        where: {
+          id: prize.id,
+        },
+        data: {
+          creatorClaimed: true,
+          creatorClaimedAt: new Date(),
+        },
+      });
+    }
+    await tx.transaction.create({
+      data: {
+        transactionId: parsedData.txSignature,
+        type: "GUMBALL_CLAIM_PRIZE",
+        sender: userAddress,
+        receiver: userAddress,
+        amount: BigInt(0),
+        mintAddress: "So11111111111111111111111111111111111111112",
+        gumballId: gumballId,
+      },
+    });
+    });
+    responseHandler.success(res, {
+      message: "Prize claimed successfully",
+      error: null,
+      gumballId: gumballId,
+    });
+  } catch (error) {
+    logger.error(error);
+    responseHandler.error(res, error);
+  }
+};
 export default {
   createGumball,
   confirmGumballCreation,
@@ -1329,6 +1402,7 @@ export default {
   spin,
   claimPrize,
   cancelGumball,
+  creatorClaimPrize,
   getGumballs,
   getGumballDetails,
   getGumballsByUser,

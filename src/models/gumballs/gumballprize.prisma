@@ -14,6 +14,10 @@ model GumballPrize {
   image           String?
   decimals        Int?
   
+  //creator claim
+  creatorClaimed  Boolean   @default(false)
+  creatorClaimedAt DateTime?
+  
   // Prize amounts
   totalAmount     BigInt    // Total value deposited
   prizeAmount     BigInt    // Amount per prize
