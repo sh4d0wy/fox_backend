@@ -43,7 +43,7 @@ const auctionProgram = new anchor.Program<Auction>(auctionIdl as anchor.Idl, pro
 const GUMBALL_PROGRAM_ID = new anchor.web3.PublicKey(gumballIdl.address);
 const gumballProgram = new anchor.Program<Gumball>(gumballIdl as anchor.Idl, provider);
 
-function rafflePda(raffleId: number): PublicKey {
+async function rafflePda(raffleId: number): Promise<PublicKey> {
     const idBuffer = Buffer.alloc(4);
     idBuffer.writeUInt32LE(raffleId);
 
@@ -54,7 +54,7 @@ function rafflePda(raffleId: number): PublicKey {
     return pda;
 }
 
-function getRaffleConfigPda(): PublicKey {
+async function getRaffleConfigPda(): Promise<PublicKey> {
     const [pda] = PublicKey.findProgramAddressSync(
         [Buffer.from("raffle_config")],
         RAFFLE_PROGRAM_ID
@@ -157,8 +157,8 @@ async function announceWinners(
     try {
         const tx = new Transaction();
 
-        const raffleAccountPda = rafflePda(args.raffleId);
-        const raffleConfigPda = getRaffleConfigPda();
+        const raffleAccountPda = await rafflePda(args.raffleId);
+        const raffleConfigPda = await getRaffleConfigPda();
 
         const raffleData = await (raffleProgram.account as any).raffle.fetch(
             raffleAccountPda
@@ -260,7 +260,7 @@ async function announceWinners(
         throw error;
     }
 }
-const auctionPda = (auctionId: number): PublicKey => {
+const auctionPda = async (auctionId: number): Promise<PublicKey> => {
     return PublicKey.findProgramAddressSync(
         [
             Buffer.from("auction"),
@@ -307,13 +307,13 @@ async function endAuction(auctionId: number) {
     try {
         const tx = new Transaction();
 
-        const auctionAccountPda = auctionPda(auctionId);
+        const auctionAccountPda = await auctionPda(auctionId);
         const auctionData = await auctionProgram.account.auction.fetch(
             auctionAccountPda
         );
 
         const prizeMint = auctionData.prizeMint;
-        const bidMint = auctionData.bidMint;
+        const bidMint = auctionData.bidMint ?? FAKE_MINT;
 
         const prizeEscrow = await getAtaAddress(
             connection,
@@ -328,7 +328,7 @@ async function endAuction(auctionId: number) {
             auctionData.creator
         );
 
-        let winnerPrizeAta;
+        let winnerPrizeAta = FAKE_ATA;
 
         if (!auctionData.highestBidder.equals(PublicKey.default)) {
             const prizeTokenProgram = await getTokenProgramFromMint(
@@ -355,7 +355,7 @@ async function endAuction(auctionId: number) {
 
         const bidTokenProgram = await getTokenProgramFromMint(
             connection,
-            bidMint || FAKE_MINT
+            bidMint
         );
 
         let bidEscrow = FAKE_ATA;
@@ -365,14 +365,14 @@ async function endAuction(auctionId: number) {
         if (auctionData.bidMint !== null) {
             bidEscrow = await getAtaAddress(
                 connection,
-                bidMint!,
+                bidMint,
                 auctionAccountPda,
                 true
             );
 
             const feeTreasuryRes = await ensureAtaIx({
                 connection,
-                mint: bidMint!,
+                mint: bidMint,
                 owner: auctionConfigPda,
                 payer: ADMIN_KEYPAIR.publicKey,
                 tokenProgram: bidTokenProgram,
@@ -386,7 +386,7 @@ async function endAuction(auctionId: number) {
 
             const creatorBidRes = await ensureAtaIx({
                 connection,
-                mint: bidMint!,
+                mint: bidMint,
                 owner: auctionData.creator,
                 payer: ADMIN_KEYPAIR.publicKey,
                 tokenProgram: bidTokenProgram,
@@ -443,7 +443,7 @@ async function endAuction(auctionId: number) {
     }
 }
 
-const gumballPda = (gumballId: number): PublicKey => {
+const gumballPda = async (gumballId: number): Promise<PublicKey> => {
     return PublicKey.findProgramAddressSync(
         [
             Buffer.from("gumball"),
@@ -490,7 +490,7 @@ async function endGumball(gumballId: number) {
     try {
         const tx = new Transaction();
 
-        const gumballAddress = gumballPda(gumballId);
+        const gumballAddress = await gumballPda(gumballId);
 
         const gumballState = await gumballProgram.account.gumballMachine.fetch(gumballAddress);
 
