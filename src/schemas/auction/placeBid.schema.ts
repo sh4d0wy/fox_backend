@@ -5,3 +5,7 @@ export const placeBidSchema = z.object({
   txSignature: z.string().min(1),
 });
 
+export const placeBidAuctionTxSchema = z.object({
+  auctionId: z.number(),
+  bidAmount: z.number(),
+});

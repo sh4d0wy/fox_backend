@@ -9,12 +9,11 @@ import { verifyTransaction } from "../utils/verifyTransaction";
 import prismaClient from "../database/client";
 import logger from "../utils/logger";
 import { cancelAuctionSchema } from "../schemas/auction/cancelAuction.schema";
-import { placeBidSchema } from "../schemas/auction/placeBid.schema";
+import { placeBidAuctionTxSchema, placeBidSchema } from "../schemas/auction/placeBid.schema";
 import { claimAuctionSchema } from "../schemas/auction/claimAuction.schema";
 import { ADMIN_KEYPAIR, connection } from "../services/solanaconnector";
 import { PublicKey, Transaction } from "@solana/web3.js";
-import { createApproveInstruction, createTransferInstruction, getAssociatedTokenAddressSync } from "@solana/spl-token";
-import { auctionProgram, FAKE_MINT, getTokenProgramFromMint } from "../utils/helpers";
+import { auctionProgram, ensureAtaIx, FAKE_ATA, FAKE_MINT, getTokenProgramFromMint } from "../utils/helpers";
 import { BN } from "@coral-xyz/anchor";
 
 const createAuction = async (req: Request, res: Response) => {
@@ -674,6 +673,16 @@ const getBidsByUser = async (req: Request, res: Response) => {
   });
 };
 
+const auctionPda = (auctionId: number): PublicKey => {
+  return PublicKey.findProgramAddressSync(
+    [
+      Buffer.from("auction"),
+      new BN(auctionId).toArrayLike(Buffer, "le", 4), // u32
+    ],
+    auctionProgram.programId
+  )[0];
+};
+
 const createAuctionTx = async (req: Request, res: Response) => {
   const userAddress = req.user as string;
   const body = req.body;
@@ -682,7 +691,6 @@ const createAuctionTx = async (req: Request, res: Response) => {
     return responseHandler.error(res, "Invalid payload");
   }
   try {
-    console.log("Creating auction tx for user:", body);
     const {
       context: { slot: minContextSlot },
       value: { blockhash, lastValidBlockHeight },
@@ -745,6 +753,202 @@ const createAuctionTx = async (req: Request, res: Response) => {
   }
 };
 
+const cancelAuctionTx = async (req: Request, res: Response) => {
+  const params = req.params;
+  const auctionId = parseInt(params.auctionId);
+  const userAddress = req.user as string;
+
+  try {
+    const {
+      context: { slot: minContextSlot },
+      value: { blockhash, lastValidBlockHeight },
+    } = await connection.getLatestBlockhashAndContext();
+
+    const transaction = new Transaction({
+      blockhash,
+      lastValidBlockHeight,
+      feePayer: new PublicKey(userAddress),
+    });
+
+    const auctionAccountPda = auctionPda(auctionId);
+
+    const auctionData = await auctionProgram.account.auction.fetch(
+      auctionAccountPda
+    );
+
+    const prizeTokenProgram = await getTokenProgramFromMint(
+      connection,
+      auctionData.prizeMint
+    );
+
+    const ix = await auctionProgram.methods
+      .cancelAuction(auctionId)
+      .accounts({
+        creator: new PublicKey(userAddress),
+        auctionAdmin: ADMIN_KEYPAIR.publicKey,
+
+        prizeMint: auctionData.prizeMint,
+
+        prizeTokenProgram,
+      })
+      .instruction();
+
+    transaction.add(ix);
+
+    transaction.partialSign(ADMIN_KEYPAIR);
+
+    const serializedTransaction = transaction.serialize({
+      verifySignatures: false,
+      requireAllSignatures: false,
+    });
+
+    const base64Transaction = serializedTransaction.toString('base64');
+
+    res.status(200).json({
+      base64Transaction,
+      minContextSlot,
+      blockhash,
+      lastValidBlockHeight,
+      message: "OK",
+    });
+
+  } catch (error) {
+    logger.error(error);
+    responseHandler.error(res, error);
+  }
+};
+
+const placeBidAuctionTx = async (req: Request, res: Response) => {
+  const userAddress = req.user as string;
+  const body = req.body;
+  const { success, data: parsedData } = placeBidAuctionTxSchema.safeParse(body);
+  if (!success) {
+    return responseHandler.error(res, "Invalid payload");
+  }
+  try {
+    const {
+      context: { slot: minContextSlot },
+      value: { blockhash, lastValidBlockHeight },
+    } = await connection.getLatestBlockhashAndContext();
+
+    const transaction = new Transaction({
+      blockhash,
+      lastValidBlockHeight,
+      feePayer: new PublicKey(userAddress),
+    });
+
+    /* ---------------- PDAs ---------------- */
+    const auctionAccountPda = auctionPda(parsedData.auctionId);
+
+    const auctionData = await auctionProgram.account.auction.fetch(
+      auctionAccountPda
+    );
+
+    const isSolBid = auctionData.bidMint === null;
+    const bidMint = auctionData.bidMint ?? FAKE_MINT;
+
+    let currentBidderAta: PublicKey = FAKE_ATA;
+    let prevBidderAta: PublicKey = FAKE_ATA;
+    let bidEscrow: PublicKey = FAKE_ATA;
+    let highestBidder: PublicKey = new PublicKey(userAddress);
+
+    /* ---------------- Token program ---------------- */
+    const bidTokenProgram = await getTokenProgramFromMint(
+      connection,
+      bidMint
+    );
+
+    if (!isSolBid) {
+      /* -------- Ensure Escrow ATA -------- */
+      const escrowRes = await ensureAtaIx({
+        connection,
+        mint: bidMint,
+        owner: auctionAccountPda,
+        payer: new PublicKey(userAddress),
+        tokenProgram: bidTokenProgram,
+        allowOwnerOffCurve: true,
+      });
+
+      bidEscrow = escrowRes.ata;
+      if (escrowRes.ix) transaction.add(escrowRes.ix);
+
+      /* -------- Ensure current bidder ATA -------- */
+      const currentRes = await ensureAtaIx({
+        connection,
+        mint: bidMint,
+        owner: new PublicKey(userAddress),
+        payer: new PublicKey(userAddress),
+        tokenProgram: bidTokenProgram,
+      });
+
+      currentBidderAta = currentRes.ata;
+      if (currentRes.ix) transaction.add(currentRes.ix);
+
+      /* -------- Ensure previous bidder ATA (refund path) -------- */
+      if (!auctionData.highestBidder.equals(PublicKey.default)) {
+        const prevRes = await ensureAtaIx({
+          connection,
+          mint: bidMint,
+          owner: auctionData.highestBidder,
+          payer: new PublicKey(userAddress),
+          tokenProgram: bidTokenProgram,
+        });
+
+        prevBidderAta = prevRes.ata;
+        if (prevRes.ix) transaction.add(prevRes.ix);
+      }
+    } else {
+      if (!auctionData.highestBidder.equals(PublicKey.default)) {
+        highestBidder = auctionData.highestBidder;
+      }
+    }
+
+    /* ---------------- Anchor instruction ---------------- */
+    const ix = await auctionProgram.methods
+      .placeBid(
+        parsedData.auctionId,
+        new BN(parsedData.bidAmount)
+      )
+      .accounts({
+        bidder: new PublicKey(userAddress),
+        auctionAdmin: ADMIN_KEYPAIR.publicKey,
+
+        prevBidderAccount: highestBidder,
+
+        bidMint,
+        currentBidderAta,
+        prevBidderAta,
+        bidEscrow,
+
+        bidTokenProgram,
+      })
+      .instruction();
+
+    transaction.add(ix);
+
+    transaction.partialSign(ADMIN_KEYPAIR);
+
+    const serializedTransaction = transaction.serialize({
+      verifySignatures: false,
+      requireAllSignatures: false,
+    });
+
+    const base64Transaction = serializedTransaction.toString('base64');
+
+    res.status(200).json({
+      base64Transaction,
+      minContextSlot,
+      blockhash,
+      lastValidBlockHeight,
+      message: "OK",
+    });
+
+  } catch (error) {
+    logger.error(error);
+    responseHandler.error(res, error);
+  }
+};
+
 export default {
   createAuction,
   confirmAuctionCreation,
@@ -757,5 +961,7 @@ export default {
   deleteAuction,
   getBidsByUser,
   createAuctionTx,
+  cancelAuctionTx,
+  placeBidAuctionTx
 };
 

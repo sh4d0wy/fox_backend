@@ -18,6 +18,8 @@ auctionRouter.post("/claim/:auctionId", authMiddleware, auctionController.claimA
 auctionRouter.delete("/delete/:auctionId", authMiddleware, auctionController.deleteAuction);
 
 auctionRouter.post("/create-tx", authMiddleware, auctionController.createAuctionTx);
+auctionRouter.get("/cancel-tx/:auctionId", authMiddleware, auctionController.cancelAuctionTx);
+auctionRouter.post("/bid-tx/", authMiddleware, auctionController.placeBidAuctionTx);
 
 export default auctionRouter;
 
