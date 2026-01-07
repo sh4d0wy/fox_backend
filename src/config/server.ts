@@ -10,6 +10,7 @@ import raffleRouter from "../routes/raffleRoutes";
 import auctionRouter from "../routes/auctionRoutes";
 import gumballRouter from "../routes/gumballRoutes";
 import statsRouter from "../routes/statsRoutes";
+import notificationRouter from "../routes/notificationRoutes";
 
 export const app = express();
 
@@ -81,6 +82,7 @@ app.use("/api/raffle",raffleRouter);
 app.use("/api/auction", auctionRouter);
 app.use("/api/gumball", gumballRouter);
 app.use("/api/stats", statsRouter);
+app.use("/api/notifications", notificationRouter);
 
 const serverConn = createServer(app);
 
