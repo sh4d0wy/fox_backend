@@ -20,7 +20,8 @@ app.use(cors({
             'https://lively-selkie-af66c7.netlify.app',
             'http://localhost:5173',
             'http://localhost:3000',
-            'https://fox-frontend-chi.vercel.app'
+            'https://fox-frontend-chi.vercel.app',
+            'https://fox-frontend-orcin.vercel.app'
         ];
         
         // Check if the origin is in the allowed list or matches patterns
