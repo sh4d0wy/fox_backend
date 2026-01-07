@@ -50,13 +50,7 @@ const getRecentWinnings = async (req: Request, res: Response) => {
       claimed: claimedRaffleIds.has(raffle.id),
     }));
 
-    const total = await prismaClient.raffle.count({
-      where: {
-        winners: {
-          some: { walletAddress },
-        },
-      },
-    });
+    const total = rafflesWithClaimStatus.length;
 
     return responseHandler.success(res, {
       message: "Recent winnings fetched successfully",
