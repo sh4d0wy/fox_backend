@@ -14,6 +14,7 @@ raffleRouter.post("/confirm/:raffleId",authMiddleware,raffleController.confirmRa
 raffleRouter.post("/cancel/:raffleId",authMiddleware,raffleController.cancelRaffle);
 raffleRouter.post("/buy/:raffleId",authMiddleware,raffleController.buyTicket);
 raffleRouter.post("/claim/:raffleId",authMiddleware,raffleController.claimPrize);
+raffleRouter.post("/claim-ticket-amount/:raffleId",authMiddleware,raffleController.claimTicketAmount);
 
 raffleRouter.delete("/delete/:raffleId",authMiddleware,raffleController.deleteRaffle);
 

@@ -8,29 +8,30 @@ enum RaffleState {
 }
 
 model Raffle {
-  id                 Int         @id @default(autoincrement())
-  raffle             String?     @unique //raffle address to be fetched later
-  createdAt          DateTime    @default(now())
-  endsAt             DateTime
-  state              RaffleState @default(None)
-  createdBy          String
-  ticketPrice        Float
-  ticketTokenSymbol  String      @default("Sol")
-  ticketTokenAddress String      @default("So11111111111111111111111111111111111111112")
-  ticketSupply       Int
-  ticketSold         Int         @default(0)
-  maxTickets         Int         @default(0)
-  claimed            Int         @default(0)
-  numberOfWinners    Int         @default(1)
-  winnerPicked       Boolean     @default(false)
-  floor              Float?
-  val                Float?
-  ttv                Float
-  roi                Float
-  entriesAddress     String? //entries address to be fetched later
-  prize              String? //pize address to be fetched later
-  maxEntries         Int
-  totalEntries       Int         @default(0)
+  id                           Int         @id @default(autoincrement())
+  raffle                       String?     @unique //raffle address to be fetched later
+  createdAt                    DateTime    @default(now())
+  endsAt                       DateTime
+  state                        RaffleState @default(None)
+  createdBy                    String
+  ticketPrice                  Float
+  ticketTokenSymbol            String      @default("Sol")
+  ticketTokenAddress           String      @default("So11111111111111111111111111111111111111112")
+  ticketSupply                 Int
+  ticketSold                   Int         @default(0)
+  maxTickets                   Int         @default(0)
+  claimed                      Int         @default(0)
+  numberOfWinners              Int         @default(1)
+  winnerPicked                 Boolean     @default(false)
+  floor                        Float?
+  val                          Float?
+  ttv                          Float
+  roi                          Float
+  entriesAddress               String? //entries address to be fetched later
+  prize                        String? //pize address to be fetched later
+  maxEntries                   Int
+  totalEntries                 Int         @default(0)
+  ticketAmountClaimedByCreator Boolean     @default(false)
 
   creator       User        @relation("RaffleCreator", fields: [createdBy], references: [walletAddress], onDelete: Cascade)
   favouritedBy  User[]      @relation("FavouriteRaffle")

@@ -15,6 +15,7 @@ import { ADMIN_KEYPAIR, connection } from "../services/solanaconnector";
 import { PublicKey, Transaction } from "@solana/web3.js";
 import { ensureAtaIx, FAKE_ATA, FAKE_MINT, getTokenProgramFromMint, raffleProgram } from "../utils/helpers";
 import { BN } from "@coral-xyz/anchor";
+import { claimTicketAmountSchema } from "../schemas/raffle/claimTicketAmountSchema";
 
 const createRaffle = async (req: Request, res: Response) => {
   const body = req.body;
@@ -652,6 +653,77 @@ const claimPrize = async (req: Request, res: Response) => {
   }
 };
 
+const claimTicketAmount = async (req: Request, res: Response) => {
+  const params = req.params;
+  const raffleId = parseInt(params.raffleId);
+  const userAddress = req.user as string;
+  const body = req.body;
+  const { success, data: parsedData } = claimTicketAmountSchema.safeParse(body);
+  if (!success) {
+    return responseHandler.error(res, "Invalid payload");
+  }
+  const validatedTransaction = await verifyTransaction(parsedData.txSignature);
+  if (!validatedTransaction) {
+    return responseHandler.error(res, "Invalid transaction");
+  }
+  try {
+    await prismaClient.$transaction(async (tx) => {
+      const raffle = await tx.raffle.findUnique({
+        where: {
+          id: raffleId,
+        },
+      });
+      if (!raffle) {
+        return responseHandler.error(res, "Raffle not found");
+      }
+      if (raffle.createdBy !== userAddress) {
+        return responseHandler.error(res, "You are not the creator of this raffle");
+      }
+      if (raffle.ticketAmountClaimedByCreator) {
+        return responseHandler.error(res, "Ticket amount has already been claimed by the creator");
+      }
+      const existingTransaction = await tx.transaction.findUnique({
+        where: {
+          transactionId: parsedData.txSignature,
+        },
+      });
+      if (existingTransaction) {
+        return responseHandler.error(res, "Transaction already exists");
+      }
+      const updatedRaffle = await tx.raffle.update({
+        where: {
+          id: raffleId,
+        },
+        data: {
+          ticketAmountClaimedByCreator: true,
+        },
+      });
+      if (!updatedRaffle) {
+        return responseHandler.error(res, "Failed to update raffle");
+      }
+      const amount = raffle.ticketPrice * raffle.ticketSold;
+      await tx.transaction.create({
+        data: {
+          transactionId: parsedData.txSignature,
+          type: "RAFFLE_CLAIM_TICKET_AMOUNT",
+          sender: userAddress,
+          receiver: raffle.raffle || raffleId.toString(),
+          amount: amount,
+          mintAddress: raffle.ticketTokenAddress,
+          raffleId: raffleId,
+        },
+      });
+    });
+    responseHandler.success(res, {
+      message: "Ticket amount claimed successfully",
+      error: null,
+      raffleId: raffleId,
+    });
+  } catch (error) {
+    logger.error(error);
+    responseHandler.error(res, error);
+  }
+};
 const getWinnersClaimedPrizes = async (req: Request, res: Response) => {
   const params = req.params;
   const raffleId = parseInt(params.raffleId);
@@ -1220,6 +1292,7 @@ export default {
   cancelRaffle,
   buyTicket,
   claimPrize,
+  claimTicketAmount,
   deleteRaffle,
   getWinnersClaimedPrizes,
   cancelRaffleTx,
