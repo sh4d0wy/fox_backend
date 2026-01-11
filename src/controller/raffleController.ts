@@ -1283,6 +1283,159 @@ const createRaffleTx = async (req: Request, res: Response) => {
   }
 };
 
+const claimPrizeBackTx = async (req: Request, res: Response) => {
+  const params = req.params;
+  const raffleId = parseInt(params.raffleId);
+  const userAddress = req.user as string;
+  const userPublicKey = new PublicKey(userAddress);
+
+  try {
+    const {
+      context: { slot: minContextSlot },
+      value: { blockhash, lastValidBlockHeight },
+    } = await connection.getLatestBlockhashAndContext();
+
+    const transaction = new Transaction({
+      blockhash,
+      lastValidBlockHeight,
+      feePayer: userPublicKey,
+    });
+
+    /* ---------------- PDAs ---------------- */
+    const raffleAccountPda = rafflePda(raffleId);
+
+    /* ---------------- Fetch raffle ---------------- */
+    const raffleData = await raffleProgram.account.raffle.fetch(
+      raffleAccountPda
+    );
+
+    /* ---------------- Prize side ---------------- */
+    const isSolPrize = raffleData.prizeMint === null;
+    const prizeMint = raffleData.prizeMint ?? FAKE_MINT;
+
+    /* ---------------- Ticket side ---------------- */
+    const isSolTicket = raffleData.ticketMint === null;
+    const ticketMint = raffleData.ticketMint ?? FAKE_MINT;
+
+    /* ---------------- Token programs ---------------- */
+    const prizeTokenProgram = await getTokenProgramFromMint(
+      connection,
+      prizeMint
+    );
+    const ticketTokenProgram = await getTokenProgramFromMint(
+      connection,
+      ticketMint
+    );
+
+    /* ---------------- Accounts ---------------- */
+    let prizeEscrow: PublicKey = FAKE_ATA;
+    let creatorPrizeAta: PublicKey = FAKE_ATA;
+    let ticketEscrow: PublicKey = FAKE_ATA;
+    let creatorTicketAta: PublicKey = FAKE_ATA;
+
+    // ---- Prize SPL / NFT ----
+    if (!isSolPrize) {
+      // Prize escrow ATA (owner = raffle PDA)
+      const prizeEscrowRes = await ensureAtaIx({
+        connection,
+        mint: prizeMint,
+        owner: raffleAccountPda,
+        payer: userPublicKey,
+        tokenProgram: prizeTokenProgram,
+        allowOwnerOffCurve: true,
+      });
+
+      prizeEscrow = prizeEscrowRes.ata;
+      if (prizeEscrowRes.ix) transaction.add(prizeEscrowRes.ix);
+
+      // Creator prize ATA
+      const creatorPrizeRes = await ensureAtaIx({
+        connection,
+        mint: prizeMint,
+        owner: userPublicKey,
+        payer: userPublicKey,
+        tokenProgram: prizeTokenProgram,
+      });
+
+      creatorPrizeAta = creatorPrizeRes.ata;
+      if (creatorPrizeRes.ix) transaction.add(creatorPrizeRes.ix);
+    }
+
+    // ---- Ticket SPL ----
+    if (!isSolTicket) {
+      // Ticket escrow ATA (owner = raffle PDA)
+      const ticketEscrowRes = await ensureAtaIx({
+        connection,
+        mint: ticketMint,
+        owner: raffleAccountPda,
+        payer: userPublicKey,
+        tokenProgram: ticketTokenProgram,
+        allowOwnerOffCurve: true,
+      });
+
+      ticketEscrow = ticketEscrowRes.ata;
+      if (ticketEscrowRes.ix) transaction.add(ticketEscrowRes.ix);
+
+      // Creator ticket ATA
+      const creatorTicketRes = await ensureAtaIx({
+        connection,
+        mint: ticketMint,
+        owner: userPublicKey,
+        payer: userPublicKey,
+        tokenProgram: ticketTokenProgram,
+      });
+
+      creatorTicketAta = creatorTicketRes.ata;
+      if (creatorTicketRes.ix) transaction.add(creatorTicketRes.ix);
+    }
+
+    /* ---------------- Anchor Instruction ---------------- */
+    const ix = await raffleProgram.methods
+      .claimAmountBack(raffleId)
+      .accounts({
+        creator: userPublicKey,
+        raffleAdmin: ADMIN_KEYPAIR.publicKey,
+
+        prizeMint,
+        ticketMint,
+
+        prizeEscrow,
+        ticketEscrow,
+
+        creatorPrizeAta,
+        creatorTicketAta,
+
+        prizeTokenProgram,
+        ticketTokenProgram,
+      })
+      .instruction();
+
+
+    transaction.add(ix);
+
+    transaction.partialSign(ADMIN_KEYPAIR);
+
+    const serializedTransaction = transaction.serialize({
+      verifySignatures: false,
+      requireAllSignatures: false,
+    });
+
+    const base64Transaction = serializedTransaction.toString('base64');
+
+    res.status(200).json({
+      base64Transaction,
+      minContextSlot,
+      blockhash,
+      lastValidBlockHeight,
+      message: "OK",
+    });
+
+  } catch (error) {
+    logger.error(error);
+    responseHandler.error(res, error);
+  }
+};
+
 export default {
   createRaffle,
   confirmRaffleCreation,
@@ -1298,5 +1451,6 @@ export default {
   cancelRaffleTx,
   buyerClaimPrizeTx,
   buyTicketTx,
-  createRaffleTx
+  createRaffleTx,
+  claimPrizeBackTx,
 };
