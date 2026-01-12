@@ -1,5 +1,5 @@
 {
-  "address": "3f4Hj369oD79D71UeVZ5NQSxxh1vJ7WLmzyKghPx8bHF",
+  "address": "4s5vnj8ge7qCLbe3q5KNXK6CbXszhqSc3phpt6UdGCqt",
   "metadata": {
     "name": "raffle",
     "version": "0.1.0",
@@ -9,16 +9,7 @@
   "instructions": [
     {
       "name": "activate_raffle",
-      "discriminator": [
-        95,
-        197,
-        43,
-        48,
-        169,
-        59,
-        250,
-        106
-      ],
+      "discriminator": [95, 197, 43, 48, 169, 59, 250, 106],
       "accounts": [
         {
           "name": "raffle_config",
@@ -26,14 +17,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  114,
-                  97,
-                  102,
-                  102,
-                  108,
-                  101
-                ]
+                "value": [114, 97, 102, 102, 108, 101]
               }
             ]
           }
@@ -45,14 +29,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  114,
-                  97,
-                  102,
-                  102,
-                  108,
-                  101
-                ]
+                "value": [114, 97, 102, 102, 108, 101]
               },
               {
                 "kind": "arg",
@@ -76,16 +53,7 @@
     },
     {
       "name": "announce_winners",
-      "discriminator": [
-        195,
-        233,
-        64,
-        176,
-        73,
-        222,
-        220,
-        94
-      ],
+      "discriminator": [195, 233, 64, 176, 73, 222, 220, 94],
       "accounts": [
         {
           "name": "raffle_config",
@@ -94,14 +62,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  114,
-                  97,
-                  102,
-                  102,
-                  108,
-                  101
-                ]
+                "value": [114, 97, 102, 102, 108, 101]
               }
             ]
           }
@@ -113,14 +74,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  114,
-                  97,
-                  102,
-                  102,
-                  108,
-                  101
-                ]
+                "value": [114, 97, 102, 102, 108, 101]
               },
               {
                 "kind": "arg",
@@ -168,16 +122,7 @@
     },
     {
       "name": "buy_ticket",
-      "discriminator": [
-        11,
-        24,
-        17,
-        193,
-        168,
-        116,
-        164,
-        169
-      ],
+      "discriminator": [11, 24, 17, 193, 168, 116, 164, 169],
       "accounts": [
         {
           "name": "raffle_config",
@@ -186,14 +131,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  114,
-                  97,
-                  102,
-                  102,
-                  108,
-                  101
-                ]
+                "value": [114, 97, 102, 102, 108, 101]
               }
             ]
           }
@@ -205,14 +143,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  114,
-                  97,
-                  102,
-                  102,
-                  108,
-                  101
-                ]
+                "value": [114, 97, 102, 102, 108, 101]
               },
               {
                 "kind": "arg",
@@ -228,14 +159,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  114,
-                  97,
-                  102,
-                  102,
-                  108,
-                  101
-                ]
+                "value": [114, 97, 102, 102, 108, 101]
               },
               {
                 "kind": "arg",
@@ -289,16 +213,7 @@
     },
     {
       "name": "buyer_claim_prize",
-      "discriminator": [
-        47,
-        76,
-        109,
-        56,
-        93,
-        71,
-        98,
-        179
-      ],
+      "discriminator": [47, 76, 109, 56, 93, 71, 98, 179],
       "accounts": [
         {
           "name": "raffle_config",
@@ -306,14 +221,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  114,
-                  97,
-                  102,
-                  102,
-                  108,
-                  101
-                ]
+                "value": [114, 97, 102, 102, 108, 101]
               }
             ]
           }
@@ -325,14 +233,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  114,
-                  97,
-                  102,
-                  102,
-                  108,
-                  101
-                ]
+                "value": [114, 97, 102, 102, 108, 101]
               },
               {
                 "kind": "arg",
@@ -348,14 +249,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  114,
-                  97,
-                  102,
-                  102,
-                  108,
-                  101
-                ]
+                "value": [114, 97, 102, 102, 108, 101]
               },
               {
                 "kind": "arg",
@@ -405,16 +299,7 @@
     },
     {
       "name": "cancel_raffle",
-      "discriminator": [
-        135,
-        191,
-        223,
-        141,
-        192,
-        186,
-        234,
-        254
-      ],
+      "discriminator": [135, 191, 223, 141, 192, 186, 234, 254],
       "accounts": [
         {
           "name": "raffle_config",
@@ -422,14 +307,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  114,
-                  97,
-                  102,
-                  102,
-                  108,
-                  101
-                ]
+                "value": [114, 97, 102, 102, 108, 101]
               }
             ]
           }
@@ -441,14 +319,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  114,
-                  97,
-                  102,
-                  102,
-                  108,
-                  101
-                ]
+                "value": [114, 97, 102, 102, 108, 101]
               },
               {
                 "kind": "arg",
@@ -494,16 +365,7 @@
     },
     {
       "name": "claim_amount_back",
-      "discriminator": [
-        203,
-        244,
-        195,
-        101,
-        12,
-        169,
-        255,
-        163
-      ],
+      "discriminator": [203, 244, 195, 101, 12, 169, 255, 163],
       "accounts": [
         {
           "name": "raffle_config",
@@ -511,14 +373,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  114,
-                  97,
-                  102,
-                  102,
-                  108,
-                  101
-                ]
+                "value": [114, 97, 102, 102, 108, 101]
               }
             ]
           }
@@ -530,14 +385,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  114,
-                  97,
-                  102,
-                  102,
-                  108,
-                  101
-                ]
+                "value": [114, 97, 102, 102, 108, 101]
               },
               {
                 "kind": "arg",
@@ -597,16 +445,7 @@
     },
     {
       "name": "create_raffle",
-      "discriminator": [
-        226,
-        206,
-        159,
-        34,
-        213,
-        207,
-        98,
-        126
-      ],
+      "discriminator": [226, 206, 159, 34, 213, 207, 98, 126],
       "accounts": [
         {
           "name": "raffle_config",
@@ -615,14 +454,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  114,
-                  97,
-                  102,
-                  102,
-                  108,
-                  101
-                ]
+                "value": [114, 97, 102, 102, 108, 101]
               }
             ]
           }
@@ -634,14 +466,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  114,
-                  97,
-                  102,
-                  102,
-                  108,
-                  101
-                ]
+                "value": [114, 97, 102, 102, 108, 101]
               },
               {
                 "kind": "account",
@@ -750,16 +575,7 @@
     },
     {
       "name": "initialize_raffle_config",
-      "discriminator": [
-        81,
-        95,
-        191,
-        34,
-        162,
-        176,
-        141,
-        43
-      ],
+      "discriminator": [81, 95, 191, 34, 162, 176, 141, 43],
       "accounts": [
         {
           "name": "raffle_config",
@@ -768,14 +584,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  114,
-                  97,
-                  102,
-                  102,
-                  108,
-                  101
-                ]
+                "value": [114, 97, 102, 102, 108, 101]
               }
             ]
           }
@@ -814,21 +623,16 @@
         {
           "name": "maximum_raffle_period",
           "type": "u32"
+        },
+        {
+          "name": "maximum_wallet_pct",
+          "type": "u8"
         }
       ]
     },
     {
       "name": "update_pause_and_unpause",
-      "discriminator": [
-        124,
-        65,
-        236,
-        137,
-        103,
-        20,
-        115,
-        240
-      ],
+      "discriminator": [124, 65, 236, 137, 103, 20, 115, 240],
       "accounts": [
         {
           "name": "raffle_config",
@@ -837,14 +641,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  114,
-                  97,
-                  102,
-                  102,
-                  108,
-                  101
-                ]
+                "value": [114, 97, 102, 102, 108, 101]
               }
             ]
           }
@@ -864,16 +661,7 @@
     },
     {
       "name": "update_raffle_config_admin",
-      "discriminator": [
-        74,
-        242,
-        44,
-        45,
-        75,
-        79,
-        185,
-        224
-      ],
+      "discriminator": [74, 242, 44, 45, 75, 79, 185, 224],
       "accounts": [
         {
           "name": "raffle_config",
@@ -882,14 +670,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  114,
-                  97,
-                  102,
-                  102,
-                  108,
-                  101
-                ]
+                "value": [114, 97, 102, 102, 108, 101]
               }
             ]
           }
@@ -909,16 +690,7 @@
     },
     {
       "name": "update_raffle_config_data",
-      "discriminator": [
-        82,
-        95,
-        33,
-        15,
-        181,
-        163,
-        101,
-        85
-      ],
+      "discriminator": [82, 95, 33, 15, 181, 163, 101, 85],
       "accounts": [
         {
           "name": "raffle_config",
@@ -927,14 +699,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  114,
-                  97,
-                  102,
-                  102,
-                  108,
-                  101
-                ]
+                "value": [114, 97, 102, 102, 108, 101]
               }
             ]
           }
@@ -961,21 +726,16 @@
         {
           "name": "maximum_raffle_period",
           "type": "u32"
+        },
+        {
+          "name": "maximum_wallet_pct",
+          "type": "u8"
         }
       ]
     },
     {
       "name": "update_raffle_config_owner",
-      "discriminator": [
-        118,
-        122,
-        145,
-        97,
-        163,
-        152,
-        14,
-        113
-      ],
+      "discriminator": [118, 122, 145, 97, 163, 152, 14, 113],
       "accounts": [
         {
           "name": "raffle_config",
@@ -984,14 +744,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  114,
-                  97,
-                  102,
-                  102,
-                  108,
-                  101
-                ]
+                "value": [114, 97, 102, 102, 108, 101]
               }
             ]
           }
@@ -1011,16 +764,7 @@
     },
     {
       "name": "update_raffle_ticketing",
-      "discriminator": [
-        118,
-        12,
-        123,
-        14,
-        172,
-        34,
-        211,
-        212
-      ],
+      "discriminator": [118, 12, 123, 14, 172, 34, 211, 212],
       "accounts": [
         {
           "name": "raffle_config",
@@ -1028,14 +772,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  114,
-                  97,
-                  102,
-                  102,
-                  108,
-                  101
-                ]
+                "value": [114, 97, 102, 102, 108, 101]
               }
             ]
           }
@@ -1047,14 +784,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  114,
-                  97,
-                  102,
-                  102,
-                  108,
-                  101
-                ]
+                "value": [114, 97, 102, 102, 108, 101]
               },
               {
                 "kind": "arg",
@@ -1098,16 +828,7 @@
     },
     {
       "name": "update_raffle_time",
-      "discriminator": [
-        238,
-        164,
-        119,
-        208,
-        86,
-        120,
-        178,
-        163
-      ],
+      "discriminator": [238, 164, 119, 208, 86, 120, 178, 163],
       "accounts": [
         {
           "name": "raffle_config",
@@ -1115,14 +836,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  114,
-                  97,
-                  102,
-                  102,
-                  108,
-                  101
-                ]
+                "value": [114, 97, 102, 102, 108, 101]
               }
             ]
           }
@@ -1134,14 +848,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  114,
-                  97,
-                  102,
-                  102,
-                  108,
-                  101
-                ]
+                "value": [114, 97, 102, 102, 108, 101]
               },
               {
                 "kind": "arg",
@@ -1177,16 +884,7 @@
     },
     {
       "name": "update_raffle_winners",
-      "discriminator": [
-        24,
-        6,
-        130,
-        11,
-        83,
-        211,
-        207,
-        170
-      ],
+      "discriminator": [24, 6, 130, 11, 83, 211, 207, 170],
       "accounts": [
         {
           "name": "raffle_config",
@@ -1194,14 +892,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  114,
-                  97,
-                  102,
-                  102,
-                  108,
-                  101
-                ]
+                "value": [114, 97, 102, 102, 108, 101]
               }
             ]
           }
@@ -1213,14 +904,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  114,
-                  97,
-                  102,
-                  102,
-                  108,
-                  101
-                ]
+                "value": [114, 97, 102, 102, 108, 101]
               },
               {
                 "kind": "arg",
@@ -1256,16 +940,7 @@
     },
     {
       "name": "withdraw_sol_fees",
-      "discriminator": [
-        191,
-        53,
-        166,
-        97,
-        124,
-        212,
-        228,
-        219
-      ],
+      "discriminator": [191, 53, 166, 97, 124, 212, 228, 219],
       "accounts": [
         {
           "name": "raffle_config",
@@ -1274,14 +949,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  114,
-                  97,
-                  102,
-                  102,
-                  108,
-                  101
-                ]
+                "value": [114, 97, 102, 102, 108, 101]
               }
             ]
           }
@@ -1309,16 +977,7 @@
     },
     {
       "name": "withdraw_spl_fees",
-      "discriminator": [
-        67,
-        45,
-        141,
-        82,
-        211,
-        167,
-        149,
-        115
-      ],
+      "discriminator": [67, 45, 141, 82, 211, 167, 149, 115],
       "accounts": [
         {
           "name": "raffle_config",
@@ -1327,14 +986,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  114,
-                  97,
-                  102,
-                  102,
-                  108,
-                  101
-                ]
+                "value": [114, 97, 102, 102, 108, 101]
               }
             ]
           }
@@ -1359,38 +1011,8 @@
               {
                 "kind": "const",
                 "value": [
-                  6,
-                  221,
-                  246,
-                  225,
-                  215,
-                  101,
-                  161,
-                  147,
-                  217,
-                  203,
-                  225,
-                  70,
-                  206,
-                  235,
-                  121,
-                  172,
-                  28,
-                  180,
-                  133,
-                  237,
-                  95,
-                  91,
-                  55,
-                  145,
-                  58,
-                  140,
-                  245,
-                  133,
-                  126,
-                  255,
-                  0,
-                  169
+                  6, 221, 246, 225, 215, 101, 161, 147, 217, 203, 225, 70, 206, 235, 121, 172, 28, 180, 133, 237, 95,
+                  91, 55, 145, 58, 140, 245, 133, 126, 255, 0, 169
                 ]
               },
               {
@@ -1401,38 +1023,8 @@
             "program": {
               "kind": "const",
               "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
+                140, 151, 37, 143, 78, 36, 137, 241, 187, 61, 16, 41, 20, 142, 13, 131, 11, 90, 19, 153, 218, 255, 16,
+                132, 4, 142, 123, 216, 219, 233, 248, 89
               ]
             }
           }
@@ -1460,423 +1052,95 @@
   "accounts": [
     {
       "name": "Buyer",
-      "discriminator": [
-        212,
-        193,
-        28,
-        181,
-        26,
-        219,
-        85,
-        174
-      ]
+      "discriminator": [212, 193, 28, 181, 26, 219, 85, 174]
     },
     {
       "name": "Raffle",
-      "discriminator": [
-        143,
-        133,
-        63,
-        173,
-        138,
-        10,
-        142,
-        200
-      ]
+      "discriminator": [143, 133, 63, 173, 138, 10, 142, 200]
     },
     {
       "name": "RaffleConfig",
-      "discriminator": [
-        70,
-        211,
-        113,
-        93,
-        22,
-        204,
-        183,
-        119
-      ]
+      "discriminator": [70, 211, 113, 93, 22, 204, 183, 119]
     }
   ],
   "events": [
     {
       "name": "AmountClaimBack",
-      "discriminator": [
-        61,
-        225,
-        105,
-        20,
-        230,
-        253,
-        58,
-        208
-      ]
+      "discriminator": [61, 225, 105, 20, 230, 253, 58, 208]
     },
     {
       "name": "ColledtedTicketRevenue",
-      "discriminator": [
-        97,
-        247,
-        20,
-        226,
-        72,
-        49,
-        100,
-        123
-      ]
+      "discriminator": [97, 247, 20, 226, 72, 49, 100, 123]
     },
     {
       "name": "FeesWithdrawn",
-      "discriminator": [
-        234,
-        15,
-        0,
-        119,
-        148,
-        241,
-        40,
-        21
-      ]
+      "discriminator": [234, 15, 0, 119, 148, 241, 40, 21]
     },
     {
       "name": "PrizeClaimed",
-      "discriminator": [
-        213,
-        150,
-        192,
-        76,
-        199,
-        33,
-        212,
-        38
-      ]
+      "discriminator": [213, 150, 192, 76, 199, 33, 212, 38]
     },
     {
       "name": "RaffleActivated",
-      "discriminator": [
-        248,
-        120,
-        222,
-        111,
-        248,
-        249,
-        101,
-        163
-      ]
+      "discriminator": [248, 120, 222, 111, 248, 249, 101, 163]
     },
     {
       "name": "RaffleCancelled",
-      "discriminator": [
-        123,
-        83,
-        254,
-        127,
-        53,
-        244,
-        159,
-        102
-      ]
+      "discriminator": [123, 83, 254, 127, 53, 244, 159, 102]
     },
     {
       "name": "RaffleCreated",
-      "discriminator": [
-        178,
-        172,
-        201,
-        96,
-        233,
-        171,
-        6,
-        99
-      ]
+      "discriminator": [178, 172, 201, 96, 233, 171, 6, 99]
     },
     {
       "name": "RaffleFailed",
-      "discriminator": [
-        135,
-        207,
-        186,
-        78,
-        167,
-        55,
-        96,
-        143
-      ]
+      "discriminator": [135, 207, 186, 78, 167, 55, 96, 143]
     },
     {
       "name": "RaffleTicketingUpdated",
-      "discriminator": [
-        61,
-        15,
-        147,
-        134,
-        25,
-        81,
-        65,
-        188
-      ]
+      "discriminator": [61, 15, 147, 134, 25, 81, 65, 188]
     },
     {
       "name": "RaffleTimeUpdated",
-      "discriminator": [
-        145,
-        114,
-        155,
-        203,
-        166,
-        149,
-        133,
-        153
-      ]
+      "discriminator": [145, 114, 155, 203, 166, 149, 133, 153]
     },
     {
       "name": "RaffleWinnersUpdated",
-      "discriminator": [
-        137,
-        227,
-        147,
-        84,
-        43,
-        36,
-        196,
-        142
-      ]
+      "discriminator": [137, 227, 147, 84, 43, 36, 196, 142]
     },
     {
       "name": "SplFeesWithdrawn",
-      "discriminator": [
-        201,
-        164,
-        201,
-        96,
-        70,
-        233,
-        240,
-        251
-      ]
+      "discriminator": [201, 164, 201, 96, 70, 233, 240, 251]
     },
     {
       "name": "TicketPurchased",
-      "discriminator": [
-        108,
-        59,
-        246,
-        95,
-        84,
-        145,
-        13,
-        71
-      ]
+      "discriminator": [108, 59, 246, 95, 84, 145, 13, 71]
     },
     {
       "name": "WinnersAnnounced",
-      "discriminator": [
-        153,
-        186,
-        3,
-        103,
-        193,
-        218,
-        144,
-        78
-      ]
+      "discriminator": [153, 186, 3, 103, 193, 218, 144, 78]
     }
   ],
   "errors": [
     {
       "code": 6000,
-      "name": "InvalidRaffleId",
-      "msg": "Invalid Raffle ID"
+      "name": "TokenTransferFailed",
+      "msg": "Token transfer failed"
     },
     {
       "code": 6001,
-      "name": "InvalidCreator",
-      "msg": "Invalid Raffle Creator"
+      "name": "SolTransferFailed",
+      "msg": "SOL transfer failed"
     },
     {
       "code": 6002,
-      "name": "FunctionPaused",
-      "msg": "Current function is paused"
+      "name": "InsufficientTokenBalance",
+      "msg": "Insufficient SPL Token Balance"
     },
     {
       "code": 6003,
-      "name": "RaffleAlreadyStarted",
-      "msg": "Raffle is already started"
-    },
-    {
-      "code": 6004,
-      "name": "StartTimeNotReached",
-      "msg": "Start time is not reached"
-    },
-    {
-      "code": 6005,
-      "name": "EndTimeNotReached",
-      "msg": "End time is not reached"
-    },
-    {
-      "code": 6006,
-      "name": "EndTimeIsCrossed",
-      "msg": "End time is crossed"
-    },
-    {
-      "code": 6007,
-      "name": "StartTimeInPast",
-      "msg": "Start time should be greater than current time"
-    },
-    {
-      "code": 6008,
-      "name": "Overflow",
-      "msg": "Calculation Overflow Error"
-    },
-    {
-      "code": 6009,
-      "name": "InvalidNFT",
-      "msg": "Invalid NFT"
-    },
-    {
-      "code": 6010,
-      "name": "InvalidWinnerIndex",
-      "msg": "Invalid Winner Index"
-    },
-    {
-      "code": 6011,
-      "name": "ZeroPrizeForWinner",
-      "msg": "Invalid zero prize for winner"
-    },
-    {
-      "code": 6012,
-      "name": "InvalidWinner",
-      "msg": "Invalid Winner claim"
-    },
-    {
-      "code": 6013,
-      "name": "PrizeAlreadyClaimed",
-      "msg": "Prize is already claimed"
-    },
-    {
-      "code": 6014,
-      "name": "InvalidRaffleStateForCancel",
-      "msg": "Raffle state should be in Initialized or Active"
-    },
-    {
-      "code": 6015,
-      "name": "RaffleNotEnded",
-      "msg": "Raffle is not ended"
-    },
-    {
-      "code": 6016,
-      "name": "InvalidZeroAmount",
-      "msg": "Invalid Zero Amount"
-    },
-    {
-      "code": 6017,
-      "name": "InvalidMaxPerWalletPct",
-      "msg": "Invalid maximum wallet per pct"
-    },
-    {
-      "code": 6018,
-      "name": "InvalidMaximumTickets",
-      "msg": "Invalid Maximum Tickets"
-    },
-    {
-      "code": 6019,
-      "name": "TimeOrTicketsNotMet",
-      "msg": "Time or Tickets not met"
-    },
-    {
-      "code": 6020,
-      "name": "ExceedMaxWinners",
-      "msg": "Winners count exceed maximum"
-    },
-    {
-      "code": 6021,
-      "name": "InvalidZeroWinnersCount",
-      "msg": "Invalid zero winners count"
-    },
-    {
-      "code": 6022,
-      "name": "InsufficientPrizeAmount",
-      "msg": "Insufficient prize amount"
-    },
-    {
-      "code": 6023,
-      "name": "StateShouldBeInInitialized",
-      "msg": "Raffle State not in Initialized state"
-    },
-    {
-      "code": 6024,
-      "name": "InvalidRaffleStateForUpdate",
-      "msg": "Invalid raffle state for update"
-    },
-    {
-      "code": 6025,
-      "name": "RaffleNotSuccessEnded",
-      "msg": "Raffle is not Successfully ended"
-    },
-    {
-      "code": 6026,
-      "name": "RaffleNotActive",
-      "msg": "Raffle is not active"
-    },
-    {
-      "code": 6027,
-      "name": "InvalidWinnersLength",
-      "msg": "Invalid winners length"
-    },
-    {
-      "code": 6028,
-      "name": "DuplicateWinnersNotAllowed",
-      "msg": "Duplicate Winners are not allowed"
-    },
-    {
-      "code": 6029,
-      "name": "InvalidWinShares",
-      "msg": "Invalid win shares"
-    },
-    {
-      "code": 6030,
-      "name": "MoreThanOneTicketSolded",
-      "msg": "More than one ticket is solded"
-    },
-    {
-      "code": 6031,
-      "name": "CannotUpdateWinnersForNftPrize",
-      "msg": "Cannot update winners for NFT prize"
-    },
-    {
-      "code": 6032,
-      "name": "StartTimeExceedEndTime",
-      "msg": "Start time do not exceed end time"
-    },
-    {
-      "code": 6033,
-      "name": "InvalidZeroTickets",
-      "msg": "Invalid zero tickets"
-    },
-    {
-      "code": 6034,
-      "name": "TicketsSoldOut",
-      "msg": "Tickets are sold out"
-    },
-    {
-      "code": 6035,
-      "name": "InvalidTicketZeroPrice",
-      "msg": "Invalid ticket zero price"
-    },
-    {
-      "code": 6036,
-      "name": "InvalidTotalTickets",
-      "msg": "Invalid total tickets"
-    },
-    {
-      "code": 6037,
-      "name": "WinnersExceedTotalTickets",
-      "msg": "Total tickets should be greater than winners count"
-    },
-    {
-      "code": 6038,
-      "name": "MaxTicketsPerWalletExceeded",
-      "msg": "Maximum Tickets Per Wallet Exceeded"
+      "name": "InsufficientSolBalance",
+      "msg": "Insufficient SOL Token Balance"
     }
   ],
   "types": [
@@ -2215,6 +1479,10 @@
           },
           {
             "name": "config_bump",
+            "type": "u8"
+          },
+          {
+            "name": "maximum_wallet_pct",
             "type": "u8"
           }
         ]
