@@ -8,6 +8,7 @@ raffleRouter.get("/",raffleController.getRaffles);
 raffleRouter.get("/rafflebyuser",authMiddleware,raffleController.getRafflesByUser);
 raffleRouter.get("/:raffleId",raffleController.getRaffleDetails);
 raffleRouter.get("/winners/claim/:raffleId",raffleController.getWinnersClaimedPrizes );
+raffleRouter.get("/collection/floorPrice/:symbol",raffleController.getCollectionFloorPrice);
 
 raffleRouter.post("/create",authMiddleware,raffleController.createRaffle);
 raffleRouter.post("/confirm/:raffleId",authMiddleware,raffleController.confirmRaffleCreation);

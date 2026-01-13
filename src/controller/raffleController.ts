@@ -17,6 +17,26 @@ import { ensureAtaIx, FAKE_ATA, FAKE_MINT, getTokenProgramFromMint, raffleProgra
 import { BN } from "@coral-xyz/anchor";
 import { claimTicketAmountSchema } from "../schemas/raffle/claimTicketAmountSchema";
 
+const getCollectionFloorPrice = async (req: Request, res: Response) => {
+  const { symbol } = req.params;
+  if (!symbol) {
+    return responseHandler.error(res, "Collection is required");
+  }
+  const url = `https://api-mainnet.magiceden.dev/v2/collections/${symbol}/stats`;
+  const options = {method: 'GET', headers: {accept: 'application/json'}};
+  const response = await fetch(url, options);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch floor price for ${symbol}`);
+  }
+  const data = await response.json() as { floorPrice: number };
+  const floorPrice = data?.floorPrice || null;
+
+  responseHandler.success(res, {
+    message: "Collection floor price fetched successfully",
+    error: null,
+    floorPrice: floorPrice,
+  });
+}
 const createRaffle = async (req: Request, res: Response) => {
   const body = req.body;
   const { success, data: parsedData, error } = raffleSchema.safeParse(body);
@@ -1437,6 +1457,7 @@ const claimPrizeBackTx = async (req: Request, res: Response) => {
 };
 
 export default {
+  getCollectionFloorPrice,
   createRaffle,
   confirmRaffleCreation,
   getRaffles,
