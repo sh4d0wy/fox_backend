@@ -59,10 +59,11 @@ const ratelimiter = rateLimit({
     legacyHeaders: false, 
 });
 
-app.use(ratelimiter);
 app.use(express.static(path.join(process.cwd(), "public")))
 app.use(express.json());
 app.use(cookieParser());
+
+app.use("/api", ratelimiter);
 
 app.use(session({
     secret: process.env.SESSION_SECRET as string,
