@@ -2,6 +2,7 @@ import express  from "express";
 import { createServer } from "http";
 import cookieParser from "cookie-parser";
 import cors from "cors";
+import path from 'path';
 import rateLimit from "express-rate-limit";
 import userRouter from "../routes/userRoutes";
 import passport from "./passportConfig";
@@ -59,6 +60,7 @@ const ratelimiter = rateLimit({
 });
 
 app.use(ratelimiter);
+app.use(express.static(path.join(process.cwd(), "public")))
 app.use(express.json());
 app.use(cookieParser());
 
@@ -84,6 +86,12 @@ app.use("/api/auction", auctionRouter);
 app.use("/api/gumball", gumballRouter);
 app.use("/api/stats", statsRouter);
 app.use("/api/notifications", notificationRouter);
+
+app.get(/^\/(?!api).*/, (_, res) => {
+  res.sendFile(
+    path.join(process.cwd(), "public", "index.html")
+  );
+});
 
 const serverConn = createServer(app);
 
