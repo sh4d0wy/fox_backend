@@ -2,7 +2,7 @@ node_modules
 .env*
 dist
 package-lock.json
-pnpm-lock.yaml
+
 /prisma/schema.prisma
 
 /src/generated/prisma
