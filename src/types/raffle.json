@@ -1,5 +1,5 @@
 {
-  "address": "4s5vnj8ge7qCLbe3q5KNXK6CbXszhqSc3phpt6UdGCqt",
+  "address": "AbeXDhYA84zDSyjowBWJ291nxutyUYi4dcfCxzE9LLXc",
   "metadata": {
     "name": "raffle",
     "version": "0.1.0",
@@ -1011,8 +1011,9 @@
               {
                 "kind": "const",
                 "value": [
-                  6, 221, 246, 225, 215, 101, 161, 147, 217, 203, 225, 70, 206, 235, 121, 172, 28, 180, 133, 237, 95,
-                  91, 55, 145, 58, 140, 245, 133, 126, 255, 0, 169
+                  6, 221, 246, 225, 215, 101, 161, 147, 217, 203, 225, 70, 206,
+                  235, 121, 172, 28, 180, 133, 237, 95, 91, 55, 145, 58, 140,
+                  245, 133, 126, 255, 0, 169
                 ]
               },
               {
@@ -1023,8 +1024,9 @@
             "program": {
               "kind": "const",
               "value": [
-                140, 151, 37, 143, 78, 36, 137, 241, 187, 61, 16, 41, 20, 142, 13, 131, 11, 90, 19, 153, 218, 255, 16,
-                132, 4, 142, 123, 216, 219, 233, 248, 89
+                140, 151, 37, 143, 78, 36, 137, 241, 187, 61, 16, 41, 20, 142,
+                13, 131, 11, 90, 19, 153, 218, 255, 16, 132, 4, 142, 123, 216,
+                219, 233, 248, 89
               ]
             }
           }
@@ -1124,23 +1126,198 @@
   "errors": [
     {
       "code": 6000,
-      "name": "TokenTransferFailed",
-      "msg": "Token transfer failed"
+      "name": "InvalidRaffleId",
+      "msg": "Invalid Raffle ID"
     },
     {
       "code": 6001,
-      "name": "SolTransferFailed",
-      "msg": "SOL transfer failed"
+      "name": "InvalidCreator",
+      "msg": "Invalid Raffle Creator"
     },
     {
       "code": 6002,
-      "name": "InsufficientTokenBalance",
-      "msg": "Insufficient SPL Token Balance"
+      "name": "FunctionPaused",
+      "msg": "Current function is paused"
     },
     {
       "code": 6003,
-      "name": "InsufficientSolBalance",
-      "msg": "Insufficient SOL Token Balance"
+      "name": "RaffleAlreadyStarted",
+      "msg": "Raffle is already started"
+    },
+    {
+      "code": 6004,
+      "name": "StartTimeNotReached",
+      "msg": "Start time is not reached"
+    },
+    {
+      "code": 6005,
+      "name": "EndTimeNotReached",
+      "msg": "End time is not reached"
+    },
+    {
+      "code": 6006,
+      "name": "EndTimeIsCrossed",
+      "msg": "End time is crossed"
+    },
+    {
+      "code": 6007,
+      "name": "StartTimeInPast",
+      "msg": "Start time should be greater than current time"
+    },
+    {
+      "code": 6008,
+      "name": "Overflow",
+      "msg": "Calculation Overflow Error"
+    },
+    {
+      "code": 6009,
+      "name": "InvalidNFT",
+      "msg": "Invalid NFT"
+    },
+    {
+      "code": 6010,
+      "name": "InvalidWinnerIndex",
+      "msg": "Invalid Winner Index"
+    },
+    {
+      "code": 6011,
+      "name": "ZeroPrizeForWinner",
+      "msg": "Invalid zero prize for winner"
+    },
+    {
+      "code": 6012,
+      "name": "InvalidWinner",
+      "msg": "Invalid Winner claim"
+    },
+    {
+      "code": 6013,
+      "name": "PrizeAlreadyClaimed",
+      "msg": "Prize is already claimed"
+    },
+    {
+      "code": 6014,
+      "name": "InvalidRaffleStateForCancel",
+      "msg": "Raffle state should be in Initialized or Active"
+    },
+    {
+      "code": 6015,
+      "name": "RaffleNotEnded",
+      "msg": "Raffle is not ended"
+    },
+    {
+      "code": 6016,
+      "name": "InvalidZeroAmount",
+      "msg": "Invalid Zero Amount"
+    },
+    {
+      "code": 6017,
+      "name": "InvalidMaxPerWalletPct",
+      "msg": "Invalid maximum wallet per pct"
+    },
+    {
+      "code": 6018,
+      "name": "InvalidMaximumTickets",
+      "msg": "Invalid Maximum Tickets"
+    },
+    {
+      "code": 6019,
+      "name": "TimeOrTicketsNotMet",
+      "msg": "Time or Tickets not met"
+    },
+    {
+      "code": 6020,
+      "name": "ExceedMaxWinners",
+      "msg": "Winners count exceed maximum"
+    },
+    {
+      "code": 6021,
+      "name": "InvalidZeroWinnersCount",
+      "msg": "Invalid zero winners count"
+    },
+    {
+      "code": 6022,
+      "name": "InsufficientPrizeAmount",
+      "msg": "Insufficient prize amount"
+    },
+    {
+      "code": 6023,
+      "name": "StateShouldBeInInitialized",
+      "msg": "Raffle State not in Initialized state"
+    },
+    {
+      "code": 6024,
+      "name": "InvalidRaffleStateForUpdate",
+      "msg": "Invalid raffle state for update"
+    },
+    {
+      "code": 6025,
+      "name": "RaffleNotSuccessEnded",
+      "msg": "Raffle is not Successfully ended"
+    },
+    {
+      "code": 6026,
+      "name": "RaffleNotActive",
+      "msg": "Raffle is not active"
+    },
+    {
+      "code": 6027,
+      "name": "InvalidWinnersLength",
+      "msg": "Invalid winners length"
+    },
+    {
+      "code": 6028,
+      "name": "DuplicateWinnersNotAllowed",
+      "msg": "Duplicate Winners are not allowed"
+    },
+    {
+      "code": 6029,
+      "name": "InvalidWinShares",
+      "msg": "Invalid win shares"
+    },
+    {
+      "code": 6030,
+      "name": "MoreThanOneTicketSolded",
+      "msg": "More than one ticket is solded"
+    },
+    {
+      "code": 6031,
+      "name": "CannotUpdateWinnersForNftPrize",
+      "msg": "Cannot update winners for NFT prize"
+    },
+    {
+      "code": 6032,
+      "name": "StartTimeExceedEndTime",
+      "msg": "Start time do not exceed end time"
+    },
+    {
+      "code": 6033,
+      "name": "InvalidZeroTickets",
+      "msg": "Invalid zero tickets"
+    },
+    {
+      "code": 6034,
+      "name": "TicketsSoldOut",
+      "msg": "Tickets are sold out"
+    },
+    {
+      "code": 6035,
+      "name": "InvalidTicketZeroPrice",
+      "msg": "Invalid ticket zero price"
+    },
+    {
+      "code": 6036,
+      "name": "InvalidTotalTickets",
+      "msg": "Invalid total tickets"
+    },
+    {
+      "code": 6037,
+      "name": "WinnersExceedTotalTickets",
+      "msg": "Total tickets should be greater than winners count"
+    },
+    {
+      "code": 6038,
+      "name": "MaxTicketsPerWalletExceeded",
+      "msg": "Maximum Tickets Per Wallet Exceeded"
     }
   ],
   "types": [

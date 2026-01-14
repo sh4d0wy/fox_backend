@@ -1,5 +1,5 @@
 {
-  "address": "HDW5Huoqz7Us3yiMgxAEkekHUfGvggUPLEz7WZ8uSTBY",
+  "address": "4mhzWoT65ZtGgBtSAuUgmDpDvxExn9fb5S7UJzDr3Efj",
   "metadata": {
     "name": "auction",
     "version": "0.1.0",
@@ -921,23 +921,103 @@
   "errors": [
     {
       "code": 6000,
-      "name": "TokenTransferFailed",
-      "msg": "Token transfer failed"
+      "name": "InvalidAuctionId",
+      "msg": "Invalid Auction ID"
     },
     {
       "code": 6001,
-      "name": "SolTransferFailed",
-      "msg": "SOL transfer failed"
+      "name": "InvalidCreator",
+      "msg": "Invalid Auction Creator"
     },
     {
       "code": 6002,
-      "name": "InsufficientTokenBalance",
-      "msg": "Insufficient SPL Token Balance"
+      "name": "EndTimeNotReached",
+      "msg": "End time not reached"
     },
     {
       "code": 6003,
-      "name": "InsufficientSolBalance",
-      "msg": "Insufficient SOL Balance"
+      "name": "FunctionPaused",
+      "msg": "Particular Function is paused"
+    },
+    {
+      "code": 6004,
+      "name": "Overflow",
+      "msg": "Calculation Overflow Error"
+    },
+    {
+      "code": 6005,
+      "name": "InvalidZeroAmount",
+      "msg": "Invalid zero amount"
+    },
+    {
+      "code": 6006,
+      "name": "StartTimeExceedEndTime",
+      "msg": "Start time exceed end time or invalid duration"
+    },
+    {
+      "code": 6007,
+      "name": "StartTimeInPast",
+      "msg": "Start time should be greater than current time"
+    },
+    {
+      "code": 6008,
+      "name": "AuctionAlreadyStarted",
+      "msg": "Auction already started"
+    },
+    {
+      "code": 6009,
+      "name": "AuctionNotStarted",
+      "msg": "Auction not started yet"
+    },
+    {
+      "code": 6010,
+      "name": "AuctionNotActive",
+      "msg": "Auction not active"
+    },
+    {
+      "code": 6011,
+      "name": "AuctionAlreadyCompleted",
+      "msg": "Auction already completed"
+    },
+    {
+      "code": 6012,
+      "name": "InvalidAuctionTimeExtension",
+      "msg": "Invalid auction time extension"
+    },
+    {
+      "code": 6013,
+      "name": "AuctionHasBids",
+      "msg": "Auction has bids and cannot be cancelled"
+    },
+    {
+      "code": 6014,
+      "name": "InvalidNFT",
+      "msg": "Invalid NFT (must be a single-supply token with 0 decimals)"
+    },
+    {
+      "code": 6015,
+      "name": "BidTooLow",
+      "msg": "Bid amount is too low"
+    },
+    {
+      "code": 6016,
+      "name": "BidBelowIncrement",
+      "msg": "Bid increase is smaller than minimum increment"
+    },
+    {
+      "code": 6017,
+      "name": "CannotBidOwnHighBid",
+      "msg": "Cannot bid: caller is current highest bidder"
+    },
+    {
+      "code": 6018,
+      "name": "NoBidsPresent",
+      "msg": "No bids present"
+    },
+    {
+      "code": 6019,
+      "name": "InsufficientBalance",
+      "msg": "Insufficient balance to place bid"
     }
   ],
   "types": [
