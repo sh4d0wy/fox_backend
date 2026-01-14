@@ -51,19 +51,19 @@ app.use(cors({
     exposedHeaders: ['Set-Cookie'],
 }));
 
-const ratelimiter = rateLimit({
-    windowMs: 5 * 60 * 1000, 
-    max: 100, 
-    message: "Too many requests from this IP, please try again later.",
-    standardHeaders: true, 
-    legacyHeaders: false, 
-});
+// const ratelimiter = rateLimit({
+//     windowMs: 5 * 60 * 1000, 
+//     max: 100, 
+//     message: "Too many requests from this IP, please try again later.",
+//     standardHeaders: true, 
+//     legacyHeaders: false, 
+// });
 
 app.use(express.static(path.join(process.cwd(), "public")))
 app.use(express.json());
 app.use(cookieParser());
 
-app.use("/api", ratelimiter);
+// app.use("/api", ratelimiter);
 
 app.use(session({
     secret: process.env.SESSION_SECRET as string,
