@@ -30,9 +30,6 @@ export const auctionSchema = z.object({
   auctionPda: z.string().optional(),
   auctionBump: z.number().int().optional(),
   bidEscrow: z.string().optional(),
-});
-
-export const confirmAuctionCreationSchema = z.object({
   txSignature: z.string().min(1),
 });
 

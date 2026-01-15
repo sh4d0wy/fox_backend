@@ -1,7 +1,6 @@
 import { responseHandler } from "../utils/resHandler";
 import { Request, Response } from "express";
 import {
-  confirmRaffleCreationSchema,
   createRaffleSchema,
   raffleSchema,
 } from "../schemas/raffle/createRaffle.schema";
@@ -23,7 +22,7 @@ const getCollectionFloorPrice = async (req: Request, res: Response) => {
     return responseHandler.error(res, "Collection is required");
   }
   const url = `https://api-mainnet.magiceden.dev/v2/collections/${symbol}/stats`;
-  const options = {method: 'GET', headers: {accept: 'application/json'}};
+  const options = { method: 'GET', headers: { accept: 'application/json' } };
   const response = await fetch(url, options);
   if (!response.ok) {
     throw new Error(`Failed to fetch floor price for ${symbol}`);
@@ -37,6 +36,7 @@ const getCollectionFloorPrice = async (req: Request, res: Response) => {
     floorPrice: floorPrice,
   });
 }
+
 const createRaffle = async (req: Request, res: Response) => {
   const body = req.body;
   const { success, data: parsedData, error } = raffleSchema.safeParse(body);
@@ -52,145 +52,82 @@ const createRaffle = async (req: Request, res: Response) => {
     return responseHandler.error(res, "Invalid endsAt");
   }
 
-  const { prizeData, ...raffleData } = parsedData;
+  const isTransactionConfirmed = await verifyTransaction(
+    parsedData.txSignature
+  );
+  if (!isTransactionConfirmed) {
+    return responseHandler.error(res, "Transaction not confirmed");
+  }
 
-  const raffle = await prismaClient.raffle.create({
-    data: {
-      ...raffleData,
-      prizeData: {
-        create: {
-          type: prizeData.type,
-          address: prizeData.address,
-          mintAddress: prizeData.mintAddress,
-          mint: prizeData.mint,
-          name: prizeData.name,
-          verified: prizeData.verified,
-          symbol: prizeData.symbol,
-          decimals: prizeData.decimals,
-          image: prizeData.image,
-          attributes: prizeData.attributes,
-          collection: prizeData.collection,
-          creator: prizeData.creator,
-          description: prizeData.description,
-          externalUrl: prizeData.externalUrl,
-          properties: prizeData.properties,
-          amount: prizeData.amount,
-          floor: prizeData.floor,
+  const { prizeData, ...raffleData } = parsedData;
+  let raffle;
+
+  await prismaClient.$transaction(async (tx) => {
+    const existingTransaction = await tx.transaction.findUnique({
+      where: {
+        transactionId: parsedData.txSignature,
+      },
+    });
+    if (existingTransaction) {
+      throw new Error("Transaction already exists");
+    }
+
+    const status =
+      parsedData.createdAt && parsedData.createdAt <= new Date()
+        ? "Active"
+        : "Initialized";
+
+    raffle = await tx.raffle.create({
+      data: {
+        ...raffleData,
+        state: status,
+        prizeData: {
+          create: {
+            type: prizeData.type,
+            address: prizeData.address,
+            mintAddress: prizeData.mintAddress,
+            mint: prizeData.mint,
+            name: prizeData.name,
+            verified: prizeData.verified,
+            symbol: prizeData.symbol,
+            decimals: prizeData.decimals,
+            image: prizeData.image,
+            attributes: prizeData.attributes,
+            collection: prizeData.collection,
+            creator: prizeData.creator,
+            description: prizeData.description,
+            externalUrl: prizeData.externalUrl,
+            properties: prizeData.properties,
+            amount: prizeData.amount,
+            floor: prizeData.floor,
+          },
         },
       },
-    },
-    include: {
-      prizeData: true,
-    },
+      include: {
+        prizeData: true,
+      },
+    });
+
+    const transaction = await tx.transaction.create({
+      data: {
+        transactionId: parsedData.txSignature,
+        type: "RAFFLE_CREATION",
+        sender: raffle.createdBy,
+        receiver: raffle.raffle || "system",
+        amount: BigInt(0),
+        mintAddress: "So11111111111111111111111111111111111111112",
+      },
+    });
+    if (!transaction) {
+      throw new Error("Transaction not created");
+    }
   });
 
   responseHandler.success(res, {
-    message: "Raffle creation initiated successfully",
+    message: "Raffle created successfully",
     error: null,
     raffle,
   });
-};
-
-const confirmRaffleCreation = async (req: Request, res: Response) => {
-  const params = req.params;
-  const raffleId = parseInt(params.raffleId);
-  const body = req.body;
-  const { success, data: parsedData } =
-    confirmRaffleCreationSchema.safeParse(body);
-  if (!success) {
-    return responseHandler.error(res, "Invalid payload");
-  }
-  try {
-    const isTransactionConfirmed = await verifyTransaction(
-      parsedData.txSignature
-    );
-    if (!isTransactionConfirmed) {
-      return responseHandler.error(res, "Transaction not confirmed");
-    }
-
-    await prismaClient.$transaction(async (tx) => {
-      const existingTransaction = await tx.transaction.findUnique({
-        where: {
-          transactionId: parsedData.txSignature,
-        },
-      });
-      if (existingTransaction) {
-        throw {
-          code: "DB_ERROR",
-          message: "Transaction already exists",
-        };
-      }
-      const raffle = await tx.raffle.findUnique({
-        where: {
-          id: raffleId,
-        },
-      });
-      if (!raffle) {
-        throw {
-          code: "DB_ERROR",
-          message: "Raffle not found",
-        };
-      }
-      if (raffle.createdAt && raffle.createdAt <= new Date()) {
-        const updatedRaffle = await tx.raffle.update({
-          where: {
-            id: raffleId,
-          },
-          data: {
-            state: "Active",
-          },
-        });
-        if (!updatedRaffle) {
-          throw {
-            code: "DB_ERROR",
-            message: "Raffle not updated",
-          };
-        }
-      } else if (raffle.createdAt && raffle.createdAt > new Date()) {
-        const updatedRaffle = await tx.raffle.update({
-          where: {
-            id: raffleId,
-          },
-          data: {
-            state: "Initialized",
-          },
-        });
-        if (!updatedRaffle) {
-          throw {
-            code: "DB_ERROR",
-            message: "Raffle not updated",
-          };
-        }
-      }
-
-      //TODO: Fetch the raffle, entries, prize pda address and update in the raffle model
-
-      const transaction = await tx.transaction.create({
-        data: {
-          transactionId: parsedData.txSignature,
-          type: "RAFFLE_CREATION",
-          sender: raffle.createdBy,
-          receiver: raffle.raffle || "system",
-          amount: BigInt(0),
-          mintAddress: "So11111111111111111111111111111111111111112",
-        },
-      });
-      if (!transaction) {
-        throw {
-          code: "DB_ERROR",
-          message: "Transaction not created",
-        };
-      }
-    });
-    responseHandler.success(res, {
-      message: "Raffle creation confirmed successfully",
-      error: null,
-      raffleId: raffleId,
-    });
-  } catch (error) {
-    logger.error(error);
-    responseHandler.error(res, error);
-  }
 };
 
 const getRaffles = async (req: Request, res: Response) => {

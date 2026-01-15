@@ -2,7 +2,6 @@ import { responseHandler } from "../utils/resHandler";
 import { Request, Response } from "express";
 import {
   auctionSchema,
-  confirmAuctionCreationSchema,
   createAuctionSchema,
 } from "../schemas/auction/createAuction.schema";
 import { verifyTransaction } from "../utils/verifyTransaction";
@@ -27,135 +26,76 @@ const createAuction = async (req: Request, res: Response) => {
     return responseHandler.error(res, "Invalid endsAt");
   }
 
-  const auction = await prismaClient.auction.create({
-    data: {
-      id: parsedData.id,
-      createdBy: parsedData.createdBy,
-      prizeMint: parsedData.prizeMint,
-      prizeName: parsedData.prizeName,
-      prizeImage: parsedData.prizeImage,
-      collectionName: parsedData.collectionName,
-      collectionVerified: parsedData.collectionVerified,
-      floorPrice: parsedData.floorPrice,
-      traits: parsedData.traits,
-      details: parsedData.details,
-      startsAt: parsedData.startsAt,
-      endsAt: parsedData.endsAt,
-      timeExtension: parsedData.timeExtension,
-      reservePrice: parsedData.reservePrice,
-      currency: parsedData.currency,
-      bidIncrementPercent: parsedData.bidIncrementPercent,
-      payRoyalties: parsedData.payRoyalties,
-      royaltyPercentage: parsedData.royaltyPercentage,
-      auctionPda: parsedData.auctionPda,
-      auctionBump: parsedData.auctionBump,
-      bidEscrow: parsedData.bidEscrow,
-    },
+  const isTransactionConfirmed = await verifyTransaction(parsedData.txSignature);
+  if (!isTransactionConfirmed) {
+    return responseHandler.error(res, "Transaction not confirmed");
+  }
+
+  let auction;
+
+  await prismaClient.$transaction(async (tx) => {
+    const existingTransaction = await tx.transaction.findUnique({
+      where: {
+        transactionId: parsedData.txSignature,
+      },
+    });
+    if (existingTransaction) {
+      throw new Error("Transaction already exists");
+    }
+
+    const status =
+      parsedData.startsAt && parsedData.startsAt <= new Date()
+        ? "ACTIVE"
+        : "INITIALIZED";
+
+    auction = await tx.auction.create({
+      data: {
+        id: parsedData.id,
+        createdBy: parsedData.createdBy,
+        prizeMint: parsedData.prizeMint,
+        prizeName: parsedData.prizeName,
+        prizeImage: parsedData.prizeImage,
+        collectionName: parsedData.collectionName,
+        collectionVerified: parsedData.collectionVerified,
+        floorPrice: parsedData.floorPrice,
+        traits: parsedData.traits,
+        details: parsedData.details,
+        startsAt: parsedData.startsAt,
+        endsAt: parsedData.endsAt,
+        timeExtension: parsedData.timeExtension,
+        reservePrice: parsedData.reservePrice,
+        currency: parsedData.currency,
+        bidIncrementPercent: parsedData.bidIncrementPercent,
+        payRoyalties: parsedData.payRoyalties,
+        royaltyPercentage: parsedData.royaltyPercentage,
+        auctionPda: parsedData.auctionPda,
+        auctionBump: parsedData.auctionBump,
+        bidEscrow: parsedData.bidEscrow,
+        status: status,
+      },
+    });
+
+    const transaction = await tx.transaction.create({
+      data: {
+        transactionId: parsedData.txSignature,
+        type: "AUCTION_CREATION",
+        sender: parsedData.createdBy,
+        receiver: parsedData.auctionPda || "system",
+        amount: BigInt(0),
+        mintAddress: parsedData.prizeMint,
+        auctionId: parsedData.id,
+      },
+    });
+    if (!transaction) {
+      throw new Error("Transaction not created");
+    }
   });
 
   responseHandler.success(res, {
-    message: "Auction creation initiated successfully",
+    message: "Auction created successfully",
     error: null,
     auction,
   });
-};
-
-const confirmAuctionCreation = async (req: Request, res: Response) => {
-  const params = req.params;
-  const auctionId = parseInt(params.auctionId);
-  const body = req.body;
-  const { success, data: parsedData } = confirmAuctionCreationSchema.safeParse(body);
-  if (!success) {
-    return responseHandler.error(res, "Invalid payload");
-  }
-  try {
-    const isTransactionConfirmed = await verifyTransaction(parsedData.txSignature);
-    if (!isTransactionConfirmed) {
-      return responseHandler.error(res, "Transaction not confirmed");
-    }
-
-    await prismaClient.$transaction(async (tx) => {
-      const existingTransaction = await tx.transaction.findUnique({
-        where: {
-          transactionId: parsedData.txSignature,
-        },
-      });
-      if (existingTransaction) {
-        throw {
-          code: "DB_ERROR",
-          message: "Transaction already exists",
-        };
-      }
-      const auction = await tx.auction.findUnique({
-        where: {
-          id: auctionId,
-        },
-      });
-      if (!auction) {
-        throw {
-          code: "DB_ERROR",
-          message: "Auction not found",
-        };
-      }
-      if (auction.startsAt && auction.startsAt <= new Date()) {
-        const updatedAuction = await tx.auction.update({
-          where: {
-            id: auctionId,
-          },
-          data: {
-            status: "ACTIVE",
-          },
-        });
-        if (!updatedAuction) {
-          throw {
-            code: "DB_ERROR",
-            message: "Auction not updated",
-          };
-        }
-      } else if (auction.startsAt && auction.startsAt > new Date()) {
-        const updatedAuction = await tx.auction.update({
-          where: {
-            id: auctionId,
-          },
-          data: {
-            status: "INITIALIZED",
-          },
-        });
-        if (!updatedAuction) {
-          throw {
-            code: "DB_ERROR",
-            message: "Auction not updated",
-          };
-        }
-      }
-
-      const transaction = await tx.transaction.create({
-        data: {
-          transactionId: parsedData.txSignature,
-          type: "AUCTION_CREATION",
-          sender: auction.createdBy,
-          receiver: auction.auctionPda || "system",
-          amount: BigInt(0),
-          mintAddress: auction.prizeMint,
-          auctionId: auctionId,
-        },
-      });
-      if (!transaction) {
-        throw {
-          code: "DB_ERROR",
-          message: "Transaction not created",
-        };
-      }
-    });
-    responseHandler.success(res, {
-      message: "Auction creation confirmed successfully",
-      error: null,
-      auctionId: auctionId,
-    });
-  } catch (error) {
-    logger.error(error);
-    responseHandler.error(res, error);
-  }
 };
 
 const getAuctions = async (req: Request, res: Response) => {

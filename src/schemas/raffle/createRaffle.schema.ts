@@ -85,9 +85,6 @@ export const raffleSchema = z.object({
     numberOfWinners: z.number().gt(0),
     prizeData: prizeDataSchema,
     maxTickets: z.number().gt(0).optional(),
-});
-
-export const confirmRaffleCreationSchema = z.object({
     txSignature: z.string().min(1),
 });
 
