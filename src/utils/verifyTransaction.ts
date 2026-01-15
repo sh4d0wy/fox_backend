@@ -1,9 +1,7 @@
-import { Connection, clusterApiUrl, Cluster } from "@solana/web3.js";
-
-const NETWORK: Cluster = (process.env.NETWORK as Cluster) || "mainnet-beta";
+import { Connection } from "@solana/web3.js";
 
 export const verifyTransaction = async (txSignature: string) => {
-  const connection = new Connection(clusterApiUrl(NETWORK));
+  const connection = new Connection(process.env.SOLANA_RPC_URL || "https://api.devnet.solana.com");
 
   const res = await connection.getSignatureStatuses(
     [txSignature],
