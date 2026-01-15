@@ -1,1 +1,0 @@
-import{C as e}from"./index-CMYVzd5m.js";var t=e;export{t as component};
