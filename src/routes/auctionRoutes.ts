@@ -10,7 +10,6 @@ auctionRouter.get("/bidsbyuser", authMiddleware, auctionController.getBidsByUser
 auctionRouter.get("/:auctionId", auctionController.getAuctionDetails);
 
 auctionRouter.post("/create", authMiddleware, auctionController.createAuction);
-auctionRouter.post("/confirm/:auctionId", authMiddleware, auctionController.confirmAuctionCreation);
 auctionRouter.post("/cancel/:auctionId", authMiddleware, auctionController.cancelAuction);
 auctionRouter.post("/bid/:auctionId", authMiddleware, auctionController.placeBid);
 auctionRouter.post("/claim/:auctionId", authMiddleware, auctionController.claimAuction);

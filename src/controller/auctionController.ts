@@ -891,7 +891,6 @@ const placeBidAuctionTx = async (req: Request, res: Response) => {
 
 export default {
   createAuction,
-  confirmAuctionCreation,
   getAuctions,
   getAuctionDetails,
   getAuctionsByUser,

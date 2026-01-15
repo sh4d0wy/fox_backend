@@ -1396,7 +1396,6 @@ const claimPrizeBackTx = async (req: Request, res: Response) => {
 export default {
   getCollectionFloorPrice,
   createRaffle,
-  confirmRaffleCreation,
   getRaffles,
   getRaffleDetails,
   getRafflesByUser,

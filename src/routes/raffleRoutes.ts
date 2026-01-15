@@ -11,7 +11,6 @@ raffleRouter.get("/winners/claim/:raffleId",raffleController.getWinnersClaimedPr
 raffleRouter.get("/collection/floorPrice/:symbol",raffleController.getCollectionFloorPrice);
 
 raffleRouter.post("/create",authMiddleware,raffleController.createRaffle);
-raffleRouter.post("/confirm/:raffleId",authMiddleware,raffleController.confirmRaffleCreation);
 raffleRouter.post("/cancel/:raffleId",authMiddleware,raffleController.cancelRaffle);
 raffleRouter.post("/buy/:raffleId",authMiddleware,raffleController.buyTicket);
 raffleRouter.post("/claim/:raffleId",authMiddleware,raffleController.claimPrize);
