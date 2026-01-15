@@ -26,10 +26,10 @@ const createAuction = async (req: Request, res: Response) => {
     return responseHandler.error(res, "Invalid endsAt");
   }
 
-  const isTransactionConfirmed = await verifyTransaction(parsedData.txSignature);
-  if (!isTransactionConfirmed) {
-    return responseHandler.error(res, "Transaction not confirmed");
-  }
+  // const isTransactionConfirmed = await verifyTransaction(parsedData.txSignature);
+  // if (!isTransactionConfirmed) {
+  //   return responseHandler.error(res, "Transaction not confirmed");
+  // }
 
   let auction;
 
