@@ -17,7 +17,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const FAKE_MINT = new PublicKey('So11111111111111111111111111111111111111112');
-const FAKE_ATA = new PublicKey('B9W4wPFWjTbZ9ab1okzB4D3SsGY7wntkrBKwpp5RC1Uv')
+const FAKE_ATA = new PublicKey('C3FzbX9n1YD2dow2dCmEv5uNyyf22Gb3TLAEqGBhw5fY')
 
 const connection = new Connection(
     process.env.SOLANA_RPC_URL || "https://api.devnet.solana.com",
