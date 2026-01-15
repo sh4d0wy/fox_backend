@@ -59,13 +59,13 @@ const createRaffle = async (req: Request, res: Response) => {
   //   return responseHandler.error(res, "Transaction not confirmed");
   // }
 
-  const { prizeData, ...raffleData } = parsedData;
+  const { prizeData, txSignature, ...raffleData} = parsedData;
   let raffle;
 
   await prismaClient.$transaction(async (tx) => {
     const existingTransaction = await tx.transaction.findUnique({
       where: {
-        transactionId: parsedData.txSignature,
+        transactionId: txSignature,
       },
     });
     if (existingTransaction) {
@@ -110,7 +110,7 @@ const createRaffle = async (req: Request, res: Response) => {
 
     const transaction = await tx.transaction.create({
       data: {
-        transactionId: parsedData.txSignature,
+        transactionId: txSignature,
         type: "RAFFLE_CREATION",
         sender: raffle.createdBy,
         receiver: raffle.raffle || "system",
