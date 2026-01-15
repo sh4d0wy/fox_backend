@@ -1,1 +1,0 @@
-import{C as e}from"./index-4NHKeTcO.js";var t=e;export{t as component};
