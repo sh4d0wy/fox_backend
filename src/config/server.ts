@@ -24,7 +24,8 @@ app.use(cors({
             'http://localhost:3000',
             'https://fox-frontend-chi.vercel.app',
             'https://fox-frontend-orcin.vercel.app',
-            'http://localhost:4173'
+            'http://localhost:4173',
+            'https://raffle.meccain.com'
         ];
         
         // Check if the origin is in the allowed list or matches patterns
