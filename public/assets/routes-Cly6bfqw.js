@@ -1,0 +1,1 @@
+import{C as e}from"./index-D2oNMXH3.js";var t=e;export{t as component};
