@@ -157,7 +157,7 @@ async function announceWinners(
         tx.feePayer = ADMIN_KEYPAIR.publicKey;
 
         const { blockhash, lastValidBlockHeight } =
-            await connection.getLatestBlockhash("finalized");
+            await connection.getLatestBlockhash("confirmed");
 
         tx.recentBlockhash = blockhash;
 
@@ -349,7 +349,7 @@ async function endAuction(auctionId: number) {
         tx.feePayer = ADMIN_KEYPAIR.publicKey;
 
         const { blockhash, lastValidBlockHeight } =
-            await connection.getLatestBlockhash("finalized");
+            await connection.getLatestBlockhash("confirmed");
 
         tx.recentBlockhash = blockhash;
 
@@ -524,7 +524,7 @@ async function startGumball(gumballId: number) {
         tx.feePayer = ADMIN_KEYPAIR.publicKey;
 
         const { blockhash, lastValidBlockHeight } =
-            await connection.getLatestBlockhash("finalized");
+            await connection.getLatestBlockhash("confirmed");
 
         tx.recentBlockhash = blockhash;
 
@@ -572,7 +572,7 @@ async function endGumball(gumballId: number) {
         tx.feePayer = ADMIN_KEYPAIR.publicKey;
 
         const { blockhash, lastValidBlockHeight } =
-            await connection.getLatestBlockhash("finalized");
+            await connection.getLatestBlockhash("confirmed");
 
         tx.recentBlockhash = blockhash;
 
