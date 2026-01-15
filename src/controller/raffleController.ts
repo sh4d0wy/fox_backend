@@ -1219,6 +1219,24 @@ const createRaffleTx = async (req: Request, res: Response) => {
 
     transaction.partialSign(ADMIN_KEYPAIR);
 
+    // Simulate the transaction before returning
+    const simulationResult = await connection.simulateTransaction(transaction);
+
+    // Always log simulation results for debugging
+    logger.log("Transaction simulation completed");
+    logger.log("Simulation logs:", simulationResult.value.logs);
+    logger.log("Units consumed:", simulationResult.value.unitsConsumed);
+
+    if (simulationResult.value.err) {
+      logger.error("Transaction simulation failed:", simulationResult.value.err);
+      return responseHandler.error(res, {
+        code: "SIMULATION_ERROR",
+        message: "Transaction simulation failed",
+        error: simulationResult.value.err,
+        logs: simulationResult.value.logs,
+      });
+    }
+
     const serializedTransaction = transaction.serialize({
       verifySignatures: false,
       requireAllSignatures: false,
@@ -1231,6 +1249,8 @@ const createRaffleTx = async (req: Request, res: Response) => {
       minContextSlot,
       blockhash,
       lastValidBlockHeight,
+      simulationLogs: simulationResult.value.logs,
+      unitsConsumed: simulationResult.value.unitsConsumed,
       message: "OK",
     });
 
