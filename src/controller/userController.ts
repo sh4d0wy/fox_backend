@@ -94,6 +94,7 @@ export default {
         select: {
           id: true,
           walletAddress: true,
+          profileImage: true,
           twitterId: true,
           twitterConnected: true,
           createdAt: true,
@@ -123,6 +124,7 @@ export default {
         select: {
           id: true,
           walletAddress: true,
+          profileImage: true,
           twitterId: true,
           twitterConnected: true,
           createdAt: true,
@@ -964,6 +966,59 @@ export default {
       return responseHandler.success(res, {
         message: isFollowing ? "Unfollowed gumball" : "Following gumball",
         isFollowing: !isFollowing,
+      });
+    } catch (error) {
+      logger.error(error);
+      return responseHandler.error(res, error);
+    }
+  },
+
+  updateProfileImage: async (req: Request, res: Response) => {
+    try {
+      const walletAddress = req.user as string;
+
+      if (!req.file) {
+        return responseHandler.error(res, "No image file provided");
+      }
+
+      const fs = await import("fs");
+      const path = await import("path");
+
+      const uploadDir = path.join(process.cwd(), "public", "uploads", "profile-images");
+      const newFileExt = path.extname(req.file.originalname).toLowerCase();
+      const newFileName = `${walletAddress}${newFileExt}`;
+
+      // Delete old profile images with different extensions
+      const allowedExtensions = [".jpg", ".jpeg", ".png", ".gif", ".webp"];
+      for (const ext of allowedExtensions) {
+        if (ext !== newFileExt) {
+          const oldFilePath = path.join(uploadDir, `${walletAddress}${ext}`);
+          if (fs.existsSync(oldFilePath)) {
+            fs.unlinkSync(oldFilePath);
+          }
+        }
+      }
+
+      // Construct the URL path for the uploaded image
+      const profileImageUrl = `/uploads/profile-images/${newFileName}`;
+
+      // Update user's profileImage in database
+      const updatedUser = await prismaClient.user.update({
+        where: { walletAddress },
+        data: { profileImage: profileImageUrl },
+        select: {
+          id: true,
+          walletAddress: true,
+          profileImage: true,
+          twitterId: true,
+          twitterConnected: true,
+          createdAt: true,
+        },
+      });
+
+      return responseHandler.success(res, {
+        message: "Profile image updated successfully",
+        user: updatedUser,
       });
     } catch (error) {
       logger.error(error);

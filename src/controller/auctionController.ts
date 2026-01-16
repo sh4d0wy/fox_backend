@@ -116,6 +116,13 @@ const getAuctions = async (req: Request, res: Response) => {
         },
         take: 1,
       },
+      creator: {
+        select: {
+          walletAddress: true,
+          twitterId: true,
+          profileImage: true,
+        },
+      },
     },
   });
   responseHandler.success(res, {
@@ -142,6 +149,7 @@ const getAuctionDetails = async (req: Request, res: Response) => {
             select: {
               walletAddress: true,
               twitterId: true,
+              profileImage: true,
             },
           },
         },
@@ -150,18 +158,21 @@ const getAuctionDetails = async (req: Request, res: Response) => {
         select: {
           walletAddress: true,
           twitterId: true,
+          profileImage: true,
         },
       },
       favouritedBy: {
         select: {
           walletAddress: true,
           twitterId: true,
+          profileImage: true,
         },
       },
       creator: {
         select: {
           walletAddress: true,
           twitterId: true,
+          profileImage: true,
         },
       },
     },

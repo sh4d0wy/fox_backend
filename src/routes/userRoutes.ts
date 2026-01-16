@@ -3,6 +3,7 @@ import userController from "../controller/userController";
 import passport from "../config/passportConfig";
 import { Session } from "express-session";
 import authMiddleware from "../middleware/authMiddleware";
+import { profileImageUpload } from "../config/multerConfig";
 
 const userRouter = express.Router();
 
@@ -44,6 +45,13 @@ userRouter.get("/auth/twitter/:walletAddress",(req, res, next) => {
 
 
 userRouter.get("/profile/me", authMiddleware, userController.getMyProfile);
+
+userRouter.patch(
+  "/profile/image",
+  authMiddleware,
+  profileImageUpload.single("profileImage"),
+  userController.updateProfileImage
+);
 
 userRouter.get("/profile/:walletAddress", userController.getProfile);
 

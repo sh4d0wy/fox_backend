@@ -1034,6 +1034,13 @@ const getGumballs = async (req: Request, res: Response) => {
           spins: true,
         },
       },
+      creator: {
+        select: {
+          walletAddress: true,
+          twitterId: true,
+          profileImage: true,
+        },
+      },
     },
   });
 
@@ -1103,6 +1110,7 @@ const getGumballDetails = async (req: Request, res: Response) => {
         select: {
           walletAddress: true,
           twitterId: true,
+          profileImage: true,
         },
       },
     },

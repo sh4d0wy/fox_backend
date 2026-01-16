@@ -143,6 +143,13 @@ const getRaffles = async (req: Request, res: Response) => {
     },
     include: {
       prizeData: true,
+      creator: {
+        select: {
+          walletAddress: true,
+          twitterId: true,
+          profileImage: true,
+        },
+      },
     }
   });
   responseHandler.success(res, {
@@ -164,18 +171,27 @@ const getRaffleDetails = async (req: Request, res: Response) => {
       raffleEntries: {
         include: {
           transactions: true,
+          user: {
+            select: {
+              walletAddress: true,
+              twitterId: true,
+              profileImage: true,
+            },
+          },
         },
       },
       winners: {
         select: {
           walletAddress: true,
           twitterId: true,
+          profileImage: true,
         }
       },
       favouritedBy: {
         select: {
           walletAddress: true,
           twitterId: true,
+          profileImage: true,
         }
       },
     }
