@@ -147,7 +147,7 @@ const getAuctionDetails = async (req: Request, res: Response) => {
         include: {
           bidder: {
             select: {
-              walletAddress: true,
+              walletAddress: true, 
               twitterId: true,
               profileImage: true,
             },
