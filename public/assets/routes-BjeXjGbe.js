@@ -1,1 +1,0 @@
-import{D as e}from"./index-Dyt0Bt_N.js";var t=e;export{t as component};

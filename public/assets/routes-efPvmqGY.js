@@ -1,0 +1,1 @@
+import{O as e}from"./index-6-Uy3_Cm.js";var t=e;export{t as component};
