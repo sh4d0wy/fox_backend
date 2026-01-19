@@ -160,6 +160,9 @@ export default {
           _count: {
             select: { raffleEntries: true },
           },
+          creator: {
+            select: { walletAddress: true, twitterId: true, profileImage: true },
+          },
         },
       });
 
@@ -194,7 +197,7 @@ export default {
             include: {
               prizeData: true,
               creator: {
-                select: { walletAddress: true, twitterId: true },
+                select: { walletAddress: true, twitterId: true, profileImage: true },
               },
               winners: {
                 select: { walletAddress: true },
@@ -256,7 +259,7 @@ export default {
             include: {
               prizeData: true,
               creator: {
-                select: { walletAddress: true, twitterId: true },
+                select: { walletAddress: true, twitterId: true, profileImage: true },
               },
             },
             orderBy: { createdAt: "desc" },
@@ -373,7 +376,7 @@ export default {
           auction: {
             include: {
               creator: {
-                select: { walletAddress: true, twitterId: true },
+                select: { walletAddress: true, twitterId: true, profileImage: true },
               },
             },
           },
@@ -412,7 +415,7 @@ export default {
             take: Number(limit),
             include: {
               creator: {
-                select: { walletAddress: true, twitterId: true },
+                select: { walletAddress: true, twitterId: true, profileImage: true },
               },
             },
             orderBy: { createdAt: "desc" },

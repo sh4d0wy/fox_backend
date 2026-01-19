@@ -194,6 +194,13 @@ const getRaffleDetails = async (req: Request, res: Response) => {
           profileImage: true,
         }
       },
+      creator: {
+        select: {
+          walletAddress: true,
+          twitterId: true,
+          profileImage: true,
+        }
+      },
     }
   });
   if (!raffle) {
