@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/raffle.json`.
  */
 export type Raffle = {
-  "address": "AbeXDhYA84zDSyjowBWJ291nxutyUYi4dcfCxzE9LLXc",
+  "address": "3NttreBkayEE8KyitLSNrTT9L86fRgj7JUDZVuyvcws7",
   "metadata": {
     "name": "raffle",
     "version": "0.1.0",
@@ -400,6 +400,44 @@ export type Raffle = {
         {
           "name": "systemProgram",
           "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "associatedTokenProgram",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "metadataAccount",
+          "writable": true
+        },
+        {
+          "name": "editionAccount"
+        },
+        {
+          "name": "ownerTokenRecord",
+          "docs": [
+            "Required only for pNFTs. Derived as PDA(metadata, mint, \"token_record\", source_ata)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "destTokenRecord",
+          "docs": [
+            "Required only for pNFTs. Derived as PDA(metadata, mint, \"token_record\", destination_ata)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "authorizationRules",
+          "optional": true
+        },
+        {
+          "name": "authRulesProgram"
+        },
+        {
+          "name": "tokenMetadataProgram"
+        },
+        {
+          "name": "sysvarInstructions"
         }
       ],
       "args": [
@@ -489,6 +527,44 @@ export type Raffle = {
         {
           "name": "systemProgram",
           "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "associatedTokenProgram",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "metadataAccount",
+          "writable": true
+        },
+        {
+          "name": "editionAccount"
+        },
+        {
+          "name": "ownerTokenRecord",
+          "docs": [
+            "Required only for pNFTs. Derived as PDA(metadata, mint, \"token_record\", source_ata)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "destTokenRecord",
+          "docs": [
+            "Required only for pNFTs. Derived as PDA(metadata, mint, \"token_record\", destination_ata)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "authorizationRules",
+          "optional": true
+        },
+        {
+          "name": "authRulesProgram"
+        },
+        {
+          "name": "tokenMetadataProgram"
+        },
+        {
+          "name": "sysvarInstructions"
         }
       ],
       "args": [
@@ -592,6 +668,44 @@ export type Raffle = {
         {
           "name": "systemProgram",
           "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "associatedTokenProgram",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "metadataAccount",
+          "writable": true
+        },
+        {
+          "name": "editionAccount"
+        },
+        {
+          "name": "ownerTokenRecord",
+          "docs": [
+            "Required only for pNFTs. Derived as PDA(metadata, mint, \"token_record\", source_ata)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "destTokenRecord",
+          "docs": [
+            "Required only for pNFTs. Derived as PDA(metadata, mint, \"token_record\", destination_ata)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "authorizationRules",
+          "optional": true
+        },
+        {
+          "name": "authRulesProgram"
+        },
+        {
+          "name": "tokenMetadataProgram"
+        },
+        {
+          "name": "sysvarInstructions"
         }
       ],
       "args": [
@@ -693,6 +807,44 @@ export type Raffle = {
         {
           "name": "systemProgram",
           "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "associatedTokenProgram",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "metadataAccount",
+          "writable": true
+        },
+        {
+          "name": "editionAccount"
+        },
+        {
+          "name": "ownerTokenRecord",
+          "docs": [
+            "Required only for pNFTs. Derived as PDA(metadata, mint, \"token_record\", source_ata)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "destTokenRecord",
+          "docs": [
+            "Required only for pNFTs. Derived as PDA(metadata, mint, \"token_record\", destination_ata)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "authorizationRules",
+          "optional": true
+        },
+        {
+          "name": "authRulesProgram"
+        },
+        {
+          "name": "tokenMetadataProgram"
+        },
+        {
+          "name": "sysvarInstructions"
         }
       ],
       "args": [
@@ -1699,198 +1851,93 @@ export type Raffle = {
   "errors": [
     {
       "code": 6000,
-      "name": "invalidRaffleId",
-      "msg": "Invalid Raffle ID"
+      "name": "invalidTicketMint",
+      "msg": "Invalid Ticket Mint"
     },
     {
       "code": 6001,
-      "name": "invalidCreator",
-      "msg": "Invalid Raffle Creator"
+      "name": "missingTicketMint",
+      "msg": "Missing Ticket Mint"
     },
     {
       "code": 6002,
-      "name": "functionPaused",
-      "msg": "Current function is paused"
+      "name": "invalidTicketEscrow",
+      "msg": "Invalid Ticket Escrow"
     },
     {
       "code": 6003,
-      "name": "raffleAlreadyStarted",
-      "msg": "Raffle is already started"
+      "name": "missingTicketEscrow",
+      "msg": "Missing Ticket Escrow"
     },
     {
       "code": 6004,
-      "name": "startTimeNotReached",
-      "msg": "Start time is not reached"
+      "name": "invalidTicketTokenProgram",
+      "msg": "Invalid Ticket Program"
     },
     {
       "code": 6005,
-      "name": "endTimeNotReached",
-      "msg": "End time is not reached"
+      "name": "invalidPrizeMint",
+      "msg": "Invalid Prize Mint"
     },
     {
       "code": 6006,
-      "name": "endTimeIsCrossed",
-      "msg": "End time is crossed"
+      "name": "missingPrizeMint",
+      "msg": "Missing Prize Mint"
     },
     {
       "code": 6007,
-      "name": "startTimeInPast",
-      "msg": "Start time should be greater than current time"
+      "name": "invalidPrizeEscrow",
+      "msg": "Invalid Prize Escrow"
     },
     {
       "code": 6008,
-      "name": "overflow",
-      "msg": "Calculation Overflow Error"
+      "name": "missingPrizeEscrow",
+      "msg": "Missing Prize Escrow"
     },
     {
       "code": 6009,
-      "name": "invalidNft",
-      "msg": "Invalid NFT"
+      "name": "invalidPrizeEscrowOwner",
+      "msg": "Invalid Prize Escrow Owner"
     },
     {
       "code": 6010,
-      "name": "invalidWinnerIndex",
-      "msg": "Invalid Winner Index"
+      "name": "invalidPrizeTokenProgram",
+      "msg": "Invalid Prize Program"
     },
     {
       "code": 6011,
-      "name": "zeroPrizeForWinner",
-      "msg": "Invalid zero prize for winner"
+      "name": "invalidFeeTreasuryAtaOwner",
+      "msg": "Invalid Fee Treasury ATA Owner"
     },
     {
       "code": 6012,
-      "name": "invalidWinner",
-      "msg": "Invalid Winner claim"
+      "name": "invalidBuyerAccountUser",
+      "msg": "Invalid Buyer Account User"
     },
     {
       "code": 6013,
-      "name": "prizeAlreadyClaimed",
-      "msg": "Prize is already claimed"
+      "name": "invalidTicketAtaOwner",
+      "msg": "Invalid Ticket ATA Owner"
     },
     {
       "code": 6014,
-      "name": "invalidRaffleStateForCancel",
-      "msg": "Raffle state should be in Initialized or Active"
+      "name": "invalidPrizeAtaOwner",
+      "msg": "Invalid Prize ATA Owner"
     },
     {
       "code": 6015,
-      "name": "raffleNotEnded",
-      "msg": "Raffle is not ended"
+      "name": "invalidWinnerPrizeAtaOwner",
+      "msg": "Invalid winner prize ATA Owner"
     },
     {
       "code": 6016,
-      "name": "invalidZeroAmount",
-      "msg": "Invalid Zero Amount"
+      "name": "invalidTicketEscrowOwner",
+      "msg": "Invalid ticket escrow ownner"
     },
     {
       "code": 6017,
-      "name": "invalidMaxPerWalletPct",
-      "msg": "Invalid maximum wallet per pct"
-    },
-    {
-      "code": 6018,
-      "name": "invalidMaximumTickets",
-      "msg": "Invalid Maximum Tickets"
-    },
-    {
-      "code": 6019,
-      "name": "timeOrTicketsNotMet",
-      "msg": "Time or Tickets not met"
-    },
-    {
-      "code": 6020,
-      "name": "exceedMaxWinners",
-      "msg": "Winners count exceed maximum"
-    },
-    {
-      "code": 6021,
-      "name": "invalidZeroWinnersCount",
-      "msg": "Invalid zero winners count"
-    },
-    {
-      "code": 6022,
-      "name": "insufficientPrizeAmount",
-      "msg": "Insufficient prize amount"
-    },
-    {
-      "code": 6023,
-      "name": "stateShouldBeInInitialized",
-      "msg": "Raffle State not in Initialized state"
-    },
-    {
-      "code": 6024,
-      "name": "invalidRaffleStateForUpdate",
-      "msg": "Invalid raffle state for update"
-    },
-    {
-      "code": 6025,
-      "name": "raffleNotSuccessEnded",
-      "msg": "Raffle is not Successfully ended"
-    },
-    {
-      "code": 6026,
-      "name": "raffleNotActive",
-      "msg": "Raffle is not active"
-    },
-    {
-      "code": 6027,
-      "name": "invalidWinnersLength",
-      "msg": "Invalid winners length"
-    },
-    {
-      "code": 6028,
-      "name": "duplicateWinnersNotAllowed",
-      "msg": "Duplicate Winners are not allowed"
-    },
-    {
-      "code": 6029,
-      "name": "invalidWinShares",
-      "msg": "Invalid win shares"
-    },
-    {
-      "code": 6030,
-      "name": "moreThanOneTicketSolded",
-      "msg": "More than one ticket is solded"
-    },
-    {
-      "code": 6031,
-      "name": "cannotUpdateWinnersForNftPrize",
-      "msg": "Cannot update winners for NFT prize"
-    },
-    {
-      "code": 6032,
-      "name": "startTimeExceedEndTime",
-      "msg": "Start time do not exceed end time"
-    },
-    {
-      "code": 6033,
-      "name": "invalidZeroTickets",
-      "msg": "Invalid zero tickets"
-    },
-    {
-      "code": 6034,
-      "name": "ticketsSoldOut",
-      "msg": "Tickets are sold out"
-    },
-    {
-      "code": 6035,
-      "name": "invalidTicketZeroPrice",
-      "msg": "Invalid ticket zero price"
-    },
-    {
-      "code": 6036,
-      "name": "invalidTotalTickets",
-      "msg": "Invalid total tickets"
-    },
-    {
-      "code": 6037,
-      "name": "winnersExceedTotalTickets",
-      "msg": "Total tickets should be greater than winners count"
-    },
-    {
-      "code": 6038,
-      "name": "maxTicketsPerWalletExceeded",
-      "msg": "Maximum Tickets Per Wallet Exceeded"
+      "name": "invalidMetadataOwner",
+      "msg": "Invalid Metadata Owner"
     }
   ],
   "types": [

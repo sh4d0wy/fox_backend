@@ -11,8 +11,8 @@ import { cancelRaffleSchema } from "../schemas/raffle/cancelRaffle.schema";
 import { buyTicketSchema, buyTicketTxSchema } from "../schemas/raffle/buyTicket.schema";
 import { claimPrizeSchema } from "../schemas/raffle/claimPrize.schema";
 import { ADMIN_KEYPAIR, connection } from "../services/solanaconnector";
-import { PublicKey, Transaction } from "@solana/web3.js";
-import { ensureAtaIx, FAKE_ATA, FAKE_MINT, getTokenProgramFromMint, raffleProgram } from "../utils/helpers";
+import { ComputeBudgetProgram, PublicKey, SYSVAR_INSTRUCTIONS_PUBKEY, Transaction } from "@solana/web3.js";
+import { ensureAtaIx, FAKE_ATA, FAKE_MINT, getTokenProgramFromMint, raffleProgram, getMasterEditionPda, getMetadataPda, getRuleSet, getTokenRecordPda, METAPLEX_METADATA_PROGRAM_ID, MPL_TOKEN_AUTH_RULES_PROGRAM_ID } from "../utils/helpers";
 import { BN } from "@coral-xyz/anchor";
 import { claimTicketAmountSchema } from "../schemas/raffle/claimTicketAmountSchema";
 
@@ -59,7 +59,7 @@ const createRaffle = async (req: Request, res: Response) => {
     return responseHandler.error(res, "Transaction not confirmed");
   }
 
-  const { prizeData, txSignature, ...raffleData} = parsedData;
+  const { prizeData, txSignature, ...raffleData } = parsedData;
   let raffle;
 
   await prismaClient.$transaction(async (tx) => {
@@ -842,6 +842,17 @@ const cancelRaffleTx = async (req: Request, res: Response) => {
       if (creatorAtaRes.ix) transaction.add(creatorAtaRes.ix);
     }
 
+    // ---------------- Metaplex Accounts (New) ----------------
+    const metadataAccount = getMetadataPda(prizeMint);
+    const editionAccount = getMasterEditionPda(prizeMint);
+    const ownerTokenRecord = getTokenRecordPda(prizeMint, prizeEscrow);
+    const destTokenRecord = getTokenRecordPda(prizeMint, creatorPrizeAta);
+    const ruleSet = await getRuleSet(prizeMint);
+
+    const modifyComputeUnits = ComputeBudgetProgram.setComputeUnitLimit({
+      units: 400000 // Set this to 400k to be safe
+    });
+
     /* ---------------- Anchor Instruction ---------------- */
     const ix = await raffleProgram.methods
       .cancelRaffle(raffleId)
@@ -854,9 +865,20 @@ const cancelRaffleTx = async (req: Request, res: Response) => {
         creatorPrizeAta,
 
         prizeTokenProgram,
+
+        // Metaplex & pNFT Accounts
+        metadataAccount,
+        editionAccount,
+        ownerTokenRecord,
+        destTokenRecord,
+        authorizationRules: ruleSet, // Pass null if Option<T> is not used
+        authRulesProgram: MPL_TOKEN_AUTH_RULES_PROGRAM_ID, // Or a specific rules program if applicable
+        tokenMetadataProgram: METAPLEX_METADATA_PROGRAM_ID,
+        sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
       })
       .instruction();
 
+    transaction.add(modifyComputeUnits);
     transaction.add(ix);
 
     transaction.partialSign(ADMIN_KEYPAIR);
@@ -954,6 +976,17 @@ const buyerClaimPrizeTx = async (req: Request, res: Response) => {
       if (winnerAtaRes.ix) transaction.add(winnerAtaRes.ix);
     }
 
+    // ---------------- Metaplex Accounts (New) ----------------
+    const metadataAccount = getMetadataPda(prizeMint);
+    const editionAccount = getMasterEditionPda(prizeMint);
+    const ownerTokenRecord = getTokenRecordPda(prizeMint, prizeEscrow);
+    const destTokenRecord = getTokenRecordPda(prizeMint, winnerPrizeAta);
+    const ruleSet = await getRuleSet(prizeMint);
+
+    const modifyComputeUnits = ComputeBudgetProgram.setComputeUnitLimit({
+      units: 400000 // Set this to 400k to be safe
+    });
+
     /* ---------------- Anchor Instruction ---------------- */
     const ix = await raffleProgram.methods
       .buyerClaimPrize(raffleId)
@@ -966,9 +999,20 @@ const buyerClaimPrizeTx = async (req: Request, res: Response) => {
         winnerPrizeAta,
 
         prizeTokenProgram,
+
+        // Metaplex & pNFT Accounts
+        metadataAccount,
+        editionAccount,
+        ownerTokenRecord,
+        destTokenRecord,
+        authorizationRules: ruleSet, // Pass null if Option<T> is not used
+        authRulesProgram: MPL_TOKEN_AUTH_RULES_PROGRAM_ID, // Or a specific rules program if applicable
+        tokenMetadataProgram: METAPLEX_METADATA_PROGRAM_ID,
+        sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
       })
       .instruction();
 
+    transaction.add(modifyComputeUnits);
     transaction.add(ix);
 
 
@@ -1210,6 +1254,17 @@ const createRaffleTx = async (req: Request, res: Response) => {
       if (creatorRes.ix) transaction.add(creatorRes.ix);
     }
 
+    // ---------------- Metaplex Accounts (New) ----------------
+    const metadataAccount = getMetadataPda(prizeMint);
+    const editionAccount = getMasterEditionPda(prizeMint);
+    const ownerTokenRecord = getTokenRecordPda(prizeMint, creatorPrizeAta);
+    const destTokenRecord = getTokenRecordPda(prizeMint, prizeEscrow);
+    const ruleSet = await getRuleSet(prizeMint);
+
+    const modifyComputeUnits = ComputeBudgetProgram.setComputeUnitLimit({
+      units: 400000 // Set this to 400k to be safe
+    });
+
     // ---------------- Anchor Instruction ----------------
     const ix = await raffleProgram.methods
       .createRaffle(
@@ -1240,9 +1295,20 @@ const createRaffleTx = async (req: Request, res: Response) => {
 
         ticketTokenProgram,
         prizeTokenProgram,
+
+        // Metaplex & pNFT Accounts
+        metadataAccount,
+        editionAccount,
+        ownerTokenRecord,
+        destTokenRecord,
+        authorizationRules: ruleSet, // Pass null if Option<T> is not used
+        authRulesProgram: MPL_TOKEN_AUTH_RULES_PROGRAM_ID, // Or a specific rules program if applicable
+        tokenMetadataProgram: METAPLEX_METADATA_PROGRAM_ID,
+        sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
       })
       .instruction();
 
+    transaction.add(modifyComputeUnits);
     transaction.add(ix);
 
     transaction.partialSign(ADMIN_KEYPAIR);
@@ -1374,6 +1440,17 @@ const claimPrizeBackTx = async (req: Request, res: Response) => {
       if (creatorTicketRes.ix) transaction.add(creatorTicketRes.ix);
     }
 
+    // ---------------- Metaplex Accounts (New) ----------------
+    const metadataAccount = getMetadataPda(prizeMint);
+    const editionAccount = getMasterEditionPda(prizeMint);
+    const ownerTokenRecord = getTokenRecordPda(prizeMint, prizeEscrow);
+    const destTokenRecord = getTokenRecordPda(prizeMint, creatorPrizeAta);
+    const ruleSet = await getRuleSet(prizeMint);
+
+    const modifyComputeUnits = ComputeBudgetProgram.setComputeUnitLimit({
+      units: 400000
+    });
+
     /* ---------------- Anchor Instruction ---------------- */
     const ix = await raffleProgram.methods
       .claimAmountBack(raffleId)
@@ -1392,10 +1469,20 @@ const claimPrizeBackTx = async (req: Request, res: Response) => {
 
         prizeTokenProgram,
         ticketTokenProgram,
+
+        // Metaplex & pNFT Accounts
+        metadataAccount,
+        editionAccount,
+        ownerTokenRecord,
+        destTokenRecord,
+        authorizationRules: ruleSet, // Pass null if Option<T> is not used
+        authRulesProgram: MPL_TOKEN_AUTH_RULES_PROGRAM_ID, // Or a specific rules program if applicable
+        tokenMetadataProgram: METAPLEX_METADATA_PROGRAM_ID,
+        sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
       })
       .instruction();
 
-
+    transaction.add(modifyComputeUnits);
     transaction.add(ix);
 
     transaction.partialSign(ADMIN_KEYPAIR);
