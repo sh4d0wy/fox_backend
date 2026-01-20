@@ -605,7 +605,7 @@ const claimPrize = async (req: Request, res: Response) => {
         };
       }
       const amount = raffle.prizeData
-        ? (raffle.prizeData.amount ? raffle.prizeData.amount : raffle.prizeData.floor!) / raffle.numberOfWinners
+        ? (raffle.prizeData.amount ? raffle.prizeData.amount/ raffle.numberOfWinners : raffle.prizeData.floor!) 
         : 0;
 
       // Create the transaction record
