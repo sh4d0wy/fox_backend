@@ -10,9 +10,9 @@ import logger from "../utils/logger";
 import { cancelRaffleSchema } from "../schemas/raffle/cancelRaffle.schema";
 import { buyTicketSchema, buyTicketTxSchema } from "../schemas/raffle/buyTicket.schema";
 import { claimPrizeSchema } from "../schemas/raffle/claimPrize.schema";
-import { ADMIN_KEYPAIR, connection } from "../services/solanaconnector";
+import { ADMIN_KEYPAIR, connection, raffleProgram } from "../services/solanaconnector";
 import { ComputeBudgetProgram, PublicKey, SYSVAR_INSTRUCTIONS_PUBKEY, Transaction } from "@solana/web3.js";
-import { ensureAtaIx, FAKE_ATA, FAKE_MINT, getTokenProgramFromMint, raffleProgram, getMasterEditionPda, getMetadataPda, getRuleSet, getTokenRecordPda, METAPLEX_METADATA_PROGRAM_ID, MPL_TOKEN_AUTH_RULES_PROGRAM_ID } from "../utils/helpers";
+import { ensureAtaIx, FAKE_ATA, FAKE_MINT, getTokenProgramFromMint, getMasterEditionPda, getMetadataPda, getRuleSet, getTokenRecordPda, METAPLEX_METADATA_PROGRAM_ID, MPL_TOKEN_AUTH_RULES_PROGRAM_ID } from "../utils/helpers";
 import { BN } from "@coral-xyz/anchor";
 import { claimTicketAmountSchema } from "../schemas/raffle/claimTicketAmountSchema";
 
@@ -605,7 +605,7 @@ const claimPrize = async (req: Request, res: Response) => {
         };
       }
       const amount = raffle.prizeData
-        ? (raffle.prizeData.amount ? raffle.prizeData.amount/ raffle.numberOfWinners : raffle.prizeData.floor!) 
+        ? (raffle.prizeData.amount ? raffle.prizeData.amount / raffle.numberOfWinners : raffle.prizeData.floor!)
         : 0;
 
       // Create the transaction record

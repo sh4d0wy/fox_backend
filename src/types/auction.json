@@ -1,16 +1,27 @@
 {
-  "address": "4mhzWoT65ZtGgBtSAuUgmDpDvxExn9fb5S7UJzDr3Efj",
+  "address": "2J3du9mvh9t4bSP8DzNckVQrBQYupCW92SMnKRtTSaaJ",
   "metadata": {
     "name": "auction",
     "version": "0.1.0",
     "spec": "0.1.0",
     "description": "Created with Anchor"
   },
-  "docs": ["Sysvar for token mint and ATA creation"],
+  "docs": [
+    "Sysvar for token mint and ATA creation"
+  ],
   "instructions": [
     {
       "name": "cancel_auction",
-      "discriminator": [156, 43, 197, 110, 218, 105, 143, 182],
+      "discriminator": [
+        156,
+        43,
+        197,
+        110,
+        218,
+        105,
+        143,
+        182
+      ],
       "accounts": [
         {
           "name": "auction_config",
@@ -18,7 +29,15 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [97, 117, 99, 116, 105, 111, 110]
+                "value": [
+                  97,
+                  117,
+                  99,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
               }
             ]
           }
@@ -30,7 +49,15 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [97, 117, 99, 116, 105, 111, 110]
+                "value": [
+                  97,
+                  117,
+                  99,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
               },
               {
                 "kind": "arg",
@@ -72,9 +99,38 @@
             "program": {
               "kind": "const",
               "value": [
-                140, 151, 37, 143, 78, 36, 137, 241, 187, 61, 16, 41, 20, 142,
-                13, 131, 11, 90, 19, 153, 218, 255, 16, 132, 4, 142, 123, 216,
-                219, 233, 248, 89
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
               ]
             }
           }
@@ -100,9 +156,38 @@
             "program": {
               "kind": "const",
               "value": [
-                140, 151, 37, 143, 78, 36, 137, 241, 187, 61, 16, 41, 20, 142,
-                13, 131, 11, 90, 19, 153, 218, 255, 16, 132, 4, 142, 123, 216,
-                219, 233, 248, 89
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
               ]
             }
           }
@@ -117,6 +202,40 @@
         {
           "name": "system_program",
           "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "metadata_account",
+          "writable": true
+        },
+        {
+          "name": "edition_account"
+        },
+        {
+          "name": "owner_token_record",
+          "docs": [
+            "Required only for pNFTs. Derived as PDA(metadata, mint, \"token_record\", source_ata)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "dest_token_record",
+          "docs": [
+            "Required only for pNFTs. Derived as PDA(metadata, mint, \"token_record\", destination_ata)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "authorization_rules",
+          "optional": true
+        },
+        {
+          "name": "auth_rules_program"
+        },
+        {
+          "name": "token_metadata_program"
+        },
+        {
+          "name": "sysvar_instructions"
         }
       ],
       "args": [
@@ -128,7 +247,16 @@
     },
     {
       "name": "complete_auction",
-      "discriminator": [89, 120, 196, 134, 103, 28, 192, 83],
+      "discriminator": [
+        89,
+        120,
+        196,
+        134,
+        103,
+        28,
+        192,
+        83
+      ],
       "accounts": [
         {
           "name": "auction_config",
@@ -137,7 +265,15 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [97, 117, 99, 116, 105, 111, 110]
+                "value": [
+                  97,
+                  117,
+                  99,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
               }
             ]
           }
@@ -149,7 +285,15 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [97, 117, 99, 116, 105, 111, 110]
+                "value": [
+                  97,
+                  117,
+                  99,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
               },
               {
                 "kind": "arg",
@@ -169,7 +313,9 @@
         },
         {
           "name": "winner",
-          "docs": ["audit: there is no check for winner and hisghest bidder"],
+          "docs": [
+            "audit: there is no check for winner and hisghest bidder"
+          ],
           "writable": true
         },
         {
@@ -215,6 +361,40 @@
         {
           "name": "system_program",
           "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "metadata_account",
+          "writable": true
+        },
+        {
+          "name": "edition_account"
+        },
+        {
+          "name": "owner_token_record",
+          "docs": [
+            "Required only for pNFTs. Derived as PDA(metadata, mint, \"token_record\", source_ata)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "dest_token_record",
+          "docs": [
+            "Required only for pNFTs. Derived as PDA(metadata, mint, \"token_record\", destination_ata)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "authorization_rules",
+          "optional": true
+        },
+        {
+          "name": "auth_rules_program"
+        },
+        {
+          "name": "token_metadata_program"
+        },
+        {
+          "name": "sysvar_instructions"
         }
       ],
       "args": [
@@ -226,7 +406,16 @@
     },
     {
       "name": "create_auction",
-      "discriminator": [234, 6, 201, 246, 47, 219, 176, 107],
+      "discriminator": [
+        234,
+        6,
+        201,
+        246,
+        47,
+        219,
+        176,
+        107
+      ],
       "accounts": [
         {
           "name": "auction_config",
@@ -235,7 +424,15 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [97, 117, 99, 116, 105, 111, 110]
+                "value": [
+                  97,
+                  117,
+                  99,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
               }
             ]
           }
@@ -247,7 +444,15 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [97, 117, 99, 116, 105, 111, 110]
+                "value": [
+                  97,
+                  117,
+                  99,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
               },
               {
                 "kind": "account",
@@ -293,9 +498,38 @@
             "program": {
               "kind": "const",
               "value": [
-                140, 151, 37, 143, 78, 36, 137, 241, 187, 61, 16, 41, 20, 142,
-                13, 131, 11, 90, 19, 153, 218, 255, 16, 132, 4, 142, 123, 216,
-                219, 233, 248, 89
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
               ]
             }
           }
@@ -321,9 +555,38 @@
             "program": {
               "kind": "const",
               "value": [
-                140, 151, 37, 143, 78, 36, 137, 241, 187, 61, 16, 41, 20, 142,
-                13, 131, 11, 90, 19, 153, 218, 255, 16, 132, 4, 142, 123, 216,
-                219, 233, 248, 89
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
               ]
             }
           }
@@ -338,6 +601,40 @@
         {
           "name": "system_program",
           "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "metadata_account",
+          "writable": true
+        },
+        {
+          "name": "edition_account"
+        },
+        {
+          "name": "owner_token_record",
+          "docs": [
+            "Required only for pNFTs. Derived as PDA(metadata, mint, \"token_record\", source_ata)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "dest_token_record",
+          "docs": [
+            "Required only for pNFTs. Derived as PDA(metadata, mint, \"token_record\", destination_ata)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "authorization_rules",
+          "optional": true
+        },
+        {
+          "name": "auth_rules_program"
+        },
+        {
+          "name": "token_metadata_program"
+        },
+        {
+          "name": "sysvar_instructions"
         }
       ],
       "args": [
@@ -373,7 +670,16 @@
     },
     {
       "name": "initialize_auction_config",
-      "discriminator": [94, 1, 96, 31, 46, 102, 88, 102],
+      "discriminator": [
+        94,
+        1,
+        96,
+        31,
+        46,
+        102,
+        88,
+        102
+      ],
       "accounts": [
         {
           "name": "auction_config",
@@ -382,7 +688,15 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [97, 117, 99, 116, 105, 111, 110]
+                "value": [
+                  97,
+                  117,
+                  99,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
               }
             ]
           }
@@ -434,7 +748,16 @@
     },
     {
       "name": "place_bid",
-      "discriminator": [238, 77, 148, 91, 200, 151, 92, 146],
+      "discriminator": [
+        238,
+        77,
+        148,
+        91,
+        200,
+        151,
+        92,
+        146
+      ],
       "accounts": [
         {
           "name": "auction_config",
@@ -442,7 +765,15 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [97, 117, 99, 116, 105, 111, 110]
+                "value": [
+                  97,
+                  117,
+                  99,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
               }
             ]
           }
@@ -454,7 +785,15 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [97, 117, 99, 116, 105, 111, 110]
+                "value": [
+                  97,
+                  117,
+                  99,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
               },
               {
                 "kind": "arg",
@@ -512,7 +851,16 @@
     },
     {
       "name": "start_auction",
-      "discriminator": [255, 2, 149, 136, 148, 125, 65, 195],
+      "discriminator": [
+        255,
+        2,
+        149,
+        136,
+        148,
+        125,
+        65,
+        195
+      ],
       "accounts": [
         {
           "name": "auction_config",
@@ -520,7 +868,15 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [97, 117, 99, 116, 105, 111, 110]
+                "value": [
+                  97,
+                  117,
+                  99,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
               }
             ]
           }
@@ -532,7 +888,15 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [97, 117, 99, 116, 105, 111, 110]
+                "value": [
+                  97,
+                  117,
+                  99,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
               },
               {
                 "kind": "arg",
@@ -555,7 +919,16 @@
     },
     {
       "name": "update_auction",
-      "discriminator": [8, 87, 207, 233, 254, 160, 120, 224],
+      "discriminator": [
+        8,
+        87,
+        207,
+        233,
+        254,
+        160,
+        120,
+        224
+      ],
       "accounts": [
         {
           "name": "auction_config",
@@ -563,7 +936,15 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [97, 117, 99, 116, 105, 111, 110]
+                "value": [
+                  97,
+                  117,
+                  99,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
               }
             ]
           }
@@ -575,7 +956,15 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [97, 117, 99, 116, 105, 111, 110]
+                "value": [
+                  97,
+                  117,
+                  99,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
               },
               {
                 "kind": "arg",
@@ -627,7 +1016,16 @@
     },
     {
       "name": "update_auction_admin",
-      "discriminator": [87, 207, 78, 103, 211, 63, 186, 41],
+      "discriminator": [
+        87,
+        207,
+        78,
+        103,
+        211,
+        63,
+        186,
+        41
+      ],
       "accounts": [
         {
           "name": "auction_config",
@@ -636,7 +1034,15 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [97, 117, 99, 116, 105, 111, 110]
+                "value": [
+                  97,
+                  117,
+                  99,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
               }
             ]
           }
@@ -656,7 +1062,16 @@
     },
     {
       "name": "update_auction_owner",
-      "discriminator": [47, 212, 42, 241, 5, 24, 209, 206],
+      "discriminator": [
+        47,
+        212,
+        42,
+        241,
+        5,
+        24,
+        209,
+        206
+      ],
       "accounts": [
         {
           "name": "auction_config",
@@ -665,7 +1080,15 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [97, 117, 99, 116, 105, 111, 110]
+                "value": [
+                  97,
+                  117,
+                  99,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
               }
             ]
           }
@@ -685,7 +1108,16 @@
     },
     {
       "name": "update_config_data",
-      "discriminator": [106, 17, 111, 79, 128, 247, 197, 100],
+      "discriminator": [
+        106,
+        17,
+        111,
+        79,
+        128,
+        247,
+        197,
+        100
+      ],
       "accounts": [
         {
           "name": "auction_config",
@@ -694,7 +1126,15 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [97, 117, 99, 116, 105, 111, 110]
+                "value": [
+                  97,
+                  117,
+                  99,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
               }
             ]
           }
@@ -734,7 +1174,16 @@
     },
     {
       "name": "update_pause_and_unpause",
-      "discriminator": [124, 65, 236, 137, 103, 20, 115, 240],
+      "discriminator": [
+        124,
+        65,
+        236,
+        137,
+        103,
+        20,
+        115,
+        240
+      ],
       "accounts": [
         {
           "name": "auction_config",
@@ -743,7 +1192,15 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [97, 117, 99, 116, 105, 111, 110]
+                "value": [
+                  97,
+                  117,
+                  99,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
               }
             ]
           }
@@ -763,7 +1220,16 @@
     },
     {
       "name": "withdraw_sol_fees",
-      "discriminator": [191, 53, 166, 97, 124, 212, 228, 219],
+      "discriminator": [
+        191,
+        53,
+        166,
+        97,
+        124,
+        212,
+        228,
+        219
+      ],
       "accounts": [
         {
           "name": "auction_config",
@@ -772,7 +1238,15 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [97, 117, 99, 116, 105, 111, 110]
+                "value": [
+                  97,
+                  117,
+                  99,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
               }
             ]
           }
@@ -800,7 +1274,16 @@
     },
     {
       "name": "withdraw_spl_fees",
-      "discriminator": [67, 45, 141, 82, 211, 167, 149, 115],
+      "discriminator": [
+        67,
+        45,
+        141,
+        82,
+        211,
+        167,
+        149,
+        115
+      ],
       "accounts": [
         {
           "name": "auction_config",
@@ -809,7 +1292,15 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [97, 117, 99, 116, 105, 111, 110]
+                "value": [
+                  97,
+                  117,
+                  99,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
               }
             ]
           }
@@ -834,9 +1325,38 @@
               {
                 "kind": "const",
                 "value": [
-                  6, 221, 246, 225, 215, 101, 161, 147, 217, 203, 225, 70, 206,
-                  235, 121, 172, 28, 180, 133, 237, 95, 91, 55, 145, 58, 140,
-                  245, 133, 126, 255, 0, 169
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
                 ]
               },
               {
@@ -847,9 +1367,38 @@
             "program": {
               "kind": "const",
               "value": [
-                140, 151, 37, 143, 78, 36, 137, 241, 187, 61, 16, 41, 20, 142,
-                13, 131, 11, 90, 19, 153, 218, 255, 16, 132, 4, 142, 123, 216,
-                219, 233, 248, 89
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
               ]
             }
           }
@@ -877,147 +1426,192 @@
   "accounts": [
     {
       "name": "Auction",
-      "discriminator": [218, 94, 247, 242, 126, 233, 131, 81]
+      "discriminator": [
+        218,
+        94,
+        247,
+        242,
+        126,
+        233,
+        131,
+        81
+      ]
     },
     {
       "name": "AuctionConfig",
-      "discriminator": [195, 54, 8, 51, 28, 231, 33, 142]
+      "discriminator": [
+        195,
+        54,
+        8,
+        51,
+        28,
+        231,
+        33,
+        142
+      ]
     }
   ],
   "events": [
     {
       "name": "AuctionCancelled",
-      "discriminator": [22, 32, 51, 83, 215, 194, 171, 209]
+      "discriminator": [
+        22,
+        32,
+        51,
+        83,
+        215,
+        194,
+        171,
+        209
+      ]
     },
     {
       "name": "AuctionCompleted",
-      "discriminator": [44, 102, 119, 201, 251, 46, 178, 67]
+      "discriminator": [
+        44,
+        102,
+        119,
+        201,
+        251,
+        46,
+        178,
+        67
+      ]
     },
     {
       "name": "AuctionCreated",
-      "discriminator": [133, 190, 194, 65, 172, 0, 70, 178]
+      "discriminator": [
+        133,
+        190,
+        194,
+        65,
+        172,
+        0,
+        70,
+        178
+      ]
     },
     {
       "name": "AuctionStarted",
-      "discriminator": [126, 97, 193, 56, 72, 162, 162, 64]
+      "discriminator": [
+        126,
+        97,
+        193,
+        56,
+        72,
+        162,
+        162,
+        64
+      ]
     },
     {
       "name": "AuctionUpdated",
-      "discriminator": [67, 35, 50, 236, 108, 230, 253, 111]
+      "discriminator": [
+        67,
+        35,
+        50,
+        236,
+        108,
+        230,
+        253,
+        111
+      ]
     },
     {
       "name": "BidPlaced",
-      "discriminator": [135, 53, 176, 83, 193, 69, 108, 61]
+      "discriminator": [
+        135,
+        53,
+        176,
+        83,
+        193,
+        69,
+        108,
+        61
+      ]
     },
     {
       "name": "FeesWithdrawn",
-      "discriminator": [234, 15, 0, 119, 148, 241, 40, 21]
+      "discriminator": [
+        234,
+        15,
+        0,
+        119,
+        148,
+        241,
+        40,
+        21
+      ]
     },
     {
       "name": "SplFeesWithdrawn",
-      "discriminator": [201, 164, 201, 96, 70, 233, 240, 251]
+      "discriminator": [
+        201,
+        164,
+        201,
+        96,
+        70,
+        233,
+        240,
+        251
+      ]
     }
   ],
   "errors": [
     {
       "code": 6000,
-      "name": "InvalidAuctionId",
-      "msg": "Invalid Auction ID"
+      "name": "InvalidPrizeMint",
+      "msg": "Invalid Prize Mint"
     },
     {
       "code": 6001,
-      "name": "InvalidCreator",
-      "msg": "Invalid Auction Creator"
+      "name": "InvalidPrizeEscrow",
+      "msg": "Invalid Prize Escrow"
     },
     {
       "code": 6002,
-      "name": "EndTimeNotReached",
-      "msg": "End time not reached"
+      "name": "InvalidPrizeEscrowOwner",
+      "msg": "Invalid Prize Escrow Owner"
     },
     {
       "code": 6003,
-      "name": "FunctionPaused",
-      "msg": "Particular Function is paused"
+      "name": "InvalidPrizeAtaOwner",
+      "msg": "Invalid Prize ATA owner"
     },
     {
       "code": 6004,
-      "name": "Overflow",
-      "msg": "Calculation Overflow Error"
+      "name": "InvalidBidMint",
+      "msg": "Invalid Bid Token Mint"
     },
     {
       "code": 6005,
-      "name": "InvalidZeroAmount",
-      "msg": "Invalid zero amount"
+      "name": "MissingBidMint",
+      "msg": "Missing Bid Mint"
     },
     {
       "code": 6006,
-      "name": "StartTimeExceedEndTime",
-      "msg": "Start time exceed end time or invalid duration"
+      "name": "InvalidBidEscrow",
+      "msg": "Invalid Bid Escrow"
     },
     {
       "code": 6007,
-      "name": "StartTimeInPast",
-      "msg": "Start time should be greater than current time"
+      "name": "InvalidBidEscrowOwner",
+      "msg": "Invalid Bid Escrow Owner"
     },
     {
       "code": 6008,
-      "name": "AuctionAlreadyStarted",
-      "msg": "Auction already started"
+      "name": "InvalidBidAtaOwner",
+      "msg": "Invalid Bid ATA owner"
     },
     {
       "code": 6009,
-      "name": "AuctionNotStarted",
-      "msg": "Auction not started yet"
+      "name": "InvalidPreviousBidOwner",
+      "msg": "Invalid previous bid owner"
     },
     {
       "code": 6010,
-      "name": "AuctionNotActive",
-      "msg": "Auction not active"
-    },
-    {
-      "code": 6011,
-      "name": "AuctionAlreadyCompleted",
-      "msg": "Auction already completed"
-    },
-    {
-      "code": 6012,
-      "name": "InvalidAuctionTimeExtension",
-      "msg": "Invalid auction time extension"
-    },
-    {
-      "code": 6013,
-      "name": "AuctionHasBids",
-      "msg": "Auction has bids and cannot be cancelled"
-    },
-    {
-      "code": 6014,
-      "name": "InvalidNFT",
-      "msg": "Invalid NFT (must be a single-supply token with 0 decimals)"
-    },
-    {
-      "code": 6015,
-      "name": "BidTooLow",
-      "msg": "Bid amount is too low"
-    },
-    {
-      "code": 6016,
-      "name": "BidBelowIncrement",
-      "msg": "Bid increase is smaller than minimum increment"
-    },
-    {
-      "code": 6017,
-      "name": "CannotBidOwnHighBid",
-      "msg": "Cannot bid: caller is current highest bidder"
-    },
-    {
-      "code": 6018,
-      "name": "NoBidsPresent",
-      "msg": "No bids present"
-    },
-    {
-      "code": 6019,
-      "name": "InsufficientBalance",
-      "msg": "Insufficient balance to place bid"
+      "name": "InvalidHighestBidder",
+      "msg": "Invalid highest bidder"
     }
   ],
   "types": [

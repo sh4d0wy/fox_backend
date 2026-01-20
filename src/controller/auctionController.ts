@@ -10,9 +10,9 @@ import logger from "../utils/logger";
 import { cancelAuctionSchema } from "../schemas/auction/cancelAuction.schema";
 import { placeBidAuctionTxSchema, placeBidSchema } from "../schemas/auction/placeBid.schema";
 import { claimAuctionSchema } from "../schemas/auction/claimAuction.schema";
-import { ADMIN_KEYPAIR, connection } from "../services/solanaconnector";
-import { PublicKey, Transaction } from "@solana/web3.js";
-import { auctionProgram, ensureAtaIx, FAKE_ATA, FAKE_MINT, getTokenProgramFromMint } from "../utils/helpers";
+import { ADMIN_KEYPAIR, connection, auctionProgram } from "../services/solanaconnector";
+import { ComputeBudgetProgram, PublicKey, SYSVAR_INSTRUCTIONS_PUBKEY, Transaction } from "@solana/web3.js";
+import { ensureAtaIx, FAKE_ATA, FAKE_MINT, getAtaAddress, getMasterEditionPda, getMetadataPda, getRuleSet, getTokenProgramFromMint, getTokenRecordPda, METAPLEX_METADATA_PROGRAM_ID, MPL_TOKEN_AUTH_RULES_PROGRAM_ID } from "../utils/helpers";
 import { BN } from "@coral-xyz/anchor";
 
 const createAuction = async (req: Request, res: Response) => {
@@ -147,7 +147,7 @@ const getAuctionDetails = async (req: Request, res: Response) => {
         include: {
           bidder: {
             select: {
-              walletAddress: true, 
+              walletAddress: true,
               twitterId: true,
               profileImage: true,
             },
@@ -634,6 +634,11 @@ const auctionPda = (auctionId: number): PublicKey => {
   )[0];
 };
 
+const auctionConfigPda = PublicKey.findProgramAddressSync(
+  [Buffer.from("auction")],
+  auctionProgram.programId
+)[0];
+
 const createAuctionTx = async (req: Request, res: Response) => {
   const userAddress = req.user as string;
   const body = req.body;
@@ -658,6 +663,37 @@ const createAuctionTx = async (req: Request, res: Response) => {
       new PublicKey(parsedData.prizeMint)
     );
 
+    // fetch config to get auction_count
+    const config = await auctionProgram.account.auctionConfig.fetch(
+      auctionConfigPda
+    );
+
+    const auctionAccountPda = auctionPda(config.auctionCount);
+    const prizeMintPubkey = new PublicKey(parsedData.prizeMint);
+
+    const creatorPrizeAta = await getAtaAddress(
+      connection,
+      prizeMintPubkey,
+      new PublicKey(userAddress)
+    );
+
+    const prizeEscrowAta = await getAtaAddress(
+      connection,
+      prizeMintPubkey,
+      auctionAccountPda,
+      true // PDA owner
+    );
+
+    // ---------------- Metaplex Accounts (New) ----------------
+    const metadataAccount = getMetadataPda(prizeMintPubkey);
+    const editionAccount = getMasterEditionPda(prizeMintPubkey);
+    const ownerTokenRecord = getTokenRecordPda(prizeMintPubkey, creatorPrizeAta);
+    const destTokenRecord = getTokenRecordPda(prizeMintPubkey, prizeEscrowAta);
+    const ruleSet = await getRuleSet(prizeMintPubkey);
+    const modifyComputeUnits = ComputeBudgetProgram.setComputeUnitLimit({
+      units: 400000
+    });
+
     const ix = await auctionProgram.methods
       .createAuction(
         new BN(parsedData.startTime),
@@ -672,13 +708,24 @@ const createAuctionTx = async (req: Request, res: Response) => {
         creator: new PublicKey(userAddress),
         auctionAdmin: ADMIN_KEYPAIR.publicKey,
 
-        prizeMint: new PublicKey(parsedData.prizeMint),
+        prizeMint: prizeMintPubkey,
         bidMint: parsedData.bidMint ? new PublicKey(parsedData.bidMint) : FAKE_MINT,
 
         prizeTokenProgram,
+
+        // Metaplex & pNFT Accounts
+        metadataAccount,
+        editionAccount,
+        ownerTokenRecord,
+        destTokenRecord,
+        authorizationRules: ruleSet, // Pass null if Option<T> is not used
+        authRulesProgram: MPL_TOKEN_AUTH_RULES_PROGRAM_ID, // Or a specific rules program if applicable
+        tokenMetadataProgram: METAPLEX_METADATA_PROGRAM_ID,
+        sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
       })
       .instruction();
 
+    transaction.add(modifyComputeUnits);
     transaction.add(ix);
 
     transaction.partialSign(ADMIN_KEYPAIR);
@@ -732,6 +779,29 @@ const cancelAuctionTx = async (req: Request, res: Response) => {
       auctionData.prizeMint
     );
 
+    const creatorPrizeAta = await getAtaAddress(
+      connection,
+      auctionData.prizeMint,
+      new PublicKey(userAddress)
+    );
+
+    const prizeEscrowAta = await getAtaAddress(
+      connection,
+      auctionData.prizeMint,
+      auctionAccountPda,
+      true // PDA owner
+    );
+
+    // ---------------- Metaplex Accounts (New) ----------------
+    const metadataAccount = getMetadataPda(auctionData.prizeMint);
+    const editionAccount = getMasterEditionPda(auctionData.prizeMint);
+    const ownerTokenRecord = getTokenRecordPda(auctionData.prizeMint, prizeEscrowAta);
+    const destTokenRecord = getTokenRecordPda(auctionData.prizeMint, creatorPrizeAta);
+    const ruleSet = await getRuleSet(auctionData.prizeMint);
+    const modifyComputeUnits = ComputeBudgetProgram.setComputeUnitLimit({
+      units: 400000
+    });
+
     const ix = await auctionProgram.methods
       .cancelAuction(auctionId)
       .accounts({
@@ -741,9 +811,20 @@ const cancelAuctionTx = async (req: Request, res: Response) => {
         prizeMint: auctionData.prizeMint,
 
         prizeTokenProgram,
+
+        // Metaplex & pNFT Accounts
+        metadataAccount,
+        editionAccount,
+        ownerTokenRecord,
+        destTokenRecord,
+        authorizationRules: ruleSet, // Pass null if Option<T> is not used
+        authRulesProgram: MPL_TOKEN_AUTH_RULES_PROGRAM_ID, // Or a specific rules program if applicable
+        tokenMetadataProgram: METAPLEX_METADATA_PROGRAM_ID,
+        sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
       })
       .instruction();
 
+    transaction.add(modifyComputeUnits);
     transaction.add(ix);
 
     transaction.partialSign(ADMIN_KEYPAIR);

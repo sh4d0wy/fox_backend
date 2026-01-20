@@ -3,9 +3,12 @@ import {
     PublicKey,
     Transaction,
     Keypair,
+    ComputeBudgetProgram,
+    SYSVAR_INSTRUCTIONS_PUBKEY,
 } from "@solana/web3.js";
 import { AnchorProvider, Wallet } from "@coral-xyz/anchor";
 import { ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddress, getAssociatedTokenAddressSync, TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { getMetadataPda, getMasterEditionPda, getTokenRecordPda, getRuleSet, MPL_TOKEN_AUTH_RULES_PROGRAM_ID, METAPLEX_METADATA_PROGRAM_ID } from "../utils/helpers";
 import * as anchor from "@coral-xyz/anchor";
 import raffleIdl from "../types/raffle.json";
 import auctionIdl from "../types/auction.json";
@@ -33,13 +36,13 @@ const provider = new AnchorProvider(connection, wallet, {
 });
 
 const RAFFLE_PROGRAM_ID = new anchor.web3.PublicKey(raffleIdl.address);
-const raffleProgram = new anchor.Program<Raffle>(raffleIdl as anchor.Idl, provider);
+export const raffleProgram = new anchor.Program<Raffle>(raffleIdl as anchor.Idl, provider);
 
 const AUCTION_PROGRAM_ID = new anchor.web3.PublicKey(auctionIdl.address);
-const auctionProgram = new anchor.Program<Auction>(auctionIdl as anchor.Idl, provider);
+export const auctionProgram = new anchor.Program<Auction>(auctionIdl as anchor.Idl, provider);
 
 const GUMBALL_PROGRAM_ID = new anchor.web3.PublicKey(gumballIdl.address);
-const gumballProgram = new anchor.Program<Gumball>(gumballIdl as anchor.Idl, provider);
+export const gumballProgram = new anchor.Program<Gumball>(gumballIdl as anchor.Idl, provider);
 
 async function rafflePda(raffleId: number): Promise<PublicKey> {
     const idBuffer = Buffer.alloc(4);
@@ -448,6 +451,16 @@ async function endAuction(auctionId: number) {
             throw new Error("Required ATA or escrow account could not be determined");
         }
 
+        // ---------------- Metaplex Accounts (New) ----------------
+        const metadataAccount = getMetadataPda(auctionData.prizeMint);
+        const editionAccount = getMasterEditionPda(auctionData.prizeMint);
+        const ownerTokenRecord = getTokenRecordPda(auctionData.prizeMint, prizeEscrow);
+        const destTokenRecord = auctionData.hasAnyBid ? getTokenRecordPda(auctionData.prizeMint, winnerPrizeAta) : getTokenRecordPda(auctionData.prizeMint, creatorPrizeAta);
+        const ruleSet = await getRuleSet(auctionData.prizeMint);
+        const modifyComputeUnits = ComputeBudgetProgram.setComputeUnitLimit({
+            units: 400000
+        });
+
         const ix = await auctionProgram.methods.completeAuction(auctionId)
             .accounts({
                 auctionAdmin: ADMIN_KEYPAIR.publicKey,
@@ -468,9 +481,20 @@ async function endAuction(auctionId: number) {
 
                 prizeTokenProgram,
                 bidTokenProgram,
+
+                // Metaplex & pNFT Accounts
+                metadataAccount,
+                editionAccount,
+                ownerTokenRecord,
+                destTokenRecord,
+                authorizationRules: ruleSet, // Pass null if Option<T> is not used
+                authRulesProgram: MPL_TOKEN_AUTH_RULES_PROGRAM_ID, // Or a specific rules program if applicable
+                tokenMetadataProgram: METAPLEX_METADATA_PROGRAM_ID,
+                sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
             })
             .instruction();
 
+        tx.add(modifyComputeUnits);
         tx.add(ix);
 
         const signature = await connection.sendTransaction(
