@@ -16,6 +16,7 @@ const getEndedCreatedRaffles = async (req: Request, res: Response) => {
     const endedRaffles = await prismaClient.raffle.findMany({
       where: {
         createdBy: walletAddress,
+        ticketAmountClaimedByCreator: false,
         OR: [
           { state: "SuccessEnded" },
           { state: "FailedEnded" },
@@ -45,6 +46,7 @@ const getEndedCreatedRaffles = async (req: Request, res: Response) => {
     const total = await prismaClient.raffle.count({
       where: {
         createdBy: walletAddress,
+        ticketAmountClaimedByCreator: false,
         OR: [
           { state: "SuccessEnded" },
           { state: "FailedEnded" },
@@ -75,7 +77,7 @@ const getEndedCreatedRaffles = async (req: Request, res: Response) => {
     }));
 
     return responseHandler.success(res, {
-      message: "Ended raffles fetched successfully",
+      message: "Ended raffles with unclaimed ticket amount fetched successfully",
       raffles: rafflesWithClaimStatus,
       total,
       page: pageNum,
