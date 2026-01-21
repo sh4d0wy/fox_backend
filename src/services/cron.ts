@@ -87,15 +87,29 @@ async function processAuctionsToEnd(): Promise<void> {
             `[CRON] Auction ${auction.id} ended as COMPLETED_FAILED (no bids)`
           );
         } else {
-          await endAuction(auction.id);
+          const txSignature = await endAuction(auction.id);
 
-          await prismaClient.auction.update({
-            where: { id: auction.id },
-            data: {
-              status: "COMPLETED_SUCCESSFULLY",
-              completedAt: now,
-              finalPrice: auction.highestBidAmount,
-            },
+          await prismaClient.$transaction(async (tx) => {
+            await tx.auction.update({
+              where: { id: auction.id },
+              data: {
+                status: "COMPLETED_SUCCESSFULLY",
+                completedAt: now,
+                finalPrice: auction.highestBidAmount,
+              },
+            });
+            await tx.transaction.create({
+              data: {
+                transactionId: txSignature,
+                type: "AUCTION_END",
+                sender: auction.createdBy,
+                receiver: "system",
+                amount: BigInt(0),
+                mintAddress: auction.prizeMint,
+                isNft: true,
+                auctionId: auction.id,
+              },
+            }); 
           });
 
           logger.log(

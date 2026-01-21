@@ -175,15 +175,33 @@ const getAuctionDetails = async (req: Request, res: Response) => {
           profileImage: true,
         },
       },
+      transactions: {
+        select: {
+          transactionId: true,
+          type: true,
+          createdAt: true,
+          amount: true,
+          sender: true,
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+      },
     },
   });
   if (!auction) {
     return responseHandler.error(res, "Auction not found");
   }
+
+  const endingTransaction = auction.transactions.find(tx => tx.type === "AUCTION_END") || null;
+
   responseHandler.success(res, {
     message: "Auction fetched successfully",
     error: null,
-    auction,
+    auction: {
+      ...auction,
+      endingTransaction,
+    },
   });
 };
 
