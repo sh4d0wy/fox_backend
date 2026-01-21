@@ -1,1 +1,0 @@
-import{O as e}from"./index-CBs22Nnx.js";var t=e;export{t as component};
