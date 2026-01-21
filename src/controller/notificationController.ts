@@ -3,6 +3,91 @@ import prismaClient from "../database/client";
 import { responseHandler } from "../utils/resHandler";
 import logger from "../utils/logger";
 
+const getEndedCreatedRaffles = async (req: Request, res: Response) => {
+  try {
+    const walletAddress = req.user as string;
+    const { page = 1, limit = 10 } = req.query;
+
+    const pageNum = Number(page);
+    const limitNum = Number(limit);
+    const skip = (pageNum - 1) * limitNum;
+
+    // Find all raffles created by the user that have ended
+    const endedRaffles = await prismaClient.raffle.findMany({
+      where: {
+        createdBy: walletAddress,
+        OR: [
+          { state: "SuccessEnded" },
+          { state: "FailedEnded" },
+        ],
+      },
+      orderBy: { endsAt: "desc" },
+      skip,
+      take: limitNum,
+      include: {
+        prizeData: true,
+        winners: {
+          select: {
+            walletAddress: true,
+            twitterId: true,
+            profileImage: true,
+          },
+        },
+        _count: {
+          select: {
+            raffleEntries: true,
+          },
+        },
+      },
+    });
+
+    // Get total count for pagination
+    const total = await prismaClient.raffle.count({
+      where: {
+        createdBy: walletAddress,
+        OR: [
+          { state: "SuccessEnded" },
+          { state: "FailedEnded" },
+        ],
+      },
+    });
+
+    // Check which raffles have unclaimed ticket amounts
+    const rafflesWithClaimStatus = endedRaffles.map((raffle) => ({
+      id: raffle.id,
+      raffle: raffle.raffle,
+      state: raffle.state,
+      endsAt: raffle.endsAt,
+      ticketPrice: raffle.ticketPrice,
+      ticketSold: raffle.ticketSold,
+      ticketSupply: raffle.ticketSupply,
+      numberOfWinners: raffle.numberOfWinners,
+      winnerPicked: raffle.winnerPicked,
+      claimed: raffle.claimed,
+      ticketAmountClaimedByCreator: raffle.ticketAmountClaimedByCreator,
+      totalEntries: raffle._count.raffleEntries,
+      prizeData: raffle.prizeData,
+      winners: raffle.winners,
+      // Calculate total ticket revenue
+      ticketRevenue: raffle.ticketPrice * raffle.ticketSold,
+      // Check if creator can claim ticket amount
+      canClaimTicketAmount: raffle.state === "SuccessEnded" && !raffle.ticketAmountClaimedByCreator,
+    }));
+
+    return responseHandler.success(res, {
+      message: "Ended raffles fetched successfully",
+      raffles: rafflesWithClaimStatus,
+      total,
+      page: pageNum,
+      limit: limitNum,
+      totalPages: Math.ceil(total / limitNum),
+    });
+  } catch (error) {
+    logger.error(error);
+    return responseHandler.error(res, error);
+  }
+};
+
 const getRecentWinnings = async (req: Request, res: Response) => {
   try {
     const walletAddress = req.user as string;
@@ -67,5 +152,6 @@ const getRecentWinnings = async (req: Request, res: Response) => {
 
 export default {
   getRecentWinnings,
+  getEndedCreatedRaffles,
 };
 
