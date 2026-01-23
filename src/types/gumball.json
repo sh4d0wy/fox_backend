@@ -1,5 +1,5 @@
 {
-  "address": "6WjtxBErVmFVqndkV3J79rQ7qgBtwxcdSbBjMKHfUrGE",
+  "address": "FfZ9oTD5aCyoGvCi2xWZiTydvxQyiWVAh4SdR52as7z5",
   "metadata": {
     "name": "gumball",
     "version": "0.1.0",
@@ -9,7 +9,16 @@
   "instructions": [
     {
       "name": "activate_gumball",
-      "discriminator": [127, 251, 179, 138, 30, 30, 192, 238],
+      "discriminator": [
+        127,
+        251,
+        179,
+        138,
+        30,
+        30,
+        192,
+        238
+      ],
       "accounts": [
         {
           "name": "gumball_config",
@@ -17,7 +26,15 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [103, 117, 109, 98, 97, 108, 108]
+                "value": [
+                  103,
+                  117,
+                  109,
+                  98,
+                  97,
+                  108,
+                  108
+                ]
               }
             ]
           }
@@ -29,7 +46,15 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [103, 117, 109, 98, 97, 108, 108]
+                "value": [
+                  103,
+                  117,
+                  109,
+                  98,
+                  97,
+                  108,
+                  108
+                ]
               },
               {
                 "kind": "arg",
@@ -53,7 +78,16 @@
     },
     {
       "name": "add_prize",
-      "discriminator": [72, 182, 203, 140, 3, 163, 192, 98],
+      "discriminator": [
+        72,
+        182,
+        203,
+        140,
+        3,
+        163,
+        192,
+        98
+      ],
       "accounts": [
         {
           "name": "gumball_config",
@@ -61,7 +95,15 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [103, 117, 109, 98, 97, 108, 108]
+                "value": [
+                  103,
+                  117,
+                  109,
+                  98,
+                  97,
+                  108,
+                  108
+                ]
               }
             ]
           }
@@ -73,7 +115,15 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [103, 117, 109, 98, 97, 108, 108]
+                "value": [
+                  103,
+                  117,
+                  109,
+                  98,
+                  97,
+                  108,
+                  108
+                ]
               },
               {
                 "kind": "arg",
@@ -89,7 +139,15 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [103, 117, 109, 98, 97, 108, 108]
+                "value": [
+                  103,
+                  117,
+                  109,
+                  98,
+                  97,
+                  108,
+                  108
+                ]
               },
               {
                 "kind": "arg",
@@ -135,9 +193,38 @@
             "program": {
               "kind": "const",
               "value": [
-                140, 151, 37, 143, 78, 36, 137, 241, 187, 61, 16, 41, 20, 142,
-                13, 131, 11, 90, 19, 153, 218, 255, 16, 132, 4, 142, 123, 216,
-                219, 233, 248, 89
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
               ]
             }
           }
@@ -163,9 +250,38 @@
             "program": {
               "kind": "const",
               "value": [
-                140, 151, 37, 143, 78, 36, 137, 241, 187, 61, 16, 41, 20, 142,
-                13, 131, 11, 90, 19, 153, 218, 255, 16, 132, 4, 142, 123, 216,
-                219, 233, 248, 89
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
               ]
             }
           }
@@ -203,7 +319,16 @@
     },
     {
       "name": "cancel_gumball",
-      "discriminator": [198, 125, 189, 213, 97, 199, 110, 144],
+      "discriminator": [
+        198,
+        125,
+        189,
+        213,
+        97,
+        199,
+        110,
+        144
+      ],
       "accounts": [
         {
           "name": "gumball_config",
@@ -211,7 +336,15 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [103, 117, 109, 98, 97, 108, 108]
+                "value": [
+                  103,
+                  117,
+                  109,
+                  98,
+                  97,
+                  108,
+                  108
+                ]
               }
             ]
           }
@@ -223,7 +356,15 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [103, 117, 109, 98, 97, 108, 108]
+                "value": [
+                  103,
+                  117,
+                  109,
+                  98,
+                  97,
+                  108,
+                  108
+                ]
               },
               {
                 "kind": "arg",
@@ -250,8 +391,17 @@
       ]
     },
     {
-      "name": "claim_prize_back",
-      "discriminator": [103, 54, 25, 125, 252, 226, 44, 85],
+      "name": "claim_prize",
+      "discriminator": [
+        157,
+        233,
+        139,
+        121,
+        246,
+        62,
+        234,
+        235
+      ],
       "accounts": [
         {
           "name": "gumball_config",
@@ -259,7 +409,15 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [103, 117, 109, 98, 97, 108, 108]
+                "value": [
+                  103,
+                  117,
+                  109,
+                  98,
+                  97,
+                  108,
+                  108
+                ]
               }
             ]
           }
@@ -271,7 +429,15 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [103, 117, 109, 98, 97, 108, 108]
+                "value": [
+                  103,
+                  117,
+                  109,
+                  98,
+                  97,
+                  108,
+                  108
+                ]
               },
               {
                 "kind": "arg",
@@ -287,7 +453,288 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [103, 117, 109, 98, 97, 108, 108]
+                "value": [
+                  103,
+                  117,
+                  109,
+                  98,
+                  97,
+                  108,
+                  108
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "gumball_id"
+              },
+              {
+                "kind": "arg",
+                "path": "prize_index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "spin_state",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  117,
+                  109,
+                  98,
+                  97,
+                  108,
+                  108
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "gumball_id"
+              },
+              {
+                "kind": "account",
+                "path": "spinner"
+              }
+            ]
+          }
+        },
+        {
+          "name": "randomness_account_data"
+        },
+        {
+          "name": "spinner",
+          "docs": [
+            "Player who will receive the prize"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "gumball_admin",
+          "signer": true
+        },
+        {
+          "name": "prize_mint"
+        },
+        {
+          "name": "prize_escrow",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "gumball"
+              },
+              {
+                "kind": "account",
+                "path": "prize_token_program"
+              },
+              {
+                "kind": "account",
+                "path": "prize_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "spinner_prize_ata",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "spinner"
+              },
+              {
+                "kind": "account",
+                "path": "prize_token_program"
+              },
+              {
+                "kind": "account",
+                "path": "prize_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "prize_token_program",
+          "docs": [
+            "Token program"
+          ]
+        },
+        {
+          "name": "associated_token_program",
+          "docs": [
+            "system Programs"
+          ],
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "gumball_id",
+          "type": "u32"
+        },
+        {
+          "name": "prize_index",
+          "type": "u16"
+        }
+      ]
+    },
+    {
+      "name": "claim_prize_back",
+      "discriminator": [
+        103,
+        54,
+        25,
+        125,
+        252,
+        226,
+        44,
+        85
+      ],
+      "accounts": [
+        {
+          "name": "gumball_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  117,
+                  109,
+                  98,
+                  97,
+                  108,
+                  108
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "gumball",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  117,
+                  109,
+                  98,
+                  97,
+                  108,
+                  108
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "gumball_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "prize",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  117,
+                  109,
+                  98,
+                  97,
+                  108,
+                  108
+                ]
               },
               {
                 "kind": "arg",
@@ -333,9 +780,38 @@
             "program": {
               "kind": "const",
               "value": [
-                140, 151, 37, 143, 78, 36, 137, 241, 187, 61, 16, 41, 20, 142,
-                13, 131, 11, 90, 19, 153, 218, 255, 16, 132, 4, 142, 123, 216,
-                219, 233, 248, 89
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
               ]
             }
           }
@@ -361,9 +837,38 @@
             "program": {
               "kind": "const",
               "value": [
-                140, 151, 37, 143, 78, 36, 137, 241, 187, 61, 16, 41, 20, 142,
-                13, 131, 11, 90, 19, 153, 218, 255, 16, 132, 4, 142, 123, 216,
-                219, 233, 248, 89
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
               ]
             }
           }
@@ -393,7 +898,16 @@
     },
     {
       "name": "create_gumball",
-      "discriminator": [240, 178, 45, 48, 213, 119, 42, 218],
+      "discriminator": [
+        240,
+        178,
+        45,
+        48,
+        213,
+        119,
+        42,
+        218
+      ],
       "accounts": [
         {
           "name": "gumball_config",
@@ -402,7 +916,15 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [103, 117, 109, 98, 97, 108, 108]
+                "value": [
+                  103,
+                  117,
+                  109,
+                  98,
+                  97,
+                  108,
+                  108
+                ]
               }
             ]
           }
@@ -414,7 +936,15 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [103, 117, 109, 98, 97, 108, 108]
+                "value": [
+                  103,
+                  117,
+                  109,
+                  98,
+                  97,
+                  108,
+                  108
+                ]
               },
               {
                 "kind": "account",
@@ -470,7 +1000,16 @@
     },
     {
       "name": "end_gumball",
-      "discriminator": [249, 139, 11, 145, 146, 24, 165, 251],
+      "discriminator": [
+        249,
+        139,
+        11,
+        145,
+        146,
+        24,
+        165,
+        251
+      ],
       "accounts": [
         {
           "name": "gumball_config",
@@ -479,7 +1018,15 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [103, 117, 109, 98, 97, 108, 108]
+                "value": [
+                  103,
+                  117,
+                  109,
+                  98,
+                  97,
+                  108,
+                  108
+                ]
               }
             ]
           }
@@ -491,7 +1038,15 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [103, 117, 109, 98, 97, 108, 108]
+                "value": [
+                  103,
+                  117,
+                  109,
+                  98,
+                  97,
+                  108,
+                  108
+                ]
               },
               {
                 "kind": "arg",
@@ -541,7 +1096,16 @@
     },
     {
       "name": "initialize_gumball_config",
-      "discriminator": [27, 198, 52, 249, 52, 18, 112, 51],
+      "discriminator": [
+        27,
+        198,
+        52,
+        249,
+        52,
+        18,
+        112,
+        51
+      ],
       "accounts": [
         {
           "name": "gumball_config",
@@ -550,7 +1114,15 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [103, 117, 109, 98, 97, 108, 108]
+                "value": [
+                  103,
+                  117,
+                  109,
+                  98,
+                  97,
+                  108,
+                  108
+                ]
               }
             ]
           }
@@ -594,7 +1166,16 @@
     },
     {
       "name": "spin_gumball",
-      "discriminator": [64, 235, 96, 221, 71, 13, 160, 11],
+      "discriminator": [
+        64,
+        235,
+        96,
+        221,
+        71,
+        13,
+        160,
+        11
+      ],
       "accounts": [
         {
           "name": "gumball_config",
@@ -602,7 +1183,15 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [103, 117, 109, 98, 97, 108, 108]
+                "value": [
+                  103,
+                  117,
+                  109,
+                  98,
+                  97,
+                  108,
+                  108
+                ]
               }
             ]
           }
@@ -614,7 +1203,15 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [103, 117, 109, 98, 97, 108, 108]
+                "value": [
+                  103,
+                  117,
+                  109,
+                  98,
+                  97,
+                  108,
+                  108
+                ]
               },
               {
                 "kind": "arg",
@@ -624,28 +1221,41 @@
           }
         },
         {
-          "name": "prize",
+          "name": "spin_state",
           "writable": true,
           "pda": {
             "seeds": [
               {
                 "kind": "const",
-                "value": [103, 117, 109, 98, 97, 108, 108]
+                "value": [
+                  103,
+                  117,
+                  109,
+                  98,
+                  97,
+                  108,
+                  108
+                ]
               },
               {
                 "kind": "arg",
                 "path": "gumball_id"
               },
               {
-                "kind": "arg",
-                "path": "prize_index"
+                "kind": "account",
+                "path": "spinner"
               }
             ]
           }
         },
         {
+          "name": "randomness_account_data"
+        },
+        {
           "name": "spinner",
-          "docs": ["Player who will receive the prize"],
+          "docs": [
+            "Player who will receive the prize"
+          ],
           "writable": true,
           "signer": true
         },
@@ -654,66 +1264,7 @@
           "signer": true
         },
         {
-          "name": "prize_mint"
-        },
-        {
           "name": "ticket_mint"
-        },
-        {
-          "name": "prize_escrow",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "account",
-                "path": "gumball"
-              },
-              {
-                "kind": "account",
-                "path": "prize_token_program"
-              },
-              {
-                "kind": "account",
-                "path": "prize_mint"
-              }
-            ],
-            "program": {
-              "kind": "const",
-              "value": [
-                140, 151, 37, 143, 78, 36, 137, 241, 187, 61, 16, 41, 20, 142,
-                13, 131, 11, 90, 19, 153, 218, 255, 16, 132, 4, 142, 123, 216,
-                219, 233, 248, 89
-              ]
-            }
-          }
-        },
-        {
-          "name": "spinner_prize_ata",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "account",
-                "path": "spinner"
-              },
-              {
-                "kind": "account",
-                "path": "prize_token_program"
-              },
-              {
-                "kind": "account",
-                "path": "prize_mint"
-              }
-            ],
-            "program": {
-              "kind": "const",
-              "value": [
-                140, 151, 37, 143, 78, 36, 137, 241, 187, 61, 16, 41, 20, 142,
-                13, 131, 11, 90, 19, 153, 218, 255, 16, 132, 4, 142, 123, 216,
-                219, 233, 248, 89
-              ]
-            }
-          }
         },
         {
           "name": "ticket_escrow",
@@ -724,19 +1275,16 @@
           "writable": true
         },
         {
-          "name": "prize_token_program",
-          "docs": ["Token program"]
-        },
-        {
-          "name": "ticket_token_program"
-        },
-        {
-          "name": "associated_token_program",
-          "docs": ["system Programs"],
-          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+          "name": "ticket_token_program",
+          "docs": [
+            "Token program"
+          ]
         },
         {
           "name": "system_program",
+          "docs": [
+            "system Programs"
+          ],
           "address": "11111111111111111111111111111111"
         }
       ],
@@ -744,16 +1292,21 @@
         {
           "name": "gumball_id",
           "type": "u32"
-        },
-        {
-          "name": "prize_index",
-          "type": "u16"
         }
       ]
     },
     {
       "name": "update_gumball_admin",
-      "discriminator": [216, 133, 198, 218, 186, 164, 32, 100],
+      "discriminator": [
+        216,
+        133,
+        198,
+        218,
+        186,
+        164,
+        32,
+        100
+      ],
       "accounts": [
         {
           "name": "gumball_config",
@@ -762,7 +1315,15 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [103, 117, 109, 98, 97, 108, 108]
+                "value": [
+                  103,
+                  117,
+                  109,
+                  98,
+                  97,
+                  108,
+                  108
+                ]
               }
             ]
           }
@@ -782,7 +1343,16 @@
     },
     {
       "name": "update_gumball_config_data",
-      "discriminator": [169, 29, 117, 121, 228, 52, 10, 183],
+      "discriminator": [
+        169,
+        29,
+        117,
+        121,
+        228,
+        52,
+        10,
+        183
+      ],
       "accounts": [
         {
           "name": "gumball_config",
@@ -791,7 +1361,15 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [103, 117, 109, 98, 97, 108, 108]
+                "value": [
+                  103,
+                  117,
+                  109,
+                  98,
+                  97,
+                  108,
+                  108
+                ]
               }
             ]
           }
@@ -823,7 +1401,16 @@
     },
     {
       "name": "update_gumball_data",
-      "discriminator": [148, 126, 136, 233, 139, 201, 162, 174],
+      "discriminator": [
+        148,
+        126,
+        136,
+        233,
+        139,
+        201,
+        162,
+        174
+      ],
       "accounts": [
         {
           "name": "gumball_config",
@@ -831,7 +1418,15 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [103, 117, 109, 98, 97, 108, 108]
+                "value": [
+                  103,
+                  117,
+                  109,
+                  98,
+                  97,
+                  108,
+                  108
+                ]
               }
             ]
           }
@@ -843,7 +1438,15 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [103, 117, 109, 98, 97, 108, 108]
+                "value": [
+                  103,
+                  117,
+                  109,
+                  98,
+                  97,
+                  108,
+                  108
+                ]
               },
               {
                 "kind": "arg",
@@ -879,7 +1482,16 @@
     },
     {
       "name": "update_gumball_owner",
-      "discriminator": [87, 110, 29, 139, 231, 149, 159, 36],
+      "discriminator": [
+        87,
+        110,
+        29,
+        139,
+        231,
+        149,
+        159,
+        36
+      ],
       "accounts": [
         {
           "name": "gumball_config",
@@ -888,7 +1500,15 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [103, 117, 109, 98, 97, 108, 108]
+                "value": [
+                  103,
+                  117,
+                  109,
+                  98,
+                  97,
+                  108,
+                  108
+                ]
               }
             ]
           }
@@ -908,7 +1528,16 @@
     },
     {
       "name": "update_gumball_time",
-      "discriminator": [176, 22, 24, 140, 248, 77, 185, 172],
+      "discriminator": [
+        176,
+        22,
+        24,
+        140,
+        248,
+        77,
+        185,
+        172
+      ],
       "accounts": [
         {
           "name": "gumball_config",
@@ -916,7 +1545,15 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [103, 117, 109, 98, 97, 108, 108]
+                "value": [
+                  103,
+                  117,
+                  109,
+                  98,
+                  97,
+                  108,
+                  108
+                ]
               }
             ]
           }
@@ -928,7 +1565,15 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [103, 117, 109, 98, 97, 108, 108]
+                "value": [
+                  103,
+                  117,
+                  109,
+                  98,
+                  97,
+                  108,
+                  108
+                ]
               },
               {
                 "kind": "arg",
@@ -968,7 +1613,16 @@
     },
     {
       "name": "update_pause_flags",
-      "discriminator": [166, 168, 128, 146, 186, 131, 65, 66],
+      "discriminator": [
+        166,
+        168,
+        128,
+        146,
+        186,
+        131,
+        65,
+        66
+      ],
       "accounts": [
         {
           "name": "gumball_config",
@@ -977,7 +1631,15 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [103, 117, 109, 98, 97, 108, 108]
+                "value": [
+                  103,
+                  117,
+                  109,
+                  98,
+                  97,
+                  108,
+                  108
+                ]
               }
             ]
           }
@@ -997,7 +1659,16 @@
     },
     {
       "name": "withdraw_sol_fees",
-      "discriminator": [191, 53, 166, 97, 124, 212, 228, 219],
+      "discriminator": [
+        191,
+        53,
+        166,
+        97,
+        124,
+        212,
+        228,
+        219
+      ],
       "accounts": [
         {
           "name": "gumball_config",
@@ -1006,7 +1677,15 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [103, 117, 109, 98, 97, 108, 108]
+                "value": [
+                  103,
+                  117,
+                  109,
+                  98,
+                  97,
+                  108,
+                  108
+                ]
               }
             ]
           }
@@ -1034,7 +1713,16 @@
     },
     {
       "name": "withdraw_spl_fees",
-      "discriminator": [67, 45, 141, 82, 211, 167, 149, 115],
+      "discriminator": [
+        67,
+        45,
+        141,
+        82,
+        211,
+        167,
+        149,
+        115
+      ],
       "accounts": [
         {
           "name": "gumball_config",
@@ -1043,7 +1731,15 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [103, 117, 109, 98, 97, 108, 108]
+                "value": [
+                  103,
+                  117,
+                  109,
+                  98,
+                  97,
+                  108,
+                  108
+                ]
               }
             ]
           }
@@ -1068,9 +1764,38 @@
               {
                 "kind": "const",
                 "value": [
-                  6, 221, 246, 225, 215, 101, 161, 147, 217, 203, 225, 70, 206,
-                  235, 121, 172, 28, 180, 133, 237, 95, 91, 55, 145, 58, 140,
-                  245, 133, 126, 255, 0, 169
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
                 ]
               },
               {
@@ -1081,9 +1806,38 @@
             "program": {
               "kind": "const",
               "value": [
-                140, 151, 37, 143, 78, 36, 137, 241, 187, 61, 16, 41, 20, 142,
-                13, 131, 11, 90, 19, 153, 218, 255, 16, 132, 4, 142, 123, 216,
-                219, 233, 248, 89
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
               ]
             }
           }
@@ -1111,133 +1865,370 @@
   "accounts": [
     {
       "name": "GumballConfig",
-      "discriminator": [229, 179, 216, 228, 212, 37, 61, 212]
+      "discriminator": [
+        229,
+        179,
+        216,
+        228,
+        212,
+        37,
+        61,
+        212
+      ]
     },
     {
       "name": "GumballMachine",
-      "discriminator": [87, 13, 57, 25, 98, 234, 26, 27]
+      "discriminator": [
+        87,
+        13,
+        57,
+        25,
+        98,
+        234,
+        26,
+        27
+      ]
     },
     {
       "name": "Prize",
-      "discriminator": [207, 94, 143, 55, 253, 127, 70, 211]
+      "discriminator": [
+        207,
+        94,
+        143,
+        55,
+        253,
+        127,
+        70,
+        211
+      ]
+    },
+    {
+      "name": "SpinState",
+      "discriminator": [
+        169,
+        179,
+        241,
+        170,
+        228,
+        255,
+        118,
+        128
+      ]
     }
   ],
   "events": [
     {
       "name": "FeesWithdrawn",
-      "discriminator": [234, 15, 0, 119, 148, 241, 40, 21]
+      "discriminator": [
+        234,
+        15,
+        0,
+        119,
+        148,
+        241,
+        40,
+        21
+      ]
     },
     {
       "name": "GumballActivated",
-      "discriminator": [97, 160, 164, 48, 117, 198, 149, 114]
+      "discriminator": [
+        97,
+        160,
+        164,
+        48,
+        117,
+        198,
+        149,
+        114
+      ]
     },
     {
       "name": "GumballCancelled",
-      "discriminator": [78, 145, 147, 126, 59, 198, 243, 192]
+      "discriminator": [
+        78,
+        145,
+        147,
+        126,
+        59,
+        198,
+        243,
+        192
+      ]
     },
     {
       "name": "GumballCreated",
-      "discriminator": [101, 20, 97, 249, 49, 225, 184, 10]
+      "discriminator": [
+        101,
+        20,
+        97,
+        249,
+        49,
+        225,
+        184,
+        10
+      ]
     },
     {
       "name": "GumballDataUpdated",
-      "discriminator": [70, 134, 52, 235, 56, 252, 54, 74]
+      "discriminator": [
+        70,
+        134,
+        52,
+        235,
+        56,
+        252,
+        54,
+        74
+      ]
     },
     {
       "name": "GumballEnded",
-      "discriminator": [178, 87, 35, 180, 121, 171, 217, 58]
+      "discriminator": [
+        178,
+        87,
+        35,
+        180,
+        121,
+        171,
+        217,
+        58
+      ]
     },
     {
       "name": "GumballTimeUpdated",
-      "discriminator": [175, 205, 161, 245, 208, 228, 209, 112]
+      "discriminator": [
+        175,
+        205,
+        161,
+        245,
+        208,
+        228,
+        209,
+        112
+      ]
     },
     {
       "name": "PrizeAdded",
-      "discriminator": [198, 189, 108, 191, 245, 23, 92, 12]
+      "discriminator": [
+        198,
+        189,
+        108,
+        191,
+        245,
+        23,
+        92,
+        12
+      ]
     },
     {
       "name": "PrizeClaimed",
-      "discriminator": [213, 150, 192, 76, 199, 33, 212, 38]
+      "discriminator": [
+        213,
+        150,
+        192,
+        76,
+        199,
+        33,
+        212,
+        38
+      ]
+    },
+    {
+      "name": "PrizeClaimedBack",
+      "discriminator": [
+        90,
+        156,
+        212,
+        68,
+        17,
+        234,
+        180,
+        113
+      ]
     },
     {
       "name": "PrizeSpinned",
-      "discriminator": [83, 247, 78, 31, 69, 189, 175, 169]
+      "discriminator": [
+        83,
+        247,
+        78,
+        31,
+        69,
+        189,
+        175,
+        169
+      ]
     },
     {
       "name": "SplFeesWithdrawn",
-      "discriminator": [201, 164, 201, 96, 70, 233, 240, 251]
+      "discriminator": [
+        201,
+        164,
+        201,
+        96,
+        70,
+        233,
+        240,
+        251
+      ]
     }
   ],
   "errors": [
     {
       "code": 6000,
-      "name": "InvalidTicketMint",
-      "msg": "Invalid Ticket Mint"
+      "name": "InvalidGumballId",
+      "msg": "Invalid Gumball ID"
     },
     {
       "code": 6001,
-      "name": "MissingTicketMint",
-      "msg": "Missing Ticket Mint"
+      "name": "InvalidCreator",
+      "msg": "Invalid Gumball Creator"
     },
     {
       "code": 6002,
-      "name": "InvalidTicketEscrow",
-      "msg": "Invalid Ticket Escrow"
+      "name": "Overflow",
+      "msg": "Calculation Overflow Error"
     },
     {
       "code": 6003,
-      "name": "InvalidPrizeMint",
-      "msg": "Invalid Prize Mint"
+      "name": "FunctionPaused",
+      "msg": "Function is paused"
     },
     {
       "code": 6004,
-      "name": "InvalidPrizeEscrow",
-      "msg": "Invalid Prize Escrow"
+      "name": "InvalidTicketPrice",
+      "msg": "Invalid ticket price given"
     },
     {
       "code": 6005,
-      "name": "InvalidPrizeEscrowOwner",
-      "msg": "Invalid Prize Escrow Owner"
+      "name": "InvalidTotalTickets",
+      "msg": "Invalid total tickets"
     },
     {
       "code": 6006,
-      "name": "InvalidFeeTreasuryAtaOwner",
-      "msg": "Invalid Fee Treasury ATA Owner"
+      "name": "EndTimeNotReached",
+      "msg": "End time is not reached"
     },
     {
       "code": 6007,
-      "name": "InvalidBuyerAccountUser",
-      "msg": "Invalid Buyer Account User"
+      "name": "StartTimeAlreadyReached",
+      "msg": "Start time already reached"
     },
     {
       "code": 6008,
-      "name": "InvalidTicketAtaOwner",
-      "msg": "Invalid Ticket ATA Owner"
+      "name": "StartTimeExceedEndTime",
+      "msg": "Start time exceed end time"
     },
     {
       "code": 6009,
-      "name": "InvalidPrizeAtaOwner",
-      "msg": "Invalid Prize ATA Owner"
+      "name": "StartTimeInPast",
+      "msg": "Given start time is in past"
     },
     {
       "code": 6010,
-      "name": "InvalidTicketEscrowOwner",
-      "msg": "Invalid ticket escrow owner"
+      "name": "TicketsAlreadySold",
+      "msg": "Tickets are already solded"
     },
     {
       "code": 6011,
-      "name": "InvalidCreatorPrizeAtaMint",
-      "msg": "Invalid creator prize ATA mint"
+      "name": "NotInitialized",
+      "msg": "Gumball is not in initialized stage"
     },
     {
       "code": 6012,
-      "name": "InvalidCreatorPrizeAtaOwner",
-      "msg": "Invalid creator prize ATA owner"
+      "name": "StartTimeNotReached",
+      "msg": "Start time is not reached"
     },
     {
       "code": 6013,
-      "name": "InvalidPrizeEscrowMint",
-      "msg": "Invalid prize escrow mint"
+      "name": "EndTimeIsReached",
+      "msg": "End time is already reached"
+    },
+    {
+      "code": 6014,
+      "name": "InvalidGumballState",
+      "msg": "Invalid gumball state for this action"
+    },
+    {
+      "code": 6015,
+      "name": "PrizesExceedTickets",
+      "msg": "Prizes exceed the total tickets allowed"
+    },
+    {
+      "code": 6016,
+      "name": "InvalidPrizeIndex",
+      "msg": "Invalid prize index"
+    },
+    {
+      "code": 6017,
+      "name": "InvalidRemainingAccounts",
+      "msg": "Invalid Remaining accounts passed"
+    },
+    {
+      "code": 6018,
+      "name": "MissingBump",
+      "msg": "Missing PDA bump for prize"
+    },
+    {
+      "code": 6019,
+      "name": "PrizeMintMismatch",
+      "msg": "Prize mint mismatch"
+    },
+    {
+      "code": 6020,
+      "name": "PrizeAmountMismatch",
+      "msg": "Prize amount mismatch"
+    },
+    {
+      "code": 6021,
+      "name": "CannotAddExistingNftPrize",
+      "msg": "Cannot add NFT to an existing NFT prize PDA"
+    },
+    {
+      "code": 6022,
+      "name": "InvalidNftPrizeAmount",
+      "msg": "Invalid NFT prize amount (NFT must have amount = 1)"
+    },
+    {
+      "code": 6023,
+      "name": "InvalidNftPrizeQuantity",
+      "msg": "Invalid NFT prize quantity (NFT quantity must be 1)"
+    },
+    {
+      "code": 6024,
+      "name": "InvalidPrizeAmount",
+      "msg": "Invalid prize amount"
+    },
+    {
+      "code": 6025,
+      "name": "InvalidPrizeQuantity",
+      "msg": "Invalid prize quantity"
+    },
+    {
+      "code": 6026,
+      "name": "AlreadySpinned",
+      "msg": "User has already spun this gumball"
+    },
+    {
+      "code": 6027,
+      "name": "NotSpun",
+      "msg": "User has not spun this gumball yet"
+    },
+    {
+      "code": 6028,
+      "name": "InvalidRandomnessAccount",
+      "msg": "Invalid randomness account"
+    },
+    {
+      "code": 6029,
+      "name": "LengthMismatch",
+      "msg": "Lengths not in sync"
+    },
+    {
+      "code": 6030,
+      "name": "GumballEmpty",
+      "msg": "Gumball has no prizes available"
     }
   ],
   "types": [
@@ -1443,6 +2434,10 @@
             "type": "u16"
           },
           {
+            "name": "total_items_available",
+            "type": "u16"
+          },
+          {
             "name": "tickets_sold",
             "type": "u16"
           },
@@ -1471,6 +2466,12 @@
           {
             "name": "gumball_bump",
             "type": "u8"
+          },
+          {
+            "name": "prize_map",
+            "type": {
+              "vec": "u16"
+            }
           }
         ]
       }
@@ -1614,6 +2615,38 @@
             "type": "pubkey"
           },
           {
+            "name": "prize_amount",
+            "type": "u64"
+          },
+          {
+            "name": "winner",
+            "type": "pubkey"
+          },
+          {
+            "name": "claimed_at",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PrizeClaimedBack",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "gumball_id",
+            "type": "u32"
+          },
+          {
+            "name": "prize_index",
+            "type": "u16"
+          },
+          {
+            "name": "prize_mint",
+            "type": "pubkey"
+          },
+          {
             "name": "claimed_amount",
             "type": "u64"
           },
@@ -1638,24 +2671,40 @@
             "type": "u32"
           },
           {
-            "name": "prize_index",
-            "type": "u16"
-          },
-          {
-            "name": "prize_mint",
-            "type": "pubkey"
-          },
-          {
-            "name": "prize_amount",
-            "type": "u64"
-          },
-          {
-            "name": "winner",
+            "name": "randomness_account",
             "type": "pubkey"
           },
           {
             "name": "spun_at",
             "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SpinState",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "is_active",
+            "type": "bool"
+          },
+          {
+            "name": "user",
+            "type": "pubkey"
+          },
+          {
+            "name": "randomness_account",
+            "type": "pubkey"
+          },
+          {
+            "name": "gumball_id",
+            "type": "u32"
+          },
+          {
+            "name": "commit_slot",
+            "type": "u64"
           }
         ]
       }

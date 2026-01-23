@@ -12,7 +12,8 @@ import { connection, provider } from "../services/solanaconnector";
 import { deserializeMetadata } from "@metaplex-foundation/mpl-token-metadata";
 
 export const FAKE_MINT = new PublicKey('So11111111111111111111111111111111111111112');
-export const FAKE_ATA = new PublicKey('C3FzbX9n1YD2dow2dCmEv5uNyyf22Gb3TLAEqGBhw5fY')
+// export const FAKE_ATA = new PublicKey('C3FzbX9n1YD2dow2dCmEv5uNyyf22Gb3TLAEqGBhw5fY');
+export const FAKE_ATA = new PublicKey('B9W4wPFWjTbZ9ab1okzB4D3SsGY7wntkrBKwpp5RC1Uv');
 
 // The official Metaplex Token Metadata Program ID
 export const METAPLEX_METADATA_PROGRAM_ID = new PublicKey("metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s");

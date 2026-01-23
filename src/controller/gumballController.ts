@@ -14,8 +14,14 @@ import { cancelGumballSchema } from "../schemas/gumball/cancelGumball.schema";
 import { verifyTransaction } from "../utils/verifyTransaction";
 import prismaClient from "../database/client";
 import logger from "../utils/logger";
+import { ADMIN_KEYPAIR, connection, gumballProgram, provider } from "../services/solanaconnector";
+import { PublicKey, Transaction } from "@solana/web3.js";
+import { ensureAtaIx, FAKE_ATA, FAKE_MINT, getTokenProgramFromMint } from "../utils/helpers";
+import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import * as sb from "@switchboard-xyz/on-demand";
+import * as anchor from "@coral-xyz/anchor";
+import { BN } from "bn.js";
 
-//TODO: Creating cron to schedule the activation of gumballs
 const createGumball = async (req: Request, res: Response) => {
   const body = req.body;
   const { success, data: parsedData, error } = gumballSchema.safeParse(body);
@@ -106,7 +112,7 @@ const confirmGumballCreation = async (req: Request, res: Response) => {
         };
       }
       let state = "INITIALIZED";
-      if(gumball.startTime<=new Date()){
+      if (gumball.startTime <= new Date()) {
         state = "ACTIVE";
       }
       await tx.gumball.update({
@@ -386,8 +392,8 @@ const addPrize = async (req: Request, res: Response) => {
       });
 
       const newTotalPrizeValue = gumball.totalPrizeValue + prizeAmount;
-      const maxRoi = gumball.maxProceeds > BigInt(0) 
-        ? Number(newTotalPrizeValue) / Number(gumball.maxProceeds) 
+      const maxRoi = gumball.maxProceeds > BigInt(0)
+        ? Number(newTotalPrizeValue) / Number(gumball.maxProceeds)
         : null;
 
       await tx.gumball.update({
@@ -396,7 +402,7 @@ const addPrize = async (req: Request, res: Response) => {
         },
         data: {
           prizesAdded: gumball.prizesAdded + 1,
-          totalTickets:{increment:parsedData.quantity},
+          totalTickets: { increment: parsedData.quantity },
           totalPrizeValue: newTotalPrizeValue,
           maxRoi: maxRoi,
         },
@@ -531,8 +537,8 @@ const addMultiplePrizes = async (req: Request, res: Response) => {
 
       // Calculate max ROI
       const newTotalPrizeValue = gumball.totalPrizeValue + totalAddedValue;
-      const maxRoi = gumball.maxProceeds > BigInt(0) 
-        ? Number(newTotalPrizeValue) / Number(gumball.maxProceeds) 
+      const maxRoi = gumball.maxProceeds > BigInt(0)
+        ? Number(newTotalPrizeValue) / Number(gumball.maxProceeds)
         : null;
 
       await tx.gumball.update({
@@ -541,7 +547,7 @@ const addMultiplePrizes = async (req: Request, res: Response) => {
         },
         data: {
           prizesAdded: gumball.prizesAdded + parsedData.prizes.length,
-          totalTickets:{increment:newTotalQuantity},
+          totalTickets: { increment: newTotalQuantity },
           totalPrizeValue: newTotalPrizeValue,
           maxRoi: maxRoi,
         },
@@ -638,7 +644,7 @@ const prepareSpin = async (req: Request, res: Response) => {
       isTicketSol: gumball.isTicketSol,
       prizeImage: selectedPrize.image,
       prizeAmount: selectedPrize.prizeAmount.toString(),
-      isNft:selectedPrize.isNft
+      isNft: selectedPrize.isNft
     });
   } catch (error) {
     logger.error(error);
@@ -671,151 +677,151 @@ const spin = async (req: Request, res: Response) => {
     while (retryCount < MAX_RETRIES) {
       try {
         await prismaClient.$transaction(async (tx) => {
-      const existingTransaction = await tx.transaction.findUnique({
-        where: {
-          transactionId: parsedData.txSignature,
-        },
-      });
-      if (existingTransaction) {
-        throw {
-          code: "DB_ERROR",
-          message: "Transaction already exists",
-        };
-      }
+          const existingTransaction = await tx.transaction.findUnique({
+            where: {
+              transactionId: parsedData.txSignature,
+            },
+          });
+          if (existingTransaction) {
+            throw {
+              code: "DB_ERROR",
+              message: "Transaction already exists",
+            };
+          }
 
-      const gumball = await tx.gumball.findUnique({
-        where: {
-          id: gumballId,
-        },
-      });
-      if (!gumball) {
-        throw {
-          code: "DB_ERROR",
-          message: "Gumball not found",
-        };
-      }
-      if (gumball.status !== "ACTIVE") {
-        throw {
-          code: "DB_ERROR",
-          message: "Gumball is not active",
-        };
-      }
-      if (!gumball.manualStart && new Date() < gumball.startTime) {
-        throw {
-          code: "DB_ERROR",
-          message: "Gumball has not started yet",
-        };
-      }
-      if (new Date() > gumball.endTime) {
-        throw {
-          code: "DB_ERROR",
-          message: "Gumball has ended",
-        };
-      }
-      if (gumball.ticketsSold >= gumball.totalTickets) {
-        throw {
-          code: "DB_ERROR",
-          message: "All tickets have been sold",
-        };
-      }
+          const gumball = await tx.gumball.findUnique({
+            where: {
+              id: gumballId,
+            },
+          });
+          if (!gumball) {
+            throw {
+              code: "DB_ERROR",
+              message: "Gumball not found",
+            };
+          }
+          if (gumball.status !== "ACTIVE") {
+            throw {
+              code: "DB_ERROR",
+              message: "Gumball is not active",
+            };
+          }
+          if (!gumball.manualStart && new Date() < gumball.startTime) {
+            throw {
+              code: "DB_ERROR",
+              message: "Gumball has not started yet",
+            };
+          }
+          if (new Date() > gumball.endTime) {
+            throw {
+              code: "DB_ERROR",
+              message: "Gumball has ended",
+            };
+          }
+          if (gumball.ticketsSold >= gumball.totalTickets) {
+            throw {
+              code: "DB_ERROR",
+              message: "All tickets have been sold",
+            };
+          }
 
-      // Find the prize by prizeIndex
-      const prize = await tx.gumballPrize.findUnique({
-        where: {
-          gumballId_prizeIndex: {
-            gumballId: gumballId,
-            prizeIndex: parsedData.prizeIndex,
-          },
-        },
-      });
+          // Find the prize by prizeIndex
+          const prize = await tx.gumballPrize.findUnique({
+            where: {
+              gumballId_prizeIndex: {
+                gumballId: gumballId,
+                prizeIndex: parsedData.prizeIndex,
+              },
+            },
+          });
 
-      if (!prize) {
-        throw {
-          code: "DB_ERROR",
-          message: `Prize with index ${parsedData.prizeIndex} not found`,
-        };
-      }
+          if (!prize) {
+            throw {
+              code: "DB_ERROR",
+              message: `Prize with index ${parsedData.prizeIndex} not found`,
+            };
+          }
 
-      if (prize.quantityClaimed >= prize.quantity) {
-        throw {
-          code: "DB_ERROR",
-          message: "This prize is no longer available",
-        };
-      }
+          if (prize.quantityClaimed >= prize.quantity) {
+            throw {
+              code: "DB_ERROR",
+              message: "This prize is no longer available",
+            };
+          }
 
-      const existingSpin = await tx.gumballSpin.findFirst({
-        where: {
-          gumballId: gumballId,
-          spinnerAddress: userAddress,
-        },
-      });
-      const isNewBuyer = !existingSpin;
+          const existingSpin = await tx.gumballSpin.findFirst({
+            where: {
+              gumballId: gumballId,
+              spinnerAddress: userAddress,
+            },
+          });
+          const isNewBuyer = !existingSpin;
 
-      const spinRecord = await tx.gumballSpin.create({
-        data: {
-          gumballId: gumballId,
-          prizeId: prize.id,
-          spinnerAddress: userAddress,
-          winnerAddress: userAddress,
-          prizeAmount: prize.prizeAmount,
-          claimed:true,
-          claimedAt: new Date(),
-        },
-      });
+          const spinRecord = await tx.gumballSpin.create({
+            data: {
+              gumballId: gumballId,
+              prizeId: prize.id,
+              spinnerAddress: userAddress,
+              winnerAddress: userAddress,
+              prizeAmount: prize.prizeAmount,
+              claimed: true,
+              claimedAt: new Date(),
+            },
+          });
 
-      await tx.gumballPrize.update({
-        where: {
-          id: prize.id,
-        },
-        data: {
-          quantityClaimed: { increment: 1 },
-        },
-      });
+          await tx.gumballPrize.update({
+            where: {
+              id: prize.id,
+            },
+            data: {
+              quantityClaimed: { increment: 1 },
+            },
+          });
 
-      await tx.gumball.update({
-        where: {
-          id: gumballId,
-        },
-        data: {
-          ticketsSold: { increment: 1 },
-          totalProceeds: { increment: gumball.ticketPrice },
-          ...(isNewBuyer && { uniqueBuyers: { increment: 1 } }),
-        },
-      });
+          await tx.gumball.update({
+            where: {
+              id: gumballId,
+            },
+            data: {
+              ticketsSold: { increment: 1 },
+              totalProceeds: { increment: gumball.ticketPrice },
+              ...(isNewBuyer && { uniqueBuyers: { increment: 1 } }),
+            },
+          });
 
-      // Create transaction
-      await tx.transaction.create({
-        data: {
-          transactionId: parsedData.txSignature,
-          type: "GUMBALL_SPIN",
-          sender: userAddress,
-          receiver: "system",
-          amount: gumball.ticketPrice,
-          mintAddress: gumball.ticketMint || "So11111111111111111111111111111111111111112",
-          gumballId: gumballId,
-          gumballSpinId: spinRecord.id,
-          metadata: {
+          // Create transaction
+          await tx.transaction.create({
+            data: {
+              transactionId: parsedData.txSignature,
+              type: "GUMBALL_SPIN",
+              sender: userAddress,
+              receiver: "system",
+              amount: gumball.ticketPrice,
+              mintAddress: gumball.ticketMint || "So11111111111111111111111111111111111111112",
+              gumballId: gumballId,
+              gumballSpinId: spinRecord.id,
+              metadata: {
+                prizeId: prize.id,
+                prizeIndex: parsedData.prizeIndex,
+                prizeAmount: prize.prizeAmount.toString(),
+                prizeName: prize.name,
+                prizeImage: prize.image,
+                prizeMint: prize.mint,
+              },
+            },
+          });
+
+          spinResult = {
+            spinId: spinRecord.id,
             prizeId: prize.id,
             prizeIndex: parsedData.prizeIndex,
             prizeAmount: prize.prizeAmount.toString(),
             prizeName: prize.name,
+            prizeSymbol: prize.symbol,
             prizeImage: prize.image,
             prizeMint: prize.mint,
-          },
-        },
-      });
-
-      spinResult = {
-        spinId: spinRecord.id,
-        prizeId: prize.id,
-        prizeIndex: parsedData.prizeIndex,
-        prizeAmount: prize.prizeAmount.toString(),
-        prizeName: prize.name,
-        prizeSymbol: prize.symbol,
-        prizeImage: prize.image,
-        prizeMint: prize.mint,
-        isNft: prize.isNft,
-      };
+            isNft: prize.isNft,
+          };
         });
 
         break;
@@ -1088,8 +1094,8 @@ const getGumballDetails = async (req: Request, res: Response) => {
               twitterId: true,
             },
           },
-          transaction:{
-            where:{
+          transaction: {
+            where: {
               type: "GUMBALL_SPIN",
             },
             select: {
@@ -1245,7 +1251,7 @@ const deleteGumball = async (req: Request, res: Response) => {
   const userAddress = req.user as string;
 
   try {
-    if(!gumballId){
+    if (!gumballId) {
       return responseHandler.error(res, "Gumball ID is required");
     }
     const gumball = await prismaClient.gumball.findUnique({
@@ -1283,7 +1289,7 @@ const deleteGumball = async (req: Request, res: Response) => {
 const getGumballStats = async (req: Request, res: Response) => {
   const params = req.params;
   const gumballId = parseInt(params.gumballId);
-  
+
   const gumball = await prismaClient.gumball.findUnique({
     where: {
       id: gumballId,
@@ -1344,50 +1350,50 @@ const creatorClaimPrize = async (req: Request, res: Response) => {
     }
 
     await prismaClient.$transaction(async (tx) => {
-    const gumball = await tx.gumball.findUnique({
-      where: {
-        id: gumballId,
-      },
-    });
-    if (!gumball) {
-      return responseHandler.error(res, "Gumball not found");
-    }
-    if (gumball.creatorAddress !== userAddress) {
-      return responseHandler.error(res, "You are not the creator of this gumball");
-    }
-    const prizes = await tx.gumballPrize.findMany({
-      where: {
-        gumballId: gumballId,
-      },
-    });
-    if (prizes.length === 0) {
-      return responseHandler.error(res, "No prizes found for this gumball");
-    }
-    for (const prize of prizes) {
-      if (prize.creatorClaimed) {
-        continue;
-      }
-      await tx.gumballPrize.update({
+      const gumball = await tx.gumball.findUnique({
         where: {
-          id: prize.id,
-        },
-        data: {
-          creatorClaimed: true,
-          creatorClaimedAt: new Date(),
+          id: gumballId,
         },
       });
-    }
-    await tx.transaction.create({
-      data: {
-        transactionId: parsedData.txSignature,
-        type: "GUMBALL_CLAIM_PRIZE",
-        sender: userAddress,
-        receiver: userAddress,
-        amount: BigInt(0),
-        mintAddress: "So11111111111111111111111111111111111111112",
-        gumballId: gumballId,
-      },
-    });
+      if (!gumball) {
+        return responseHandler.error(res, "Gumball not found");
+      }
+      if (gumball.creatorAddress !== userAddress) {
+        return responseHandler.error(res, "You are not the creator of this gumball");
+      }
+      const prizes = await tx.gumballPrize.findMany({
+        where: {
+          gumballId: gumballId,
+        },
+      });
+      if (prizes.length === 0) {
+        return responseHandler.error(res, "No prizes found for this gumball");
+      }
+      for (const prize of prizes) {
+        if (prize.creatorClaimed) {
+          continue;
+        }
+        await tx.gumballPrize.update({
+          where: {
+            id: prize.id,
+          },
+          data: {
+            creatorClaimed: true,
+            creatorClaimedAt: new Date(),
+          },
+        });
+      }
+      await tx.transaction.create({
+        data: {
+          transactionId: parsedData.txSignature,
+          type: "GUMBALL_CLAIM_PRIZE",
+          sender: userAddress,
+          receiver: userAddress,
+          amount: BigInt(0),
+          mintAddress: "So11111111111111111111111111111111111111112",
+          gumballId: gumballId,
+        },
+      });
     });
     responseHandler.success(res, {
       message: "Prize claimed successfully",
@@ -1399,6 +1405,309 @@ const creatorClaimPrize = async (req: Request, res: Response) => {
     responseHandler.error(res, error);
   }
 };
+
+const gumballPda = (gumballId: number): PublicKey => {
+  return PublicKey.findProgramAddressSync(
+    [
+      Buffer.from("gumball"),
+      new BN(gumballId).toArrayLike(Buffer, "le", 4),
+    ],
+    gumballProgram.programId
+  )[0];
+};
+
+const calculateWinner = (revealedValue: number[], totalItemsAvailable: number, prizeMap: number[]) => {
+  // 1. Validate randomness is resolved
+  if (!revealedValue || revealedValue.every((v: any) => v === 0)) {
+    throw new Error("Randomness not yet resolved");
+  }
+
+  // 2. Extract first 8 bytes and convert to u64 (Little Endian)
+  // Equivalent to Rust: let mut data = [0u8; 8]; data.copy_from_slice(&revealed_random_value[..8]);
+  const randomBuffer = Buffer.from(revealedValue.slice(0, 8));
+  const randomU64 = new anchor.BN(randomBuffer, 'le');
+
+  // 3. Perform Modulo
+  // Equivalent to Rust: let target_pointer = (random_u64 % total_left) as usize;
+  const totalLeftBN = new anchor.BN(totalItemsAvailable);
+  const targetPointer = randomU64.mod(totalLeftBN).toNumber();
+
+  // 4. Map the pointer to the Prize Index
+  // Equivalent to Rust: let winning_prize_index = gumball.prize_map[target_pointer];
+  const winningPrizeIndex = prizeMap[targetPointer];
+
+  return {
+    targetPointer,
+    winningPrizeIndex
+  };
+};
+
+
+export async function loadSbProgram(
+  provider: anchor.Provider
+): Promise<anchor.Program> {
+  const sbProgramId = await sb.getProgramId(provider.connection);
+  const sbIdl = await anchor.Program.fetchIdl(sbProgramId, provider);
+  const sbProgram = new anchor.Program(sbIdl!, provider);
+  return sbProgram;
+}
+
+export async function setupQueue(program: anchor.Program): Promise<PublicKey> {
+  const queueAccount = await sb.getDefaultQueue(
+    program.provider.connection.rpcEndpoint
+  );
+  console.log("Queue account", queueAccount.pubkey.toString());
+  try {
+    await queueAccount.loadData();
+  } catch (err) {
+    console.error("Queue not found, ensure you are using devnet in your env");
+    process.exit(1);
+  }
+  return queueAccount.pubkey;
+}
+
+
+const spinGumballTx = async (req: Request, res: Response) => {
+  const params = req.params;
+  const userAddress = req.user as string;
+  const gumballId = parseInt(params.gumballId);
+
+  try {
+    const {
+      context: { slot: minContextSlot },
+      value: { blockhash, lastValidBlockHeight },
+    } = await connection.getLatestBlockhashAndContext();
+
+    const transaction = new Transaction({
+      blockhash,
+      lastValidBlockHeight,
+      feePayer: new PublicKey(userAddress),
+    });
+
+    const userPublicKey = new PublicKey(userAddress);
+    const sbProgram = await loadSbProgram(gumballProgram.provider);
+    const queue = await setupQueue(sbProgram);
+
+    const [randomness, rngKp, createAndCommitIx] = await sb.Randomness.createAndCommitIxs(sbProgram as any, queue);
+
+    // Only create the randomness account if it's new
+    for (const ix of createAndCommitIx) {
+      transaction.add(ix);
+    }
+
+    /* ---------------- PDAs ---------------- */
+    const gumballAddress = gumballPda(gumballId);
+    // const prizeAddress = prizePda(args.gumballId, args.prizeIndex);
+
+    const gumballState =
+      await gumballProgram.account.gumballMachine.fetch(
+        gumballAddress
+      );
+
+    const ticketMint: PublicKey | null = gumballState.ticketMint;
+
+    const ticketTokenProgram = ticketMint
+      ? await getTokenProgramFromMint(connection, ticketMint)
+      : TOKEN_PROGRAM_ID;
+
+    /* ---------------- Ticket ATAs (CLIENT MUST ENSURE) ---------------- */
+    let ticketEscrow = FAKE_ATA;
+    let spinnerTicketAta = FAKE_ATA;
+
+    if (ticketMint) {
+      /* -------- Ticket escrow ATA (owner = gumball PDA) -------- */
+      const ticketEscrowRes = await ensureAtaIx({
+        connection,
+        mint: ticketMint,
+        owner: gumballAddress,
+        payer: userPublicKey,
+        tokenProgram: ticketTokenProgram,
+        allowOwnerOffCurve: true, // PDA owner
+      });
+
+      ticketEscrow = ticketEscrowRes.ata;
+      if (ticketEscrowRes.ix) transaction.add(ticketEscrowRes.ix);
+
+      /* -------- Spinner ticket ATA -------- */
+      const spinnerTicketRes = await ensureAtaIx({
+        connection,
+        mint: ticketMint,
+        owner: userPublicKey,
+        payer: userPublicKey,
+        tokenProgram: ticketTokenProgram,
+      });
+
+      spinnerTicketAta = spinnerTicketRes.ata;
+      if (spinnerTicketRes.ix) transaction.add(spinnerTicketRes.ix);
+    }
+
+    /* ---------------- Anchor Instruction ---------------- */
+    const ix = await gumballProgram.methods
+      .spinGumball(gumballId)
+      .accounts({
+        spinner: userPublicKey,
+        gumballAdmin: ADMIN_KEYPAIR.publicKey,
+
+        ticketMint: ticketMint ?? FAKE_MINT,
+
+        ticketEscrow,
+        spinnerTicketAta,
+
+        ticketTokenProgram,
+        randomnessAccountData: randomness.pubkey,
+      })
+      .instruction();
+
+    transaction.add(ix);
+
+    transaction.partialSign(ADMIN_KEYPAIR);
+    transaction.partialSign(rngKp);
+
+    const serializedTransaction = transaction.serialize({
+      verifySignatures: false,
+      requireAllSignatures: false,
+    });
+
+    const base64Transaction = serializedTransaction.toString('base64');
+
+    res.status(200).json({
+      base64Transaction,
+      minContextSlot,
+      blockhash,
+      lastValidBlockHeight,
+      message: "OK",
+    });
+
+  } catch (error) {
+    logger.error(error);
+    responseHandler.error(res, error);
+  }
+};
+
+
+const claimGumballTx = async (req: Request, res: Response) => {
+  const params = req.params;
+  const userAddress = req.user as string;
+  const gumballId = parseInt(params.gumballId);
+
+  try {
+    const {
+      context: { slot: minContextSlot },
+      value: { blockhash, lastValidBlockHeight },
+    } = await connection.getLatestBlockhashAndContext();
+
+    const transaction = new Transaction({
+      blockhash,
+      lastValidBlockHeight,
+      feePayer: new PublicKey(userAddress),
+    });
+
+    const userPublicKey = new PublicKey(userAddress);
+    const sbProgram = await loadSbProgram(gumballProgram.provider);
+
+    const [spinStateAddress] = PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("gumball"),
+        new anchor.BN(gumballId).toBuffer("le", 4), // u32 = 4 bytes, Little Endian
+        userPublicKey.toBuffer()
+      ],
+      gumballProgram.programId
+    );
+
+    const spinStateData = await gumballProgram.account.spinState.fetch(
+      spinStateAddress
+    );
+
+    const randomnessAddress = spinStateData.randomnessAccount;
+
+    const randomness = new sb.Randomness(sbProgram as any, randomnessAddress);
+
+    // const revealIx = await randomness.revealIx();
+
+    // const revealTx = new Transaction();
+    // revealTx.add(revealIx);
+
+    // const revealTxSig = await provider.sendAndConfirm(
+    //   revealTx,
+    //   [ADMIN_KEYPAIR]
+    // );
+
+    const revealed = await randomness.loadData();
+    console.log("Randomness account after reveal:", revealed.value);
+
+    /* ---------------- PDAs ---------------- */
+    const gumballAddress = gumballPda(gumballId);
+    // const prizeAddress = prizePda(args.gumballId, args.prizeIndex);
+
+    const gumballState =
+      await gumballProgram.account.gumballMachine.fetch(
+        gumballAddress
+      );
+
+    const { winningPrizeIndex: prizeIndex } = calculateWinner(revealed.value, gumballState.totalItemsAvailable, gumballState.prizeMap);
+
+    console.log("Calculated winning prize index:", prizeIndex);
+
+    const [prizeAddress] = PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("gumball"),
+        new anchor.BN(gumballId).toBuffer("le", 4), // u32 = 4 bytes, Little Endian
+        new anchor.BN(prizeIndex).toBuffer("le", 2), // u16 = 2 bytes, Little Endian
+      ],
+      gumballProgram.programId
+    );
+
+    console.log("Derived prize address:", prizeAddress.toString());
+
+    const prizeAccountData = await gumballProgram.account.prize.fetch(prizeAddress);
+
+    const prizeMint: PublicKey = prizeAccountData.mint;
+
+    /* ---------------- Token programs ---------------- */
+    const prizeTokenProgram = await getTokenProgramFromMint(
+      connection,
+      prizeMint
+    );
+
+    /* ---------------- Anchor Instruction ---------------- */
+    const ix = await gumballProgram.methods
+      .claimPrize(gumballId, prizeIndex)
+      .accounts({
+        spinner: userPublicKey,
+        gumballAdmin: ADMIN_KEYPAIR.publicKey,
+
+        prizeMint: prizeMint,
+
+        prizeTokenProgram: prizeTokenProgram,
+        randomnessAccountData: randomness.pubkey,
+      })
+      .instruction();
+
+    transaction.add(ix);
+
+    transaction.partialSign(ADMIN_KEYPAIR);
+
+    const serializedTransaction = transaction.serialize({
+      verifySignatures: false,
+      requireAllSignatures: false,
+    });
+
+    const base64Transaction = serializedTransaction.toString('base64');
+
+    res.status(200).json({
+      base64Transaction,
+      minContextSlot,
+      blockhash,
+      lastValidBlockHeight,
+      message: "OK",
+    });
+
+  } catch (error) {
+    logger.error(error);
+    responseHandler.error(res, error);
+  }
+};
+
 export default {
   createGumball,
   confirmGumballCreation,
@@ -1417,4 +1726,6 @@ export default {
   getSpinsByUser,
   deleteGumball,
   getGumballStats,
+  spinGumballTx,
+  claimGumballTx,
 };

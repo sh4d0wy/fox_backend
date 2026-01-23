@@ -30,4 +30,7 @@ gumballRouter.post("/claim/:gumballId", authMiddleware, gumballController.claimP
 // Delete
 gumballRouter.delete("/delete/:gumballId", authMiddleware, gumballController.deleteGumball);
 
+gumballRouter.get("/spin-tx/:gumballId", authMiddleware, gumballController.spinGumballTx);
+gumballRouter.get("/claim-tx/:gumballId", authMiddleware, gumballController.claimGumballTx);
+
 export default gumballRouter;
