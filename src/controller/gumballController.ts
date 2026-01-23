@@ -1622,17 +1622,45 @@ const claimGumballTx = async (req: Request, res: Response) => {
 
     const randomness = new sb.Randomness(sbProgram as any, randomnessAddress);
 
-    // const revealIx = await randomness.revealIx();
+    let revealed = await randomness.loadData();
 
-    // const revealTx = new Transaction();
-    // revealTx.add(revealIx);
+    if (!revealed.value || revealed.value.every((v: any) => v === 0)) {
+      console.log("Revealing randomness...");
+      const { blockhash: blockhash1, lastValidBlockHeight: lastValidBlockHeight1 } =
+        await connection.getLatestBlockhash("confirmed");
 
-    // const revealTxSig = await provider.sendAndConfirm(
-    //   revealTx,
-    //   [ADMIN_KEYPAIR]
-    // );
+      const revealTx = new Transaction({
+        blockhash: blockhash1,
+        lastValidBlockHeight: lastValidBlockHeight1,
+        feePayer: ADMIN_KEYPAIR.publicKey,
+      });
 
-    const revealed = await randomness.loadData();
+      const revealIx = await randomness.revealIx();
+      revealTx.add(revealIx);
+
+      const revealTxSig = await connection.sendTransaction(
+        revealTx,
+        [ADMIN_KEYPAIR],
+        { skipPreflight: false }
+      );
+
+      const confirmation = await connection.confirmTransaction(
+        {
+          signature: revealTxSig,
+          blockhash: blockhash1,
+          lastValidBlockHeight: lastValidBlockHeight1,
+        },
+        "confirmed"
+      );
+
+      if (confirmation.value.err) {
+        throw new Error(
+          `announceWinners failed: ${JSON.stringify(confirmation.value.err)}`
+        );
+      }
+      revealed = await randomness.loadData();
+    }
+
     console.log("Randomness account after reveal:", revealed.value);
 
     /* ---------------- PDAs ---------------- */
