@@ -302,6 +302,40 @@ export type Gumball = {
         {
           "name": "systemProgram",
           "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "metadataAccount",
+          "writable": true
+        },
+        {
+          "name": "editionAccount"
+        },
+        {
+          "name": "ownerTokenRecord",
+          "docs": [
+            "Required only for pNFTs. Derived as PDA(metadata, mint, \"token_record\", source_ata)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "destTokenRecord",
+          "docs": [
+            "Required only for pNFTs. Derived as PDA(metadata, mint, \"token_record\", destination_ata)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "authorizationRules",
+          "optional": true
+        },
+        {
+          "name": "authRulesProgram"
+        },
+        {
+          "name": "tokenMetadataProgram"
+        },
+        {
+          "name": "sysvarInstructions"
         }
       ],
       "args": [
@@ -656,6 +690,40 @@ export type Gumball = {
         {
           "name": "systemProgram",
           "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "metadataAccount",
+          "writable": true
+        },
+        {
+          "name": "editionAccount"
+        },
+        {
+          "name": "ownerTokenRecord",
+          "docs": [
+            "Required only for pNFTs. Derived as PDA(metadata, mint, \"token_record\", source_ata)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "destTokenRecord",
+          "docs": [
+            "Required only for pNFTs. Derived as PDA(metadata, mint, \"token_record\", destination_ata)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "authorizationRules",
+          "optional": true
+        },
+        {
+          "name": "authRulesProgram"
+        },
+        {
+          "name": "tokenMetadataProgram"
+        },
+        {
+          "name": "sysvarInstructions"
         }
       ],
       "args": [
@@ -889,6 +957,40 @@ export type Gumball = {
         {
           "name": "systemProgram",
           "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "metadataAccount",
+          "writable": true
+        },
+        {
+          "name": "editionAccount"
+        },
+        {
+          "name": "ownerTokenRecord",
+          "docs": [
+            "Required only for pNFTs. Derived as PDA(metadata, mint, \"token_record\", source_ata)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "destTokenRecord",
+          "docs": [
+            "Required only for pNFTs. Derived as PDA(metadata, mint, \"token_record\", destination_ata)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "authorizationRules",
+          "optional": true
+        },
+        {
+          "name": "authRulesProgram"
+        },
+        {
+          "name": "tokenMetadataProgram"
+        },
+        {
+          "name": "sysvarInstructions"
         }
       ],
       "args": [

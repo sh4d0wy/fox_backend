@@ -16,8 +16,8 @@ import { verifyTransaction } from "../utils/verifyTransaction";
 import prismaClient from "../database/client";
 import logger from "../utils/logger";
 import { ADMIN_KEYPAIR, connection, gumballProgram, provider } from "../services/solanaconnector";
-import { PublicKey, Transaction, TransactionInstruction } from "@solana/web3.js";
-import { ensureAtaIx, FAKE_ATA, FAKE_MINT, getTokenProgramFromMint } from "../utils/helpers";
+import { ComputeBudgetProgram, PublicKey, SYSVAR_INSTRUCTIONS_PUBKEY, Transaction, TransactionInstruction } from "@solana/web3.js";
+import { ensureAtaIx, FAKE_ATA, FAKE_MINT, getAtaAddress, getMasterEditionPda, getMetadataPda, getRuleSet, getTokenProgramFromMint, getTokenRecordPda, METAPLEX_METADATA_PROGRAM_ID, MPL_TOKEN_AUTH_RULES_PROGRAM_ID } from "../utils/helpers";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import * as sb from "@switchboard-xyz/on-demand";
 import * as anchor from "@coral-xyz/anchor";
@@ -1746,6 +1746,29 @@ const claimGumballTx = async (req: Request, res: Response) => {
       prizeMint
     );
 
+    const creatorPrizeAta = await getAtaAddress(
+      connection,
+      prizeMint,
+      new PublicKey(userAddress)
+    );
+
+    const prizeEscrowAta = await getAtaAddress(
+      connection,
+      prizeMint,
+      gumballAddress,
+      true // PDA owner
+    );
+
+    // ---------------- Metaplex Accounts (New) ----------------
+    const metadataAccount = getMetadataPda(prizeMint);
+    const editionAccount = getMasterEditionPda(prizeMint);
+    const ownerTokenRecord = getTokenRecordPda(prizeMint, prizeEscrowAta);
+    const destTokenRecord = getTokenRecordPda(prizeMint, creatorPrizeAta);
+    const ruleSet = await getRuleSet(prizeMint);
+    const modifyComputeUnits = ComputeBudgetProgram.setComputeUnitLimit({
+      units: 400000
+    });
+
     /* ---------------- Anchor Instruction ---------------- */
     const ix = await gumballProgram.methods
       .claimPrize(gumballId, prizeIndex)
@@ -1757,9 +1780,19 @@ const claimGumballTx = async (req: Request, res: Response) => {
 
         prizeTokenProgram: prizeTokenProgram,
         randomnessAccountData: randomness.pubkey,
+        // Metaplex & pNFT Accounts
+        metadataAccount,
+        editionAccount,
+        ownerTokenRecord,
+        destTokenRecord,
+        authorizationRules: ruleSet, // Pass null if Option<T> is not used
+        authRulesProgram: MPL_TOKEN_AUTH_RULES_PROGRAM_ID, // Or a specific rules program if applicable
+        tokenMetadataProgram: METAPLEX_METADATA_PROGRAM_ID,
+        sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
       })
       .instruction();
 
+    transaction.add(modifyComputeUnits);
     transaction.add(ix);
 
     transaction.partialSign(ADMIN_KEYPAIR);
@@ -1915,6 +1948,11 @@ const cancelAndClaimGumballTx = async (req: Request, res: Response) => {
       feePayer: new PublicKey(userAddress),
     });
 
+    const modifyComputeUnits = ComputeBudgetProgram.setComputeUnitLimit({
+      units: 400000
+    });
+    transaction.add(modifyComputeUnits);
+
     const ix = await gumballProgram.methods
       .cancelGumball(parsedData.gumballId)
       .accounts({
@@ -1924,6 +1962,8 @@ const cancelAndClaimGumballTx = async (req: Request, res: Response) => {
       .instruction();
 
     transaction.add(ix);
+
+    const gumballAddress = await gumballPda(parsedData.gumballId);
 
     // 2. Claim back only the selected prize indexes
     const claimIxs: TransactionInstruction[] = [];
@@ -1964,6 +2004,26 @@ const cancelAndClaimGumballTx = async (req: Request, res: Response) => {
 
       if (creatorPrizeRes.ix) transaction.add(creatorPrizeRes.ix);
 
+      const creatorPrizeAta = await getAtaAddress(
+        connection,
+        prizeMint,
+        new PublicKey(userAddress)
+      );
+
+      const prizeEscrowAta = await getAtaAddress(
+        connection,
+        prizeMint,
+        gumballAddress,
+        true // PDA owner
+      );
+
+      // ---------------- Metaplex Accounts (New) ----------------
+      const metadataAccount = getMetadataPda(prizeMint);
+      const editionAccount = getMasterEditionPda(prizeMint);
+      const ownerTokenRecord = getTokenRecordPda(prizeMint, prizeEscrowAta);
+      const destTokenRecord = getTokenRecordPda(prizeMint, creatorPrizeAta);
+      const ruleSet = await getRuleSet(prizeMint);
+
       const claimIx = await gumballProgram.methods
         .claimPrizeBack(parsedData.gumballId, prizeIndex)
         .accounts({
@@ -1982,6 +2042,16 @@ const cancelAndClaimGumballTx = async (req: Request, res: Response) => {
           prizeTokenProgram,
           // associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
           // systemProgram: anchor.web3.SystemProgram.programId,
+
+          // Metaplex & pNFT Accounts
+          metadataAccount,
+          editionAccount,
+          ownerTokenRecord,
+          destTokenRecord,
+          authorizationRules: ruleSet, // Pass null if Option<T> is not used
+          authRulesProgram: MPL_TOKEN_AUTH_RULES_PROGRAM_ID, // Or a specific rules program if applicable
+          tokenMetadataProgram: METAPLEX_METADATA_PROGRAM_ID,
+          sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
         })
         .instruction();
 
@@ -2031,6 +2101,13 @@ const addMultiplePrizesTx = async (req: Request, res: Response) => {
       feePayer: new PublicKey(userAddress),
     });
 
+    const modifyComputeUnits = ComputeBudgetProgram.setComputeUnitLimit({
+      units: 400000
+    });
+    transaction.add(modifyComputeUnits);
+
+    const gumballAddress = await gumballPda(parsedData.gumballId);
+
     for (const prize of parsedData.prizes) {
       const prizeTokenProgram = await getTokenProgramFromMint(
         connection,
@@ -2056,6 +2133,28 @@ const addMultiplePrizesTx = async (req: Request, res: Response) => {
       //     tokenProgram: prizeTokenProgram,
       // });
 
+      const prizeMintPubkey = new PublicKey(prize.prizeMint);
+
+      const creatorPrizeAta = await getAtaAddress(
+        connection,
+        prizeMintPubkey,
+        new PublicKey(userAddress)
+      );
+
+      const prizeEscrowAta = await getAtaAddress(
+        connection,
+        prizeMintPubkey,
+        gumballAddress,
+        true // PDA owner
+      );
+
+      // ---------------- Metaplex Accounts (New) ----------------
+      const metadataAccount = getMetadataPda(prizeMintPubkey);
+      const editionAccount = getMasterEditionPda(prizeMintPubkey);
+      const ownerTokenRecord = getTokenRecordPda(prizeMintPubkey, creatorPrizeAta);
+      const destTokenRecord = getTokenRecordPda(prizeMintPubkey, prizeEscrowAta);
+      const ruleSet = await getRuleSet(prizeMintPubkey);
+
       /* -------- Add Prize Instruction -------- */
       const ix = await gumballProgram.methods
         .addPrize(
@@ -2071,6 +2170,16 @@ const addMultiplePrizesTx = async (req: Request, res: Response) => {
 
           prizeMint: new PublicKey(prize.prizeMint),
           prizeTokenProgram,
+
+          // Metaplex & pNFT Accounts
+          metadataAccount,
+          editionAccount,
+          ownerTokenRecord,
+          destTokenRecord,
+          authorizationRules: ruleSet, // Pass null if Option<T> is not used
+          authRulesProgram: MPL_TOKEN_AUTH_RULES_PROGRAM_ID, // Or a specific rules program if applicable
+          tokenMetadataProgram: METAPLEX_METADATA_PROGRAM_ID,
+          sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
         })
         .instruction();
 
@@ -2120,6 +2229,12 @@ const claimMultiplePrizesBackTx = async (req: Request, res: Response) => {
       feePayer: new PublicKey(userAddress),
     });
 
+    const modifyComputeUnits = ComputeBudgetProgram.setComputeUnitLimit({
+      units: 400000
+    });
+    transaction.add(modifyComputeUnits);
+
+    const gumballAddress = await gumballPda(parsedData.gumballId);
 
     for (const prize of parsedData.prizes) {
       const prizeAddress = await prizePda(
@@ -2154,6 +2269,26 @@ const claimMultiplePrizesBackTx = async (req: Request, res: Response) => {
       //     tokenProgram: prizeTokenProgram,
       // });
 
+      const creatorPrizeAta = await getAtaAddress(
+        connection,
+        prizeMint,
+        new PublicKey(userAddress)
+      );
+
+      const prizeEscrowAta = await getAtaAddress(
+        connection,
+        prizeMint,
+        gumballAddress,
+        true // PDA owner
+      );
+
+      // ---------------- Metaplex Accounts (New) ----------------
+      const metadataAccount = getMetadataPda(prizeMint);
+      const editionAccount = getMasterEditionPda(prizeMint);
+      const ownerTokenRecord = getTokenRecordPda(prizeMint, prizeEscrowAta);
+      const destTokenRecord = getTokenRecordPda(prizeMint, creatorPrizeAta);
+      const ruleSet = await getRuleSet(prizeMint);
+
       const ix = await gumballProgram.methods
         .claimPrizeBack(parsedData.gumballId, prize.prizeIndex)
         .accounts({
@@ -2163,6 +2298,16 @@ const claimMultiplePrizesBackTx = async (req: Request, res: Response) => {
           prizeMint,
 
           prizeTokenProgram,
+
+          // Metaplex & pNFT Accounts
+          metadataAccount,
+          editionAccount,
+          ownerTokenRecord,
+          destTokenRecord,
+          authorizationRules: ruleSet, // Pass null if Option<T> is not used
+          authRulesProgram: MPL_TOKEN_AUTH_RULES_PROGRAM_ID, // Or a specific rules program if applicable
+          tokenMetadataProgram: METAPLEX_METADATA_PROGRAM_ID,
+          sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
         })
         .instruction();
 

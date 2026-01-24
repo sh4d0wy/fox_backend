@@ -296,6 +296,40 @@
         {
           "name": "system_program",
           "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "metadata_account",
+          "writable": true
+        },
+        {
+          "name": "edition_account"
+        },
+        {
+          "name": "owner_token_record",
+          "docs": [
+            "Required only for pNFTs. Derived as PDA(metadata, mint, \"token_record\", source_ata)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "dest_token_record",
+          "docs": [
+            "Required only for pNFTs. Derived as PDA(metadata, mint, \"token_record\", destination_ata)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "authorization_rules",
+          "optional": true
+        },
+        {
+          "name": "auth_rules_program"
+        },
+        {
+          "name": "token_metadata_program"
+        },
+        {
+          "name": "sysvar_instructions"
         }
       ],
       "args": [
@@ -650,6 +684,40 @@
         {
           "name": "system_program",
           "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "metadata_account",
+          "writable": true
+        },
+        {
+          "name": "edition_account"
+        },
+        {
+          "name": "owner_token_record",
+          "docs": [
+            "Required only for pNFTs. Derived as PDA(metadata, mint, \"token_record\", source_ata)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "dest_token_record",
+          "docs": [
+            "Required only for pNFTs. Derived as PDA(metadata, mint, \"token_record\", destination_ata)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "authorization_rules",
+          "optional": true
+        },
+        {
+          "name": "auth_rules_program"
+        },
+        {
+          "name": "token_metadata_program"
+        },
+        {
+          "name": "sysvar_instructions"
         }
       ],
       "args": [
@@ -883,6 +951,40 @@
         {
           "name": "system_program",
           "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "metadata_account",
+          "writable": true
+        },
+        {
+          "name": "edition_account"
+        },
+        {
+          "name": "owner_token_record",
+          "docs": [
+            "Required only for pNFTs. Derived as PDA(metadata, mint, \"token_record\", source_ata)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "dest_token_record",
+          "docs": [
+            "Required only for pNFTs. Derived as PDA(metadata, mint, \"token_record\", destination_ata)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "authorization_rules",
+          "optional": true
+        },
+        {
+          "name": "auth_rules_program"
+        },
+        {
+          "name": "token_metadata_program"
+        },
+        {
+          "name": "sysvar_instructions"
         }
       ],
       "args": [
