@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/gumball.json`.
  */
 export type Gumball = {
-  "address": "FfZ9oTD5aCyoGvCi2xWZiTydvxQyiWVAh4SdR52as7z5",
+  "address": "E3JKUYAdd2VeUo1YdwTKUmG43WG7zwUuzxcZbzphRejc",
   "metadata": {
     "name": "gumball",
     "version": "0.1.0",
