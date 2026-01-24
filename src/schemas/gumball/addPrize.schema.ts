@@ -4,19 +4,19 @@ import { z } from "zod";
 const prizeDataSchema = z.object({
   prizeIndex: z.number().int().gte(0),
   isNft: z.boolean().default(false),
-  
+
   // Token/NFT details
   mint: z.string().min(1),
   name: z.string().optional(),
   symbol: z.string().optional(),
   image: z.string().optional(),
   decimals: z.number().int().optional(),
-  
+
   // Prize amounts
   totalAmount: z.string().min(1), // BigInt as string
   prizeAmount: z.string().min(1), // BigInt as string
   quantity: z.number().int().gt(0),
-  
+
   // For NFTs - floor price used for buy back calculation
   floorPrice: z.string().optional(), // BigInt as string
 });
@@ -41,6 +41,18 @@ export const addPrizeSchema = z.object({
   quantity: z.number().int().gt(0),
   floorPrice: z.string().optional(),
   txSignature: z.string().min(1),
+});
+
+const multiplePrizeSchema = z.array(z.object({
+  prizeIndex: z.number(),
+  prizeAmount: z.number(),
+  quantity: z.number(),
+  prizeMint: z.string().min(1),
+}))
+
+export const addMultiplePrizesSchemaTx = z.object({
+  prizes: multiplePrizeSchema,
+  gumballId: z.number(),
 });
 
 // Re-export for backward compatibility

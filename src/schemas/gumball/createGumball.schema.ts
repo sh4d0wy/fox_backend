@@ -26,6 +26,17 @@ export const gumballSchema = z.object({
   
   // Rent info
   rentAmount: z.string().optional(), // BigInt as string
+  txSignature: z.string().min(1),
+});
+
+export const createGumballSchema = z.object({
+  startTime: z.number(),
+  endTime: z.number(),
+  totalTickets: z.number(),
+  ticketPrice: z.number(),
+  isTicketSol: z.boolean(),
+  startGumball: z.boolean(),
+  ticketMint: z.string().min(1),
 });
 
 export const confirmGumballCreationSchema = z.object({

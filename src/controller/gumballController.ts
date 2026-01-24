@@ -5,17 +5,18 @@ import {
   confirmGumballCreationSchema,
   activateGumballSchema,
   updateBuyBackSchema,
+  createGumballSchema,
 } from "../schemas/gumball/createGumball.schema";
-import { addPrizeSchema, addMultiplePrizesSchema } from "../schemas/gumball/addPrize.schema";
+import { addPrizeSchema, addMultiplePrizesSchema, addMultiplePrizesSchemaTx } from "../schemas/gumball/addPrize.schema";
 import { spinSchema } from "../schemas/gumball/spin.schema";
 import { claimGumballPrizeSchema } from "../schemas/gumball/claimPrize.schema";
-import { creatorClaimPrizeSchema } from "../schemas/gumball/creatorClaimBack.schema";
-import { cancelGumballSchema } from "../schemas/gumball/cancelGumball.schema";
+import { claimMultiplePrizesBackSchemaTx, creatorClaimPrizeSchema } from "../schemas/gumball/creatorClaimBack.schema";
+import { cancelAndClaimGumballSchema, cancelGumballSchema } from "../schemas/gumball/cancelGumball.schema";
 import { verifyTransaction } from "../utils/verifyTransaction";
 import prismaClient from "../database/client";
 import logger from "../utils/logger";
 import { ADMIN_KEYPAIR, connection, gumballProgram, provider } from "../services/solanaconnector";
-import { PublicKey, Transaction } from "@solana/web3.js";
+import { PublicKey, Transaction, TransactionInstruction } from "@solana/web3.js";
 import { ensureAtaIx, FAKE_ATA, FAKE_MINT, getTokenProgramFromMint } from "../utils/helpers";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import * as sb from "@switchboard-xyz/on-demand";
@@ -33,44 +34,74 @@ const createGumball = async (req: Request, res: Response) => {
     return responseHandler.error(res, "End time must be after start time");
   }
 
-  // Calculate max proceeds based on ticket price and total tickets
-  const ticketPrice = BigInt(parsedData.ticketPrice);
-  const maxProceeds = ticketPrice * BigInt(parsedData.totalTickets);
+  const isTransactionConfirmed = await verifyTransaction(parsedData.txSignature);
+  if (!isTransactionConfirmed) {
+    return responseHandler.error(res, "Transaction not confirmed");
+  }
 
-  const gumball = await prismaClient.gumball.create({
-    data: {
-      id: parsedData.id,
-      creatorAddress: parsedData.creatorAddress,
-      name: parsedData.name,
-      manualStart: parsedData.manualStart,
-      startTime: parsedData.startTime,
-      endTime: parsedData.endTime,
-      totalTickets: parsedData.totalTickets,
-      ticketMint: parsedData.ticketMint,
-      ticketPrice: BigInt(parsedData.ticketPrice),
-      isTicketSol: parsedData.isTicketSol,
-      minPrizes: parsedData.minPrizes,
-      maxPrizes: parsedData.maxPrizes,
-      buyBackEnabled: parsedData.buyBackEnabled,
-      buyBackPercentage: parsedData.buyBackPercentage,
-      maxProceeds: maxProceeds,
-      rentAmount: parsedData.rentAmount ? BigInt(parsedData.rentAmount) : null,
-      status: "NONE",
-    },
+  let gumball;
+
+  await prismaClient.$transaction(async (tx) => {
+    const existingTransaction = await tx.transaction.findUnique({
+      where: {
+        transactionId: parsedData.txSignature,
+      },
+    });
+    if (existingTransaction) {
+      throw new Error("Transaction already exists");
+    }
+
+    const status =
+      parsedData.startTime && parsedData.startTime <= new Date()
+        ? "ACTIVE"
+        : "INITIALIZED";
+
+    // Calculate max proceeds based on ticket price and total tickets
+    const ticketPrice = BigInt(parsedData.ticketPrice);
+    const maxProceeds = ticketPrice * BigInt(parsedData.totalTickets);
+
+    gumball = await tx.gumball.create({
+      data: {
+        id: parsedData.id,
+        creatorAddress: parsedData.creatorAddress,
+        name: parsedData.name,
+        manualStart: parsedData.manualStart,
+        startTime: parsedData.startTime,
+        endTime: parsedData.endTime,
+        totalTickets: parsedData.totalTickets,
+        ticketMint: parsedData.ticketMint,
+        ticketPrice: BigInt(parsedData.ticketPrice),
+        isTicketSol: parsedData.isTicketSol,
+        minPrizes: parsedData.minPrizes,
+        maxPrizes: parsedData.maxPrizes,
+        buyBackEnabled: parsedData.buyBackEnabled,
+        buyBackPercentage: parsedData.buyBackPercentage,
+        maxProceeds: maxProceeds,
+        rentAmount: parsedData.rentAmount ? BigInt(parsedData.rentAmount) : null,
+        status: status,
+      },
+    });
+
+    const transaction = await tx.transaction.create({
+      data: {
+        transactionId: parsedData.txSignature,
+        type: "GUMBALL_CREATION",
+        sender: parsedData.creatorAddress,
+        receiver: "system",
+        amount: BigInt(0),
+        mintAddress: parsedData.ticketMint || "So11111111111111111111111111111111111111112",
+        gumballId: parsedData.id,
+      },
+    });
+    if (!transaction) {
+      throw new Error("Transaction not created");
+    }
   });
 
   responseHandler.success(res, {
     message: "Gumball creation initiated successfully",
     error: null,
-    gumball: {
-      ...gumball,
-      ticketPrice: gumball.ticketPrice.toString(),
-      maxProceeds: gumball.maxProceeds.toString(),
-      totalPrizeValue: gumball.totalPrizeValue.toString(),
-      totalProceeds: gumball.totalProceeds.toString(),
-      buyBackProfit: gumball.buyBackProfit.toString(),
-      rentAmount: gumball.rentAmount?.toString(),
-    },
+    gumball
   });
 };
 
@@ -1406,11 +1437,29 @@ const creatorClaimPrize = async (req: Request, res: Response) => {
   }
 };
 
-const gumballPda = (gumballId: number): PublicKey => {
+const gumballPda = async (gumballId: number): Promise<PublicKey> => {
   return PublicKey.findProgramAddressSync(
     [
       Buffer.from("gumball"),
       new BN(gumballId).toArrayLike(Buffer, "le", 4),
+    ],
+    gumballProgram.programId
+  )[0];
+};
+
+const gumballConfigPda = async () => {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from("gumball")],
+    gumballProgram.programId
+  )[0];
+};
+
+const prizePda = async (gumballId: number, prizeIndex: number): Promise<PublicKey> => {
+  return PublicKey.findProgramAddressSync(
+    [
+      Buffer.from("gumball"),
+      new BN(gumballId).toArrayLike(Buffer, "le", 4),
+      new BN(prizeIndex).toArrayLike(Buffer, "le", 2),
     ],
     gumballProgram.programId
   )[0];
@@ -1496,7 +1545,7 @@ const spinGumballTx = async (req: Request, res: Response) => {
     }
 
     /* ---------------- PDAs ---------------- */
-    const gumballAddress = gumballPda(gumballId);
+    const gumballAddress = await gumballPda(gumballId);
     // const prizeAddress = prizePda(args.gumballId, args.prizeIndex);
 
     const gumballState =
@@ -1664,7 +1713,7 @@ const claimGumballTx = async (req: Request, res: Response) => {
     console.log("Randomness account after reveal:", revealed.value);
 
     /* ---------------- PDAs ---------------- */
-    const gumballAddress = gumballPda(gumballId);
+    const gumballAddress = await gumballPda(gumballId);
     // const prizeAddress = prizePda(args.gumballId, args.prizeIndex);
 
     const gumballState =
@@ -1723,6 +1772,413 @@ const claimGumballTx = async (req: Request, res: Response) => {
     const base64Transaction = serializedTransaction.toString('base64');
 
     res.status(200).json({
+      prizeIndex,
+      base64Transaction,
+      minContextSlot,
+      blockhash,
+      lastValidBlockHeight,
+      message: "OK",
+    });
+
+  } catch (error) {
+    logger.error(error);
+    responseHandler.error(res, error);
+  }
+};
+
+const cancelGumballTx = async (req: Request, res: Response) => {
+  const params = req.params;
+  const gumballId = parseInt(params.gumballId);
+  const userAddress = req.user as string;
+
+  try {
+    const {
+      context: { slot: minContextSlot },
+      value: { blockhash, lastValidBlockHeight },
+    } = await connection.getLatestBlockhashAndContext();
+
+    const transaction = new Transaction({
+      blockhash,
+      lastValidBlockHeight,
+      feePayer: new PublicKey(userAddress),
+    });
+
+    const ix = await gumballProgram.methods
+      .cancelGumball(gumballId)
+      .accounts({
+        creator: new PublicKey(userAddress),
+        gumballAdmin: ADMIN_KEYPAIR.publicKey,
+      })
+      .instruction();
+
+    transaction.add(ix);
+
+    transaction.partialSign(ADMIN_KEYPAIR);
+
+    const serializedTransaction = transaction.serialize({
+      verifySignatures: false,
+      requireAllSignatures: false,
+    });
+
+    const base64Transaction = serializedTransaction.toString('base64');
+
+    res.status(200).json({
+      base64Transaction,
+      minContextSlot,
+      blockhash,
+      lastValidBlockHeight,
+      message: "OK",
+    });
+
+  } catch (error) {
+    logger.error(error);
+    responseHandler.error(res, error);
+  }
+};
+
+const createGumballTx = async (req: Request, res: Response) => {
+  const userAddress = req.user as string;
+  const body = req.body;
+  const { success, data: parsedData } = createGumballSchema.safeParse(body);
+  if (!success) {
+    return responseHandler.error(res, "Invalid payload");
+  }
+  try {
+    const {
+      context: { slot: minContextSlot },
+      value: { blockhash, lastValidBlockHeight },
+    } = await connection.getLatestBlockhashAndContext();
+
+    const transaction = new Transaction({
+      blockhash,
+      lastValidBlockHeight,
+      feePayer: new PublicKey(userAddress),
+    });
+
+    const ix = await gumballProgram.methods
+      .createGumball(
+        new BN(parsedData.startTime),
+        new BN(parsedData.endTime),
+        parsedData.totalTickets,
+        new BN(parsedData.ticketPrice),
+        parsedData.isTicketSol,
+        parsedData.startGumball
+      )
+      .accounts({
+        creator: new PublicKey(userAddress),
+        gumballAdmin: ADMIN_KEYPAIR.publicKey,
+        ticketMint: parsedData.ticketMint ?? FAKE_MINT,
+      })
+      .instruction();
+
+    transaction.add(ix);
+
+    transaction.partialSign(ADMIN_KEYPAIR);
+
+    const serializedTransaction = transaction.serialize({
+      verifySignatures: false,
+      requireAllSignatures: false,
+    });
+
+    const base64Transaction = serializedTransaction.toString('base64');
+
+    res.status(200).json({
+      base64Transaction,
+      minContextSlot,
+      blockhash,
+      lastValidBlockHeight,
+      message: "OK",
+    });
+
+  } catch (error) {
+    logger.error(error);
+    responseHandler.error(res, error);
+  }
+};
+
+const cancelAndClaimGumballTx = async (req: Request, res: Response) => {
+  const userAddress = req.user as string;
+  const body = req.body;
+  const { success, data: parsedData } = cancelAndClaimGumballSchema.safeParse(body);
+  if (!success) {
+    return responseHandler.error(res, "Invalid payload");
+  }
+  try {
+    const {
+      context: { slot: minContextSlot },
+      value: { blockhash, lastValidBlockHeight },
+    } = await connection.getLatestBlockhashAndContext();
+
+    const transaction = new Transaction({
+      blockhash,
+      lastValidBlockHeight,
+      feePayer: new PublicKey(userAddress),
+    });
+
+    const ix = await gumballProgram.methods
+      .cancelGumball(parsedData.gumballId)
+      .accounts({
+        creator: new PublicKey(userAddress),
+        gumballAdmin: ADMIN_KEYPAIR.publicKey,
+      })
+      .instruction();
+
+    transaction.add(ix);
+
+    // 2. Claim back only the selected prize indexes
+    const claimIxs: TransactionInstruction[] = [];
+
+    for (const prizeIndex of parsedData.prizeIndexes) {
+      const prizeAddress = await prizePda(parsedData.gumballId, prizeIndex);
+
+      let prizeState;
+      try {
+        prizeState = await gumballProgram.account.prize.fetch(prizeAddress);
+      } catch (err) {
+        console.log(err);
+        continue; // Skip if prize doesn't exist
+      }
+
+      const prizeMint: PublicKey = prizeState.mint;
+
+      const prizeTokenProgram = await getTokenProgramFromMint(connection, prizeMint);
+
+      // Ensure escrow ATA (owned by gumball)
+      // const prizeEscrowRes = await ensureAtaIx({
+      //     connection,
+      //     mint: prizeMint,
+      //     owner: gumballAddress,
+      //     payer: wallet.publicKey,
+      //     tokenProgram: prizeTokenProgram,
+      //     allowOwnerOffCurve: true,
+      // });
+
+      // Ensure creator ATA (user's wallet)
+      const creatorPrizeRes = await ensureAtaIx({
+        connection,
+        mint: prizeMint,
+        owner: new PublicKey(userAddress),
+        payer: new PublicKey(userAddress),
+        tokenProgram: prizeTokenProgram,
+      });
+
+      if (creatorPrizeRes.ix) transaction.add(creatorPrizeRes.ix);
+
+      const claimIx = await gumballProgram.methods
+        .claimPrizeBack(parsedData.gumballId, prizeIndex)
+        .accounts({
+          // gumballConfig: gumballConfigPda,
+          // gumball: gumballAddress,
+          // prize: prizeAddress,
+
+          creator: new PublicKey(userAddress),
+          gumballAdmin: ADMIN_KEYPAIR.publicKey,
+
+          prizeMint,
+
+          // prizeEscrow: prizeEscrowRes.ata,
+          // creatorPrizeAta: creatorPrizeRes.ata,
+
+          prizeTokenProgram,
+          // associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+          // systemProgram: anchor.web3.SystemProgram.programId,
+        })
+        .instruction();
+
+      claimIxs.push(claimIx);
+    }
+    transaction.add(...claimIxs);
+
+    transaction.partialSign(ADMIN_KEYPAIR);
+
+    const serializedTransaction = transaction.serialize({
+      verifySignatures: false,
+      requireAllSignatures: false,
+    });
+
+    const base64Transaction = serializedTransaction.toString('base64');
+
+    res.status(200).json({
+      base64Transaction,
+      minContextSlot,
+      blockhash,
+      lastValidBlockHeight,
+      message: "OK",
+    });
+
+  } catch (error) {
+    logger.error(error);
+    responseHandler.error(res, error);
+  }
+};
+
+const addMultiplePrizesTx = async (req: Request, res: Response) => {
+  const userAddress = req.user as string;
+  const body = req.body;
+  const { success, data: parsedData } = addMultiplePrizesSchemaTx.safeParse(body);
+  if (!success) {
+    return responseHandler.error(res, "Invalid payload");
+  }
+  try {
+    const {
+      context: { slot: minContextSlot },
+      value: { blockhash, lastValidBlockHeight },
+    } = await connection.getLatestBlockhashAndContext();
+
+    const transaction = new Transaction({
+      blockhash,
+      lastValidBlockHeight,
+      feePayer: new PublicKey(userAddress),
+    });
+
+    for (const prize of parsedData.prizes) {
+      const prizeTokenProgram = await getTokenProgramFromMint(
+        connection,
+        new PublicKey(prize.prizeMint)
+      );
+
+      // /* -------- Ensure Prize Escrow ATA (PDA-owned), ATA's are cretated in onchain if does not exist -------- */
+      // const prizeEscrowRes = await ensureAtaIx({
+      //     connection,
+      //     mint: prize.prizeMint,
+      //     owner: gumballAddress,
+      //     payer: wallet.publicKey,
+      //     tokenProgram: prizeTokenProgram,
+      //     allowOwnerOffCurve: true,
+      // });
+
+      // /* -------- Ensure Creator Prize ATA -------- */
+      // const creatorPrizeRes = await ensureAtaIx({
+      //     connection,
+      //     mint: prize.prizeMint,
+      //     owner: wallet.publicKey,
+      //     payer: wallet.publicKey,
+      //     tokenProgram: prizeTokenProgram,
+      // });
+
+      /* -------- Add Prize Instruction -------- */
+      const ix = await gumballProgram.methods
+        .addPrize(
+
+          parsedData.gumballId,
+          prize.prizeIndex,
+          new BN(prize.prizeAmount),
+          prize.quantity
+        )
+        .accounts({
+          creator: new PublicKey(userAddress),
+          gumballAdmin: ADMIN_KEYPAIR.publicKey,
+
+          prizeMint: new PublicKey(prize.prizeMint),
+          prizeTokenProgram,
+        })
+        .instruction();
+
+      transaction.add(ix);
+    }
+
+    transaction.partialSign(ADMIN_KEYPAIR);
+
+    const serializedTransaction = transaction.serialize({
+      verifySignatures: false,
+      requireAllSignatures: false,
+    });
+
+    const base64Transaction = serializedTransaction.toString('base64');
+
+    res.status(200).json({
+      base64Transaction,
+      minContextSlot,
+      blockhash,
+      lastValidBlockHeight,
+      message: "OK",
+    });
+
+  } catch (error) {
+    logger.error(error);
+    responseHandler.error(res, error);
+  }
+};
+
+
+const claimMultiplePrizesBackTx = async (req: Request, res: Response) => {
+  const userAddress = req.user as string;
+  const body = req.body;
+  const { success, data: parsedData } = claimMultiplePrizesBackSchemaTx.safeParse(body);
+  if (!success) {
+    return responseHandler.error(res, "Invalid payload");
+  }
+  try {
+    const {
+      context: { slot: minContextSlot },
+      value: { blockhash, lastValidBlockHeight },
+    } = await connection.getLatestBlockhashAndContext();
+
+    const transaction = new Transaction({
+      blockhash,
+      lastValidBlockHeight,
+      feePayer: new PublicKey(userAddress),
+    });
+
+
+    for (const prize of parsedData.prizes) {
+      const prizeAddress = await prizePda(
+        parsedData.gumballId,
+        prize.prizeIndex
+      );
+
+      // Fetch prize account to get mint
+      const prizeState = await gumballProgram.account.prize.fetch(prizeAddress);
+
+      const prizeMint: PublicKey = prizeState.mint;
+
+      const prizeTokenProgram = await getTokenProgramFromMint(
+        connection,
+        prizeMint
+      );
+
+      // const prizeEscrowRes = await ensureAtaIx({
+      //     connection,
+      //     mint: prizeMint,
+      //     owner: gumballAddress,
+      //     payer: wallet.publicKey,
+      //     tokenProgram: prizeTokenProgram,
+      //     allowOwnerOffCurve: true,
+      // });
+
+      // const creatorPrizeRes = await ensureAtaIx({
+      //     connection,
+      //     mint: prizeMint,
+      //     owner: wallet.publicKey,
+      //     payer: wallet.publicKey,
+      //     tokenProgram: prizeTokenProgram,
+      // });
+
+      const ix = await gumballProgram.methods
+        .claimPrizeBack(parsedData.gumballId, prize.prizeIndex)
+        .accounts({
+          creator: new PublicKey(userAddress),
+          gumballAdmin: ADMIN_KEYPAIR.publicKey,
+
+          prizeMint,
+
+          prizeTokenProgram,
+        })
+        .instruction();
+
+      transaction.add(ix);
+    }
+
+    transaction.partialSign(ADMIN_KEYPAIR);
+
+    const serializedTransaction = transaction.serialize({
+      verifySignatures: false,
+      requireAllSignatures: false,
+    });
+
+    const base64Transaction = serializedTransaction.toString('base64');
+
+    res.status(200).json({
       base64Transaction,
       minContextSlot,
       blockhash,
@@ -1756,4 +2212,9 @@ export default {
   getGumballStats,
   spinGumballTx,
   claimGumballTx,
+  cancelGumballTx,
+  createGumballTx,
+  cancelAndClaimGumballTx,
+  addMultiplePrizesTx,
+  claimMultiplePrizesBackTx
 };

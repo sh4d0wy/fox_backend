@@ -32,5 +32,10 @@ gumballRouter.delete("/delete/:gumballId", authMiddleware, gumballController.del
 
 gumballRouter.get("/spin-tx/:gumballId", authMiddleware, gumballController.spinGumballTx);
 gumballRouter.get("/claim-tx/:gumballId", authMiddleware, gumballController.claimGumballTx);
+gumballRouter.get("/cancel-tx/:gumballId", authMiddleware, gumballController.cancelGumballTx);
+gumballRouter.post("/cancelandclaim-tx", authMiddleware, gumballController.cancelAndClaimGumballTx);
+gumballRouter.post("/create-tx", authMiddleware, gumballController.createGumballTx);
+gumballRouter.post("/add-multiple-prizes-tx", authMiddleware, gumballController.addMultiplePrizesTx);
+gumballRouter.post("/claim-multiple-prizes-back-tx", authMiddleware, gumballController.claimMultiplePrizesBackTx);
 
 export default gumballRouter;
