@@ -1888,13 +1888,13 @@ const createGumballTx = async (req: Request, res: Response) => {
       feePayer: new PublicKey(userAddress),
     });
 
-    // You MUST fetch config before creating
-    const config = await gumballProgram.account.gumballConfig.fetch(
-      await gumballConfigPda()
-    );
+    // // You MUST fetch config before creating
+    // const config = await gumballProgram.account.gumballConfig.fetch(
+    //   await gumballConfigPda()
+    // );
 
-    const gumballId = config.gumballCount;
-    const gumballPdaAddress = await gumballPda(gumballId);
+    // const gumballId = config.gumballCount;
+    // const gumballPdaAddress = await gumballPda(gumballId);
 
     const ix = await gumballProgram.methods
       .createGumball(
@@ -1905,8 +1905,8 @@ const createGumballTx = async (req: Request, res: Response) => {
         parsedData.isTicketSol,
         parsedData.startGumball
       )
-      .accountsPartial({
-        gumball: gumballPdaAddress,
+      .accounts({
+        // gumball: gumballPdaAddress,
         creator: new PublicKey(userAddress),
         gumballAdmin: ADMIN_KEYPAIR.publicKey,
         ticketMint: parsedData.ticketMint ?? FAKE_MINT,
