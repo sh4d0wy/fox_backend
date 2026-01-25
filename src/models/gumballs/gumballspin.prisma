@@ -2,15 +2,15 @@ model GumballSpin {
   id              Int           @id @default(autoincrement())
   gumball         Gumball       @relation("GumballSpins", fields: [gumballId], references: [id])
   gumballId       Int
-  prize           GumballPrize  @relation("PrizeSpins", fields: [prizeId], references: [id])
-  prizeId         Int
+  prize           GumballPrize?  @relation("PrizeSpins", fields: [prizeId], references: [id])
+  prizeId         Int?
   spinner         User          @relation("GumballSpinner", fields: [spinnerAddress], references: [walletAddress])
   spinnerAddress  String
   winner          User?         @relation("GumballWinner", fields: [winnerAddress], references: [walletAddress])
   winnerAddress   String?
   prizeAmount     BigInt
   spunAt          DateTime      @default(now())
-  claimed         Boolean       @default(false)
+  isPendingClaim  Boolean       @default(true)
   claimedAt       DateTime?
   
   transaction     Transaction?  @relation("TransactionGumballSpin")

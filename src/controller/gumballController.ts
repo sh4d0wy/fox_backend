@@ -756,30 +756,6 @@ const spin = async (req: Request, res: Response) => {
             };
           }
 
-          // Find the prize by prizeIndex
-          const prize = await tx.gumballPrize.findUnique({
-            where: {
-              gumballId_prizeIndex: {
-                gumballId: gumballId,
-                prizeIndex: parsedData.prizeIndex,
-              },
-            },
-          });
-
-          if (!prize) {
-            throw {
-              code: "DB_ERROR",
-              message: `Prize with index ${parsedData.prizeIndex} not found`,
-            };
-          }
-
-          if (prize.quantityClaimed >= prize.quantity) {
-            throw {
-              code: "DB_ERROR",
-              message: "This prize is no longer available",
-            };
-          }
-
           const existingSpin = await tx.gumballSpin.findFirst({
             where: {
               gumballId: gumballId,
@@ -791,21 +767,9 @@ const spin = async (req: Request, res: Response) => {
           const spinRecord = await tx.gumballSpin.create({
             data: {
               gumballId: gumballId,
-              prizeId: prize.id,
               spinnerAddress: userAddress,
-              winnerAddress: userAddress,
-              prizeAmount: prize.prizeAmount,
-              claimed: true,
-              claimedAt: new Date(),
-            },
-          });
-
-          await tx.gumballPrize.update({
-            where: {
-              id: prize.id,
-            },
-            data: {
-              quantityClaimed: { increment: 1 },
+              prizeAmount: BigInt(0),
+              isPendingClaim: true,
             },
           });
 
@@ -831,27 +795,11 @@ const spin = async (req: Request, res: Response) => {
               mintAddress: gumball.ticketMint || "So11111111111111111111111111111111111111112",
               gumballId: gumballId,
               gumballSpinId: spinRecord.id,
-              metadata: {
-                prizeId: prize.id,
-                prizeIndex: parsedData.prizeIndex,
-                prizeAmount: prize.prizeAmount.toString(),
-                prizeName: prize.name,
-                prizeImage: prize.image,
-                prizeMint: prize.mint,
-              },
             },
           });
 
           spinResult = {
             spinId: spinRecord.id,
-            prizeId: prize.id,
-            prizeIndex: parsedData.prizeIndex,
-            prizeAmount: prize.prizeAmount.toString(),
-            prizeName: prize.name,
-            prizeSymbol: prize.symbol,
-            prizeImage: prize.image,
-            prizeMint: prize.mint,
-            isNft: prize.isNft,
           };
         });
 
@@ -912,7 +860,6 @@ const claimPrize = async (req: Request, res: Response) => {
           id: parsedData.spinId,
         },
         include: {
-          prize: true,
           gumball: true,
         },
       });
@@ -929,16 +876,40 @@ const claimPrize = async (req: Request, res: Response) => {
           message: "Spin does not belong to this gumball",
         };
       }
-      if (spin.winnerAddress !== userAddress) {
+      if (spin.spinnerAddress !== userAddress) {
         throw {
           code: "DB_ERROR",
-          message: "User is not the winner of this spin",
+          message: "User is not the spinner of this spin",
         };
       }
-      if (spin.claimed) {
+      if (!spin.isPendingClaim) {
         throw {
           code: "DB_ERROR",
           message: "Prize already claimed",
+        };
+      }
+
+      // Find the prize by prizeIndex
+      const prize = await tx.gumballPrize.findUnique({
+        where: {
+          gumballId_prizeIndex: {
+            gumballId: gumballId,
+            prizeIndex: parsedData.prizeIndex,
+          },
+        },
+      });
+
+      if (!prize) {
+        throw {
+          code: "DB_ERROR",
+          message: `Prize with index ${parsedData.prizeIndex} not found`,
+        };
+      }
+
+      if (prize.quantityClaimed >= prize.quantity) {
+        throw {
+          code: "DB_ERROR",
+          message: "This prize is no longer available",
         };
       }
 
@@ -947,8 +918,20 @@ const claimPrize = async (req: Request, res: Response) => {
           id: parsedData.spinId,
         },
         data: {
-          claimed: true,
+          prizeId: prize.id,
+          winnerAddress: userAddress,
+          prizeAmount: prize.prizeAmount,
+          isPendingClaim: false,
           claimedAt: new Date(),
+        },
+      });
+
+      await tx.gumballPrize.update({
+        where: {
+          id: prize.id,
+        },
+        data: {
+          quantityClaimed: { increment: 1 },
         },
       });
 
@@ -958,14 +941,15 @@ const claimPrize = async (req: Request, res: Response) => {
           type: "GUMBALL_CLAIM_PRIZE",
           sender: userAddress,
           receiver: userAddress,
-          amount: spin.prizeAmount,
-          mintAddress: spin.prize.mint,
-          isNft: spin.prize.isNft,
+          amount: prize.prizeAmount,
+          mintAddress: prize.mint,
+          isNft: prize.isNft,
           gumballId: gumballId,
           metadata: {
             spinId: parsedData.spinId,
-            prizeId: spin.prizeId,
-            prizeName: spin.prize.name,
+            prizeId: prize.id,
+            prizeIndex: parsedData.prizeIndex,
+            prizeName: prize.name,
           },
         },
       });
@@ -1174,12 +1158,12 @@ const getGumballDetails = async (req: Request, res: Response) => {
     spins: gumball.spins.map((s) => ({
       ...s,
       prizeAmount: s.prizeAmount.toString(),
-      prize: {
+      prize: s.prize ? {
         ...s.prize,
         totalAmount: s.prize.totalAmount.toString(),
         prizeAmount: s.prize.prizeAmount.toString(),
         floorPrice: s.prize.floorPrice?.toString(),
-      },
+      } : null,
     })),
   };
 
@@ -1261,12 +1245,12 @@ const getSpinsByUser = async (req: Request, res: Response) => {
       buyBackProfit: s.gumball.buyBackProfit.toString(),
       rentAmount: s.gumball.rentAmount?.toString(),
     },
-    prize: {
+    prize: s.prize ? {
       ...s.prize,
       totalAmount: s.prize.totalAmount.toString(),
       prizeAmount: s.prize.prizeAmount.toString(),
       floorPrice: s.prize.floorPrice?.toString(),
-    },
+    } : null,
   }));
 
   responseHandler.success(res, {
