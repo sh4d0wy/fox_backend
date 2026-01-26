@@ -497,6 +497,9 @@ export default {
           _count: {
             select: { spins: true },
           },
+          creator: {
+            select: { walletAddress: true, twitterId: true, profileImage: true },
+          },
         },
       });
 
