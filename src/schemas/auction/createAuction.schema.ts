@@ -3,6 +3,7 @@ import { z } from "zod";
 export const auctionSchema = z.object({
   id: z.number().optional(),
   createdBy: z.string().min(1),
+  startImmediately: z.boolean().optional().default(false),
 
   // Prize details
   prizeMint: z.string().min(1),

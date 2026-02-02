@@ -43,10 +43,7 @@ const createAuction = async (req: Request, res: Response) => {
       throw new Error("Transaction already exists");
     }
 
-    const status =
-      parsedData.startsAt && parsedData.startsAt <= new Date()
-        ? "ACTIVE"
-        : "INITIALIZED";
+    const status = parsedData.startImmediately ? "ACTIVE" : "INITIALIZED";
 
     auction = await tx.auction.create({
       data: {
