@@ -384,32 +384,32 @@ async function processExpiredRaffles(): Promise<void> {
 }
 
 export function startRaffleCronJob(): void {
-  cron.schedule("* * * * *", async () => {
+  cron.schedule("*/30 * * * * *", async () => {
     logger.log("[CRON] Checking for expired raffles...");
     await processExpiredRaffles();
   });
 
-  logger.log("[CRON] Raffle cron job started - checking every minute");
+  logger.log("[CRON] Raffle cron job started - checking every 30 seconds");
 }
 
 export function startAuctionCronJob(): void {
-  cron.schedule("* * * * *", async () => {
+  cron.schedule("*/30 * * * * *", async () => {
     logger.log("[CRON] Checking for auctions to start/end...");
     await processAuctionsToStart();
     await processAuctionsToEnd();
   });
 
-  logger.log("[CRON] Auction cron job started - checking every minute");
+  logger.log("[CRON] Auction cron job started - checking every 30 seconds");
 }
 
 export function startGumballCronJob(): void {
-  cron.schedule("* * * * *", async () => {
+  cron.schedule("*/30 * * * * *", async () => {
     logger.log("[CRON] Checking for gumballs to start/end...");
     await processGumballsToStart();
     await processGumballsToEnd();
   });
 
-  logger.log("[CRON] Gumball cron job started - checking every minute");
+  logger.log("[CRON] Gumball cron job started - checking every 30 seconds");
 }
 
 export function startAllCronJobs(): void {
