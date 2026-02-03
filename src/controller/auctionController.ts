@@ -44,7 +44,8 @@ const createAuction = async (req: Request, res: Response) => {
     }
 
     const status = parsedData.startImmediately ? "ACTIVE" : "INITIALIZED";
-
+    console.log("auction data from frontend", parsedData);
+    console.log("status", status);
     auction = await tx.auction.create({
       data: {
         id: parsedData.id,
