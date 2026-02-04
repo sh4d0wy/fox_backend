@@ -1109,22 +1109,22 @@ const getGumballDetails = async (req: Request, res: Response) => {
               twitterId: true,
             },
           },
-          transaction: {
-            where: {
-              type: "GUMBALL_SPIN",
-            },
-            select: {
-              transactionId: true,
-              type: true,
-              sender: true,
-              receiver: true,
-              amount: true,
-              mintAddress: true,
-              isNft: true,
-              metadata: true,
-            },
-          },
           prize: true,
+        },
+      },
+      transactions: {
+        where: {
+          type: "GUMBALL_CLAIM_PRIZE",
+        },
+        select: {
+          transactionId: true,
+          type: true,
+          sender: true,
+          receiver: true,
+          amount: true,
+          mintAddress: true,
+          isNft: true,
+          metadata: true,
         },
       },
       creator: {
@@ -1140,7 +1140,14 @@ const getGumballDetails = async (req: Request, res: Response) => {
     return responseHandler.error(res, "Gumball not found");
   }
 
-  // Convert BigInt to string for JSON serialization
+  const claimTransactionsBySpinId = new Map<number, typeof gumball.transactions[0]>();
+  for (const tx of gumball.transactions) {
+    const metadata = tx.metadata as { spinId?: number } | null;
+    if (metadata?.spinId) {
+      claimTransactionsBySpinId.set(metadata.spinId, tx);
+    }
+  }
+
   const serializedGumball = {
     ...gumball,
     ticketPrice: gumball.ticketPrice.toString(),
@@ -1155,16 +1162,24 @@ const getGumballDetails = async (req: Request, res: Response) => {
       prizeAmount: p.prizeAmount.toString(),
       floorPrice: p.floorPrice?.toString(),
     })),
-    spins: gumball.spins.map((s) => ({
-      ...s,
-      prizeAmount: s.prizeAmount.toString(),
-      prize: s.prize ? {
-        ...s.prize,
-        totalAmount: s.prize.totalAmount.toString(),
-        prizeAmount: s.prize.prizeAmount.toString(),
-        floorPrice: s.prize.floorPrice?.toString(),
-      } : null,
-    })),
+    spins: gumball.spins.map((s) => {
+      const claimTx = claimTransactionsBySpinId.get(s.id);
+      return {
+        ...s,
+        prizeAmount: s.prizeAmount.toString(),
+        prize: s.prize ? {
+          ...s.prize,
+          totalAmount: s.prize.totalAmount.toString(),
+          prizeAmount: s.prize.prizeAmount.toString(),
+          floorPrice: s.prize.floorPrice?.toString(),
+        } : null,
+        transaction: claimTx ? {
+          ...claimTx,
+          amount: claimTx.amount.toString(),
+        } : null,
+      };
+    }),
+    transactions: undefined,
   };
 
   responseHandler.success(res, {

@@ -7,6 +7,141 @@ type TimeFilter = "all" | "7d" | "30d" | "90d" | "1y";
 type LeaderboardType = "rafflers" | "buyers";
 type SortField = "volume" | "raffles" | "tickets" | "won";
 
+const SOL_MINT = "So11111111111111111111111111111111111111112";
+
+const tokenPriceCache = new Map<string, { priceInSol: number; timestamp: number }>();
+const PRICE_CACHE_TTL = 5 * 60 * 1000;
+
+interface RaydiumPriceResponse {
+  success: boolean;
+  data: Record<string, string>;
+}
+
+const fetchSolPrice = async (): Promise<number> => {
+  try {
+    const response = await fetch(
+      `https://api-v3.raydium.io/mint/price?mints=${SOL_MINT}`,
+      {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error('Raydium API request failed for SOL');
+    }
+
+    const data = await response.json() as RaydiumPriceResponse;
+
+    if (data.success && data.data && data.data[SOL_MINT]) {
+      const price = parseFloat(data.data[SOL_MINT]);
+      if (!isNaN(price)) {
+        return price;
+      }
+    }
+    return 0;
+  } catch (error) {
+    logger.error('Failed to fetch SOL price:', error);
+    return 0;
+  }
+};
+
+const fetchTokenPricesInSol = async (tokenMints: string[]): Promise<Map<string, number>> => {
+  const priceMap = new Map<string, number>();
+  
+  // Filter out SOL and already cached tokens
+  const uncachedMints = tokenMints.filter(mint => {
+    if (mint === SOL_MINT || mint === "NATIVE_SOL_MINT" || !mint) {
+      priceMap.set(mint || SOL_MINT, 1);
+      return false;
+    }
+    
+    const cached = tokenPriceCache.get(mint);
+    if (cached && Date.now() - cached.timestamp < PRICE_CACHE_TTL) {
+      priceMap.set(mint, cached.priceInSol);
+      return false;
+    }
+    return true;
+  });
+
+  if (uncachedMints.length === 0) {
+    return priceMap;
+  }
+
+  try {
+    // Fetch SOL price first
+    const solPrice = await fetchSolPrice();
+    if (solPrice === 0) {
+      // If we can't get SOL price, set all non-SOL tokens to 0
+      uncachedMints.forEach(mint => priceMap.set(mint, 0));
+      return priceMap;
+    }
+
+    // Batch fetch up to 100 mints at a time (Raydium API limit)
+    const batchSize = 100;
+    for (let i = 0; i < uncachedMints.length; i += batchSize) {
+      const batch = uncachedMints.slice(i, i + batchSize);
+      const mintsParam = batch.join(',');
+      
+      const response = await fetch(
+        `https://api-v3.raydium.io/mint/price?mints=${mintsParam}`,
+        {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json() as RaydiumPriceResponse;
+        
+        if (data.success && data.data) {
+          batch.forEach(mint => {
+            if (data.data[mint]) {
+              const tokenPriceUsd = parseFloat(data.data[mint]);
+              if (!isNaN(tokenPriceUsd)) {
+                const priceInSol = tokenPriceUsd / solPrice;
+                priceMap.set(mint, priceInSol);
+                tokenPriceCache.set(mint, {
+                  priceInSol,
+                  timestamp: Date.now()
+                });
+              } else {
+                priceMap.set(mint, 0);
+              }
+            } else {
+              priceMap.set(mint, 0);
+            }
+          });
+        }
+      } else {
+        // If batch fails, set all to 0
+        batch.forEach(mint => priceMap.set(mint, 0));
+      }
+    }
+  } catch (error) {
+    logger.error('Failed to batch fetch token prices:', error);
+    uncachedMints.forEach(mint => priceMap.set(mint, 0));
+  }
+
+  return priceMap;
+};
+
+const getTokenDecimals = (mintAddress: string | null | undefined): number => {
+  if (!mintAddress) return 9;
+  return (mintAddress===SOL_MINT || mintAddress==="NATIVE_SOL_MINT")? 9 : 6;
+};
+
+const toHumanReadable = (amount: bigint | number, decimals: number): number => {
+  return Number(amount) / Math.pow(10, decimals);
+};
+
+const toSolEquivalent = (
+  amount: number,
+  tokenPriceInSol: number
+): number => {
+  return amount * tokenPriceInSol;
+};
+
 const getDateFilter = (timeFilter: TimeFilter): Date | null => {
   const now = new Date();
   switch (timeFilter) {
@@ -51,27 +186,43 @@ const getTopRafflers = async (req: Request, res: Response) => {
             ticketSold: true,
             ticketPrice: true,
             ticketTokenSymbol: true,
+            ticketTokenAddress: true,
             state: true,
           },
         },
       },
     });
 
+    const allTicketTokens = new Set<string>();
+    rafflers.forEach(user => {
+      user.rafflesCreated.forEach(r => {
+        if (r.ticketTokenAddress) allTicketTokens.add(r.ticketTokenAddress);
+      });
+    });
+    
+    // Fetch all token prices in SOL
+    const tokenPrices = await fetchTokenPricesInSol(Array.from(allTicketTokens));
+
     const rafflerStats = rafflers.map((user) => {
       const raffles = user.rafflesCreated;
       const totalRaffles = raffles.length;
       const totalTicketsSold = raffles.reduce((sum, r) => sum + r.ticketSold, 0);
-      const totalVolume = raffles.reduce(
-        (sum, r) => sum + r.ticketSold * r.ticketPrice,
-        0
-      );
+      
+      // Calculate volume in SOL equivalent
+      const totalVolume = raffles.reduce((sum, r) => {
+        const ticketDecimals = getTokenDecimals(r.ticketTokenAddress);
+        const rawVolume = r.ticketSold * r.ticketPrice;
+        const humanReadable = toHumanReadable(rawVolume, ticketDecimals);
+        const priceInSol = tokenPrices.get(r.ticketTokenAddress || SOL_MINT) || 1;
+        return sum + toSolEquivalent(humanReadable, priceInSol);
+      }, 0);
 
       return {
         walletAddress: user.walletAddress,
         twitterId: user.twitterId,
         raffles: totalRaffles,
         ticketsSold: totalTicketsSold,
-        volume: totalVolume,
+        volume: Number(totalVolume.toFixed(6)),
       };
     });
 
@@ -87,7 +238,6 @@ const getTopRafflers = async (req: Request, res: Response) => {
       }
     });
 
-    // Paginate and add rank
     const paginatedStats = sortedStats
       .slice(skip, skip + Number(limit))
       .map((stat, index) => ({
@@ -101,6 +251,7 @@ const getTopRafflers = async (req: Request, res: Response) => {
       total: sortedStats.length,
       page: Number(page),
       limit: Number(limit),
+      currency: "SOL",
     });
   } catch (error) {
     logger.error(error);
@@ -143,6 +294,7 @@ const getTopBuyers = async (req: Request, res: Response) => {
               select: {
                 id: true,
                 ticketPrice: true,
+                ticketTokenAddress: true,
               },
             },
           },
@@ -156,14 +308,27 @@ const getTopBuyers = async (req: Request, res: Response) => {
       },
     });
 
+    const allTicketTokens = new Set<string>();
+    buyers.forEach(user => {
+      user.raffleEntries.forEach(e => {
+        if (e.raffle.ticketTokenAddress) allTicketTokens.add(e.raffle.ticketTokenAddress);
+      });
+    });
+    
+    const tokenPrices = await fetchTokenPricesInSol(Array.from(allTicketTokens));
+
     const buyerStats = buyers.map((user) => {
       const entries = user.raffleEntries;
       const uniqueRaffles = new Set(entries.map((e) => e.raffle.id)).size;
       const totalTickets = entries.reduce((sum, e) => sum + e.quantity, 0);
-      const totalVolume = entries.reduce(
-        (sum, e) => sum + e.quantity * e.raffle.ticketPrice,
-        0
-      );
+      
+      const totalVolume = entries.reduce((sum, e) => {
+        const ticketDecimals = getTokenDecimals(e.raffle.ticketTokenAddress);
+        const rawVolume = e.quantity * e.raffle.ticketPrice;
+        const humanReadable = toHumanReadable(rawVolume, ticketDecimals);
+        const priceInSol = tokenPrices.get(e.raffle.ticketTokenAddress || SOL_MINT) || 1;
+        return sum + toSolEquivalent(humanReadable, priceInSol);
+      }, 0);
       const totalWon = user.raffleWinnings.length;
 
       return {
@@ -172,7 +337,7 @@ const getTopBuyers = async (req: Request, res: Response) => {
         raffles: uniqueRaffles,
         tickets: totalTickets,
         won: totalWon,
-        volume: totalVolume,
+        volume: Number(totalVolume.toFixed(6)),
       };
     });
 
@@ -203,6 +368,7 @@ const getTopBuyers = async (req: Request, res: Response) => {
       total: sortedStats.length,
       page: Number(page),
       limit: Number(limit),
+      currency: "SOL",
     });
   } catch (error) {
     logger.error(error);
@@ -222,7 +388,10 @@ const getHotCollections = async (req: Request, res: Response) => {
           collection: { not: null },
         },
       },
-      include: {
+      select: {
+        ticketSold: true,
+        ticketPrice: true,
+        ticketTokenAddress: true,
         prizeData: {
           select: {
             collection: true,
@@ -231,14 +400,29 @@ const getHotCollections = async (req: Request, res: Response) => {
       },
     });
 
+    // Collect all unique ticket token addresses to batch fetch prices
+    const allTicketTokens = new Set<string>();
+    raffles.forEach(r => {
+      if (r.ticketTokenAddress) allTicketTokens.add(r.ticketTokenAddress);
+    });
+    
+    // Fetch all token prices in SOL
+    const tokenPrices = await fetchTokenPricesInSol(Array.from(allTicketTokens));
+
     const collectionMap = new Map<string, { volume: number; count: number }>();
 
     raffles.forEach((raffle) => {
       const collection = raffle.prizeData?.collection;
       if (collection) {
         const existing = collectionMap.get(collection) || { volume: 0, count: 0 };
+        const ticketDecimals = getTokenDecimals(raffle.ticketTokenAddress);
+        const rawVolume = raffle.ticketSold * raffle.ticketPrice;
+        const humanReadable = toHumanReadable(rawVolume, ticketDecimals);
+        const priceInSol = tokenPrices.get(raffle.ticketTokenAddress || SOL_MINT) || 1;
+        const volume = toSolEquivalent(humanReadable, priceInSol);
+        
         collectionMap.set(collection, {
-          volume: existing.volume + raffle.ticketSold * raffle.ticketPrice,
+          volume: existing.volume + volume,
           count: existing.count + 1,
         });
       }
@@ -247,7 +431,7 @@ const getHotCollections = async (req: Request, res: Response) => {
     const collections = Array.from(collectionMap.entries())
       .map(([name, data]) => ({
         collection: name,
-        volume: data.volume,
+        volume: Number(data.volume.toFixed(6)),
         raffleCount: data.count,
       }))
       .sort((a, b) => b.volume - a.volume)
@@ -260,6 +444,7 @@ const getHotCollections = async (req: Request, res: Response) => {
     responseHandler.success(res, {
       message: "Hot collections fetched successfully",
       collections,
+      currency: "SOL",
     });
   } catch (error) {
     logger.error(error);
@@ -271,6 +456,11 @@ const getHotCollections = async (req: Request, res: Response) => {
 type AnalyticsTimeframe = "day" | "week" | "month" | "year";
 
 interface TimeSeriesDataPoint {
+  date: string;
+  value: number;
+}
+
+interface CountDataPoint {
   date: string;
   value: number;
 }
@@ -301,18 +491,29 @@ const getVolumeAnalytics = async (req: Request, res: Response) => {
         groupByFormat = "day";
     }
 
+    // Use transactions directly - amount field already contains quantity * ticketPrice
     const transactions = await prismaClient.transaction.findMany({
       where: {
         createdAt: { gte: startDate },
-        type: { in: ["RAFFLE_ENTRY", "GUMBALL_SPIN"] },
+        type: "RAFFLE_ENTRY",
       },
       select: {
         createdAt: true,
         amount: true,
+        mintAddress: true,
       },
     });
 
-    const volumeByDate = new Map<string, bigint>();
+    // Collect all unique token addresses to batch fetch prices
+    const allTokens = new Set<string>();
+    transactions.forEach(tx => {
+      if (tx.mintAddress) allTokens.add(tx.mintAddress);
+    });
+    
+    // Fetch all token prices in SOL
+    const tokenPrices = await fetchTokenPricesInSol(Array.from(allTokens));
+
+    const volumeByDate = new Map<string, number>();
 
     transactions.forEach((tx) => {
       let dateKey: string;
@@ -330,14 +531,19 @@ const getVolumeAnalytics = async (req: Request, res: Response) => {
           dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
       }
 
-      const existing = volumeByDate.get(dateKey) || BigInt(0);
-      volumeByDate.set(dateKey, existing + tx.amount);
+      const existing = volumeByDate.get(dateKey) || 0;
+      // amount is already quantity * ticketPrice (stored as BigInt in raw token units)
+      const tokenDecimals = getTokenDecimals(tx.mintAddress);
+      const humanReadableAmount = toHumanReadable(tx.amount, tokenDecimals);
+      const priceInSol = tokenPrices.get(tx.mintAddress || SOL_MINT) || 1;
+      const volumeInSol = toSolEquivalent(humanReadableAmount, priceInSol);
+      volumeByDate.set(dateKey, existing + volumeInSol);
     });
 
     const volumeData: TimeSeriesDataPoint[] = Array.from(volumeByDate.entries())
-      .map(([date, value]) => ({
+      .map(([date, valueInSol]) => ({
         date,
-        value: Number(value) / 1e9, // Convert lamports to SOL
+        value: Number(valueInSol.toFixed(6)),
       }))
       .sort((a, b) => a.date.localeCompare(b.date));
 
@@ -345,6 +551,7 @@ const getVolumeAnalytics = async (req: Request, res: Response) => {
       message: "Volume analytics fetched successfully",
       timeframe,
       data: volumeData,
+      currency: "SOL",
     });
   } catch (error) {
     logger.error(error);
@@ -374,7 +581,7 @@ const getDailyRaffles = async (req: Request, res: Response) => {
       rafflesByDate.set(dateKey, (rafflesByDate.get(dateKey) || 0) + 1);
     });
 
-    const data: TimeSeriesDataPoint[] = [];
+    const data: CountDataPoint[] = [];
     for (let i = 0; i <= Number(days); i++) {
       const date = new Date(startDate.getTime() + i * 24 * 60 * 60 * 1000);
       const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
@@ -592,7 +799,7 @@ const getUniqueBuyers = async (req: Request, res: Response) => {
       buyersByDate.get(dateKey)!.add(entry.userAddress);
     });
 
-    const data: TimeSeriesDataPoint[] = Array.from(buyersByDate.entries())
+    const data: CountDataPoint[] = Array.from(buyersByDate.entries())
       .map(([date, buyers]) => ({
         date,
         value: buyers.size,
@@ -643,6 +850,7 @@ const getRaffleTypesVolume = async (req: Request, res: Response) => {
       select: {
         ticketSold: true,
         ticketPrice: true,
+        ticketTokenAddress: true,
         prizeData: {
           select: {
             type: true,
@@ -651,38 +859,52 @@ const getRaffleTypesVolume = async (req: Request, res: Response) => {
       },
     });
 
-    let nftVolume = 0;
-    let tokenVolume = 0;
+    // Collect all unique ticket token addresses to batch fetch prices
+    const allTicketTokens = new Set<string>();
+    raffles.forEach(r => {
+      if (r.ticketTokenAddress) allTicketTokens.add(r.ticketTokenAddress);
+    });
+    
+    // Fetch all token prices in SOL
+    const tokenPrices = await fetchTokenPricesInSol(Array.from(allTicketTokens));
+
+    let nftVolumeInSol = 0;
+    let tokenVolumeInSol = 0;
 
     raffles.forEach((raffle) => {
-      const volume = raffle.ticketSold * raffle.ticketPrice;
+      const ticketDecimals = getTokenDecimals(raffle.ticketTokenAddress);
+      const rawVolume = raffle.ticketSold * raffle.ticketPrice;
+      const humanReadable = toHumanReadable(rawVolume, ticketDecimals);
+      const priceInSol = tokenPrices.get(raffle.ticketTokenAddress || SOL_MINT) || 1;
+      const volumeInSol = toSolEquivalent(humanReadable, priceInSol);
       const prizeType = raffle.prizeData?.type;
 
       if (prizeType === "NFT") {
-        nftVolume += volume;
+        nftVolumeInSol += volumeInSol;
       } else {
-        tokenVolume += volume;
+        tokenVolumeInSol += volumeInSol;
       }
     });
 
-    const totalVolume = nftVolume + tokenVolume;
-    const nftPercentage = totalVolume > 0 ? Math.round((nftVolume / totalVolume) * 100) : 0;
-    const tokenPercentage = totalVolume > 0 ? Math.round((tokenVolume / totalVolume) * 100) : 0;
+    const totalVolumeInSol = nftVolumeInSol + tokenVolumeInSol;
+    const nftPercentage = totalVolumeInSol > 0 ? Math.round((nftVolumeInSol / totalVolumeInSol) * 100) : 0;
+    const tokenPercentage = totalVolumeInSol > 0 ? Math.round((tokenVolumeInSol / totalVolumeInSol) * 100) : 0;
 
     responseHandler.success(res, {
       message: "Raffle types volume fetched successfully",
       timeframe,
-      totalVolume: Number(totalVolume.toFixed(2)),
+      totalVolume: Number(totalVolumeInSol.toFixed(6)),
       data: {
         nft: {
-          volume: Number(nftVolume.toFixed(2)),
+          volume: Number(nftVolumeInSol.toFixed(6)),
           percentage: nftPercentage,
         },
         token: {
-          volume: Number(tokenVolume.toFixed(2)),
+          volume: Number(tokenVolumeInSol.toFixed(6)),
           percentage: tokenPercentage,
         },
       },
+      currency: "SOL",
     });
   } catch (error) {
     logger.error(error);
@@ -704,16 +926,33 @@ const getPlatformStats = async (req: Request, res: Response) => {
       prismaClient.transaction.count(),
     ]);
 
-    const volumeResult = await prismaClient.transaction.aggregate({
+    // Get all transactions with their mint addresses to calculate volume with proper decimals
+    const transactions = await prismaClient.transaction.findMany({
       where: {
         type: { in: ["RAFFLE_ENTRY", "GUMBALL_SPIN"] },
       },
-      _sum: {
+      select: {
         amount: true,
+        mintAddress: true,
       },
     });
 
-    const totalVolume = Number(volumeResult._sum.amount || 0) / 1e9;
+    // Collect all unique token addresses to batch fetch prices
+    const allTokens = new Set<string>();
+    transactions.forEach(tx => {
+      if (tx.mintAddress) allTokens.add(tx.mintAddress);
+    });
+    
+    // Fetch all token prices in SOL
+    const tokenPrices = await fetchTokenPricesInSol(Array.from(allTokens));
+
+    // Calculate total volume in SOL
+    const totalVolumeInSol = transactions.reduce((sum, tx) => {
+      const tokenDecimals = getTokenDecimals(tx.mintAddress);
+      const humanReadable = toHumanReadable(tx.amount, tokenDecimals);
+      const priceInSol = tokenPrices.get(tx.mintAddress || SOL_MINT) || 1;
+      return sum + toSolEquivalent(humanReadable, priceInSol);
+    }, 0);
 
     responseHandler.success(res, {
       message: "Platform stats fetched successfully",
@@ -722,8 +961,9 @@ const getPlatformStats = async (req: Request, res: Response) => {
         activeRaffles,
         totalUsers,
         totalTransactions,
-        totalVolume,
+        totalVolume: Number(totalVolumeInSol.toFixed(6)),
       },
+      currency: "SOL",
     });
   } catch (error) {
     logger.error(error);
@@ -763,8 +1003,7 @@ const getUserPnLBought = async (req: Request, res: Response) => {
     const { 
       timeframe = "daily", 
       month, 
-      year,
-      currency = "SOL"
+      year
     } = req.query;
 
     if (!userAddress) {
@@ -792,7 +1031,7 @@ const getUserPnLBought = async (req: Request, res: Response) => {
       startDate = new Date(endDate.getFullYear(), endDate.getMonth(), 1);
     }
 
-    // Get purchases (spent) - Raffle only
+    // Get purchases (spent) - Raffle only, with mint address for proper decimal conversion
     const purchases = await prismaClient.transaction.findMany({
       where: {
         sender: userAddress,
@@ -802,10 +1041,11 @@ const getUserPnLBought = async (req: Request, res: Response) => {
       select: {
         createdAt: true,
         amount: true,
+        mintAddress: true,
       },
     });
 
-    // Get winnings - Raffle only
+    // Get winnings - Raffle only, with mint address for proper decimal conversion
     const winnings = await prismaClient.transaction.findMany({
       where: {
         sender: userAddress,
@@ -815,43 +1055,60 @@ const getUserPnLBought = async (req: Request, res: Response) => {
       select: {
         createdAt: true,
         amount: true,
+        mintAddress: true,
       },
     });
 
+    // Collect all unique token addresses to batch fetch prices
+    const allTokens = new Set<string>();
+    purchases.forEach(tx => { if (tx.mintAddress) allTokens.add(tx.mintAddress); });
+    winnings.forEach(tx => { if (tx.mintAddress) allTokens.add(tx.mintAddress); });
+    
+    // Fetch all token prices in SOL
+    const tokenPrices = await fetchTokenPricesInSol(Array.from(allTokens));
+
     // Group by date key based on timeframe
-    const pnlByDate = new Map<string, { spent: bigint; won: bigint }>();
+    const pnlByDate = new Map<string, { spent: number; won: number }>();
 
     purchases.forEach((tx) => {
       const dateKey = getDateKey(tx.createdAt, timeframe as string);
-      const existing = pnlByDate.get(dateKey) || { spent: BigInt(0), won: BigInt(0) };
+      const existing = pnlByDate.get(dateKey) || { spent: 0, won: 0 };
+      const ticketDecimals = getTokenDecimals(tx.mintAddress);
+      const humanReadableAmount = toHumanReadable(tx.amount, ticketDecimals);
+      const priceInSol = tokenPrices.get(tx.mintAddress || SOL_MINT) || 1;
+      const amountInSol = toSolEquivalent(humanReadableAmount, priceInSol);
       pnlByDate.set(dateKey, {
         ...existing,
-        spent: existing.spent + tx.amount,
+        spent: existing.spent + amountInSol,
       });
     });
 
     winnings.forEach((tx) => {
       const dateKey = getDateKey(tx.createdAt, timeframe as string);
-      const existing = pnlByDate.get(dateKey) || { spent: BigInt(0), won: BigInt(0) };
+      const existing = pnlByDate.get(dateKey) || { spent: 0, won: 0 };
+      const prizeDecimals = getTokenDecimals(tx.mintAddress);
+      const humanReadableAmount = toHumanReadable(tx.amount, prizeDecimals);
+      const priceInSol = tokenPrices.get(tx.mintAddress || SOL_MINT) || 1;
+      const amountInSol = toSolEquivalent(humanReadableAmount, priceInSol);
       pnlByDate.set(dateKey, {
         ...existing,
-        won: existing.won + tx.amount,
+        won: existing.won + amountInSol,
       });
     });
 
-    // Convert to array with P&L calculations
+    // Convert to array with P&L calculations (all in SOL)
     const data = Array.from(pnlByDate.entries())
       .map(([date, values]) => {
-        const spent = Number(values.spent) / 1e9;
-        const won = Number(values.won) / 1e9;
+        const spent = values.spent;
+        const won = values.won;
         const pnl = won - spent;
         const roi = spent > 0 ? ((won - spent) / spent) * 100 : 0;
 
         return {
           date,
-          spent: Number(spent.toFixed(2)),
-          won: Number(won.toFixed(2)),
-          pnl: Number(pnl.toFixed(2)),
+          spent: Number(spent.toFixed(6)),
+          won: Number(won.toFixed(6)),
+          pnl: Number(pnl.toFixed(6)),
           roi: spent > 0 ? `${roi.toFixed(0)}%` : "0%",
         };
       })
@@ -865,9 +1122,9 @@ const getUserPnLBought = async (req: Request, res: Response) => {
 
     const summary = {
       label: getSummaryLabel(timeframe as string, startDate, year),
-      totalSpent: Number(totalSpent.toFixed(2)),
-      totalWon: Number(totalWon.toFixed(2)),
-      pnl: Number(totalPnl.toFixed(2)),
+      totalSpent: Number(totalSpent.toFixed(6)),
+      totalWon: Number(totalWon.toFixed(6)),
+      pnl: Number(totalPnl.toFixed(6)),
       roi: totalSpent > 0 ? `${totalRoi.toFixed(0)}%` : "0%",
     };
 
@@ -875,7 +1132,7 @@ const getUserPnLBought = async (req: Request, res: Response) => {
       message: "P&L bought data fetched successfully",
       summary,
       data,
-      currency,
+      currency: "SOL",
       timeframe,
     });
   } catch (error) {
@@ -894,8 +1151,7 @@ const getUserPnLSold = async (req: Request, res: Response) => {
     const { 
       timeframe = "daily", 
       month, 
-      year,
-      currency = "SOL"
+      year
     } = req.query;
 
     if (!userAddress) {
@@ -934,15 +1190,28 @@ const getUserPnLSold = async (req: Request, res: Response) => {
         createdAt: true,
         ticketSold: true,
         ticketPrice: true,
+        ticketTokenAddress: true,
         floor: true,
         prizeData: {
           select: {
             floor: true,
             amount: true,
+            decimals: true,
+            mintAddress: true,
           },
         },
       },
     });
+
+    // Collect all unique token addresses to batch fetch prices
+    const allTokens = new Set<string>();
+    userRaffles.forEach(r => {
+      if (r.ticketTokenAddress) allTokens.add(r.ticketTokenAddress);
+      if (r.prizeData?.mintAddress) allTokens.add(r.prizeData.mintAddress);
+    });
+    
+    // Fetch all token prices in SOL
+    const tokenPrices = await fetchTokenPricesInSol(Array.from(allTokens));
 
     // Group by date key based on timeframe
     const pnlByDate = new Map<string, { cost: number; sold: number }>();
@@ -951,16 +1220,27 @@ const getUserPnLSold = async (req: Request, res: Response) => {
       const dateKey = getDateKey(raffle.createdAt, timeframe as string);
       const existing = pnlByDate.get(dateKey) || { cost: 0, sold: 0 };
       
-      const cost = raffle.prizeData?.floor || raffle.prizeData?.amount || raffle.floor || 0;
-      const sold = raffle.ticketSold * raffle.ticketPrice;
+      // Prize cost - floor and amount are stored as human-readable Float values
+      // Convert to SOL using prize token price
+      const rawCost = raffle.prizeData?.floor || raffle.prizeData?.amount || raffle.floor || 0;
+      const prizeTokenMint = raffle.prizeData?.mintAddress || SOL_MINT;
+      const prizePriceInSol = tokenPrices.get(prizeTokenMint) || 1;
+      const cost = toSolEquivalent(rawCost, prizePriceInSol);
+      
+      // Revenue from ticket sales - use ticket token decimals and convert to SOL
+      const ticketDecimals = getTokenDecimals(raffle.ticketTokenAddress);
+      const rawSold = raffle.ticketSold * raffle.ticketPrice;
+      const humanReadableSold = toHumanReadable(rawSold, ticketDecimals);
+      const ticketPriceInSol = tokenPrices.get(raffle.ticketTokenAddress || SOL_MINT) || 1;
+      const soldInSol = toSolEquivalent(humanReadableSold, ticketPriceInSol);
 
       pnlByDate.set(dateKey, {
         cost: existing.cost + cost,
-        sold: existing.sold + sold,
+        sold: existing.sold + soldInSol,
       });
     });
 
-    // Convert to array with P&L calculations
+    // Convert to array with P&L calculations (all in SOL)
     const data = Array.from(pnlByDate.entries())
       .map(([date, values]) => {
         const pnl = values.sold - values.cost;
@@ -968,25 +1248,25 @@ const getUserPnLSold = async (req: Request, res: Response) => {
 
         return {
           date,
-          cost: Number(values.cost.toFixed(2)),
-          sold: Number(values.sold.toFixed(2)),
-          pnl: Number(pnl.toFixed(2)),
+          cost: Number(values.cost.toFixed(6)),
+          sold: Number(values.sold.toFixed(6)),
+          pnl: Number(pnl.toFixed(6)),
           roi: values.cost > 0 ? `${roi.toFixed(0)}%` : "0%",
         };
       })
       .sort((a, b) => b.date.localeCompare(a.date));
 
     // Calculate totals
-    const totalCost = data.reduce((sum, d) => sum + d.cost, 0);
+      const totalCost = data.reduce((sum, d) => sum + d.cost, 0);
     const totalSold = data.reduce((sum, d) => sum + d.sold, 0);
     const totalPnl = totalSold - totalCost;
     const totalRoi = totalCost > 0 ? ((totalSold - totalCost) / totalCost) * 100 : 0;
 
     const summary = {
       label: getSummaryLabel(timeframe as string, startDate, year),
-      totalCost: Number(totalCost.toFixed(2)),
-      totalSold: Number(totalSold.toFixed(2)),
-      pnl: Number(totalPnl.toFixed(2)),
+      totalCostInSol: Number(totalCost.toFixed(6)),
+      totalSold: Number(totalSold.toFixed(6)),
+      pnl: Number(totalPnl.toFixed(6)),
       roi: totalCost > 0 ? `${totalRoi.toFixed(0)}%` : "0%",
     };
 
@@ -994,7 +1274,7 @@ const getUserPnLSold = async (req: Request, res: Response) => {
       message: "P&L sold data fetched successfully",
       summary,
       data,
-      currency,
+      currency: "SOL",
       timeframe,
     });
   } catch (error) {
@@ -1034,7 +1314,7 @@ const exportPnLCSV = async (req: Request, res: Response) => {
     let csvData: string[] = [];
 
     if (type === "bought") {
-      // Get raffle purchases only
+      // Get raffle purchases only with mint address for proper decimal conversion
       const purchases = await prismaClient.transaction.findMany({
         where: {
           sender: userAddress,
@@ -1046,13 +1326,26 @@ const exportPnLCSV = async (req: Request, res: Response) => {
           amount: true,
           type: true,
           transactionId: true,
+          mintAddress: true,
         },
       });
 
-      csvData = ["Date,Transaction ID,Type,Amount (SOL)"];
+      // Collect all unique token addresses to batch fetch prices
+      const allTokens = new Set<string>();
+      purchases.forEach(tx => { if (tx.mintAddress) allTokens.add(tx.mintAddress); });
+      
+      // Fetch all token prices in SOL
+      const tokenPrices = await fetchTokenPricesInSol(Array.from(allTokens));
+
+      csvData = ["Date,Transaction ID,Type,Original Token,Original Amount,Amount (SOL)"];
       purchases.forEach((tx) => {
+        const tokenDecimals = getTokenDecimals(tx.mintAddress);
+        const humanReadableAmount = toHumanReadable(tx.amount, tokenDecimals);
+        const priceInSol = tokenPrices.get(tx.mintAddress || SOL_MINT) || 1;
+        const amountInSol = toSolEquivalent(humanReadableAmount, priceInSol);
+        const tokenSymbol = tx.mintAddress === SOL_MINT ? "SOL" : tx.mintAddress.slice(0, 8) + "...";
         csvData.push(
-          `${tx.createdAt.toISOString().split("T")[0]},${tx.transactionId},${tx.type},${(Number(tx.amount) / 1e9).toFixed(4)}`
+          `${tx.createdAt.toISOString().split("T")[0]},${tx.transactionId},${tx.type},${tokenSymbol},${humanReadableAmount.toFixed(6)},${amountInSol.toFixed(6)}`
         );
       });
     } else {
@@ -1066,24 +1359,53 @@ const exportPnLCSV = async (req: Request, res: Response) => {
           createdAt: true,
           ticketSold: true,
           ticketPrice: true,
+          ticketTokenAddress: true,
+          ticketTokenSymbol: true,
           floor: true,
           prizeData: {
             select: {
               name: true,
               floor: true,
               amount: true,
+              decimals: true,
+              symbol: true,
+              mintAddress: true,
             },
           },
         },
       });
 
-      csvData = ["Date,Raffle ID,Prize,Cost (SOL),Revenue (SOL),P&L (SOL)"];
+      // Collect all unique token addresses to batch fetch prices
+      const allTokens = new Set<string>();
+      userRaffles.forEach(r => {
+        if (r.ticketTokenAddress) allTokens.add(r.ticketTokenAddress);
+        if (r.prizeData?.mintAddress) allTokens.add(r.prizeData.mintAddress);
+      });
+      
+      // Fetch all token prices in SOL
+      const tokenPrices = await fetchTokenPricesInSol(Array.from(allTokens));
+
+      csvData = ["Date,Raffle ID,Prize,Ticket Token,Prize Token,Cost (SOL),Revenue (SOL),P&L (SOL)"];
       userRaffles.forEach((raffle) => {
-        const cost = raffle.prizeData?.floor || raffle.prizeData?.amount || raffle.floor || 0;
-        const revenue = raffle.ticketSold * raffle.ticketPrice;
-        const pnl = revenue - cost;
+        // Prize cost - floor/amount are stored as human-readable Float values, convert to SOL
+        const rawCost = raffle.prizeData?.floor || raffle.prizeData?.amount || raffle.floor || 0;
+        const prizeTokenMint = raffle.prizeData?.mintAddress || SOL_MINT;
+        const prizePriceInSol = tokenPrices.get(prizeTokenMint) || 1;
+        const costInSol = toSolEquivalent(rawCost, prizePriceInSol);
+        
+        // Revenue from ticket sales - use ticket token decimals and convert to SOL
+        const ticketDecimals = getTokenDecimals(raffle.ticketTokenAddress);
+        const rawRevenue = raffle.ticketSold * raffle.ticketPrice;
+        const humanReadableRevenue = toHumanReadable(rawRevenue, ticketDecimals);
+        const ticketPriceInSol = tokenPrices.get(raffle.ticketTokenAddress || SOL_MINT) || 1;
+        const revenueInSol = toSolEquivalent(humanReadableRevenue, ticketPriceInSol);
+        
+        const pnlInSol = revenueInSol - costInSol;
+        const ticketSymbol = raffle.ticketTokenSymbol || (raffle.ticketTokenAddress === SOL_MINT ? "SOL" : "TOKEN");
+        const prizeSymbol = raffle.prizeData?.symbol || "NFT";
+        
         csvData.push(
-          `${raffle.createdAt.toISOString().split("T")[0]},${raffle.id},${raffle.prizeData?.name || "Unknown"},${cost.toFixed(4)},${revenue.toFixed(4)},${pnl.toFixed(4)}`
+          `${raffle.createdAt.toISOString().split("T")[0]},${raffle.id},${raffle.prizeData?.name || "Unknown"},${ticketSymbol},${prizeSymbol},${costInSol.toFixed(6)},${revenueInSol.toFixed(6)},${pnlInSol.toFixed(6)}`
         );
       });
     }
