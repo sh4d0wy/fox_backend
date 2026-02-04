@@ -1,0 +1,1 @@
+import{k as e}from"./index-Cp_wugtV.js";var t=e;export{t as component};
