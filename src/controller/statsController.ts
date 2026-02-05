@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { responseHandler } from "../utils/resHandler";
 import prismaClient from "../database/client";
 import logger from "../utils/logger";
+import * as fs from "fs";
 
 type TimeFilter = "all" | "7d" | "30d" | "90d" | "1y";
 type LeaderboardType = "rafflers" | "buyers";
@@ -186,15 +187,16 @@ const getTopRafflers = async (req: Request, res: Response) => {
         const humanReadable = toHumanReadable(rawVolume, ticketDecimals);
         const priceInUsd = tokenPrices.get(normalizeMint(r.ticketTokenAddress)) || 0;
 
-        process.stdout.write("data for token: " + JSON.stringify({
+        const logData = {
           "address": r.ticketTokenAddress,
           "decimals": ticketDecimals,
-        "rawVolume": rawVolume,
-        "humanReadable": humanReadable,
-        "priceInUsd": priceInUsd,
-        "toUsdEquivalent": toUsdEquivalent(humanReadable, priceInUsd),
-        "sum": sum + toUsdEquivalent(humanReadable, priceInUsd),
-      }) + "\n");
+          "rawVolume": rawVolume,
+          "humanReadable": humanReadable,
+          "priceInUsd": priceInUsd,
+          "toUsdEquivalent": toUsdEquivalent(humanReadable, priceInUsd),
+          "sum": sum + toUsdEquivalent(humanReadable, priceInUsd),
+        };
+        fs.appendFileSync("logs.txt", `data for token: ${JSON.stringify(logData, null, 2)}\n`);
         return sum + toUsdEquivalent(humanReadable, priceInUsd);
       }, 0);
       return {
