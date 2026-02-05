@@ -186,15 +186,15 @@ const getTopRafflers = async (req: Request, res: Response) => {
         const humanReadable = toHumanReadable(rawVolume, ticketDecimals);
         const priceInUsd = tokenPrices.get(normalizeMint(r.ticketTokenAddress)) || 0;
 
-        console.log("data for token",{
+        process.stdout.write("data for token: " + JSON.stringify({
           "address": r.ticketTokenAddress,
           "decimals": ticketDecimals,
-          "rawVolume": rawVolume,
-          "humanReadable": humanReadable,
-          "priceInUsd": priceInUsd,
-          "toUsdEquivalent": toUsdEquivalent(humanReadable, priceInUsd),
-          "sum": sum + toUsdEquivalent(humanReadable, priceInUsd),
-        })
+        "rawVolume": rawVolume,
+        "humanReadable": humanReadable,
+        "priceInUsd": priceInUsd,
+        "toUsdEquivalent": toUsdEquivalent(humanReadable, priceInUsd),
+        "sum": sum + toUsdEquivalent(humanReadable, priceInUsd),
+      }) + "\n");
         return sum + toUsdEquivalent(humanReadable, priceInUsd);
       }, 0);
       return {
