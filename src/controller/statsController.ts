@@ -11,7 +11,6 @@ const SOL_MINT = "So11111111111111111111111111111111111111112";
 const NATIVE_SOL_MINT = "native";
 
 const normalizeMint = (mintAddress: string | null | undefined): string => {
-  console.log("mintAddress", mintAddress);
   if (!mintAddress || mintAddress === NATIVE_SOL_MINT) return SOL_MINT;
   return mintAddress;
 };
@@ -186,9 +185,18 @@ const getTopRafflers = async (req: Request, res: Response) => {
         const rawVolume = r.ticketSold * r.ticketPrice;
         const humanReadable = toHumanReadable(rawVolume, ticketDecimals);
         const priceInUsd = tokenPrices.get(normalizeMint(r.ticketTokenAddress)) || 0;
+
+        console.log("data for token",{
+          "address": r.ticketTokenAddress,
+          "decimals": ticketDecimals,
+          "rawVolume": rawVolume,
+          "humanReadable": humanReadable,
+          "priceInUsd": priceInUsd,
+          "toUsdEquivalent": toUsdEquivalent(humanReadable, priceInUsd),
+          "sum": sum + toUsdEquivalent(humanReadable, priceInUsd),
+        })
         return sum + toUsdEquivalent(humanReadable, priceInUsd);
       }, 0);
-
       return {
         walletAddress: user.walletAddress,
         twitterId: user.twitterId,
