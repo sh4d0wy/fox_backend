@@ -26,7 +26,8 @@ app.use(cors({
             'https://fox-frontend-orcin.vercel.app',
             'http://localhost:4173',
             'https://raffle.meccain.com',
-            'chrome-extension://bfnaelmomeimhlpmgjnjophhpkkoljpa'
+            'chrome-extension://bfnaelmomeimhlpmgjnjophhpkkoljpa',
+            'https://fox9-raffle.netlify.app'
         ];
         
         // Check if the origin is in the allowed list or matches patterns
