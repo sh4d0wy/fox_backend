@@ -16,7 +16,7 @@ import { verifyTransaction } from "../utils/verifyTransaction";
 import prismaClient from "../database/client";
 import logger from "../utils/logger";
 import { ADMIN_KEYPAIR, connection, gumballProgram, provider } from "../services/solanaconnector";
-import { ComputeBudgetProgram, PublicKey, SYSVAR_INSTRUCTIONS_PUBKEY, Transaction, TransactionInstruction } from "@solana/web3.js";
+import { ComputeBudgetProgram, PublicKey, SYSVAR_INSTRUCTIONS_PUBKEY, Transaction, TransactionInstruction, VersionedTransaction, TransactionMessage } from "@solana/web3.js";
 import { ensureAtaIx, FAKE_ATA, FAKE_MINT, getAtaAddress, getMasterEditionPda, getMetadataPda, getRuleSet, getTokenProgramFromMint, getTokenRecordPda, METAPLEX_METADATA_PROGRAM_ID, MPL_TOKEN_AUTH_RULES_PROGRAM_ID } from "../utils/helpers";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import * as sb from "@switchboard-xyz/on-demand";
@@ -59,6 +59,7 @@ const createGumball = async (req: Request, res: Response) => {
     // Calculate max proceeds based on ticket price and total tickets
     const ticketPrice = BigInt(parsedData.ticketPrice);
     const maxProceeds = ticketPrice * BigInt(parsedData.totalTickets);
+    console.log("parsedData", parsedData);
 
     gumball = await tx.gumball.create({
       data: {
@@ -1413,6 +1414,14 @@ const creatorClaimPrize = async (req: Request, res: Response) => {
           },
         });
       }
+      await tx.gumball.update({
+        where: {
+          id: gumballId,
+        },
+        data: {
+          ticketAmountClaimedByCreator: true,
+        },
+      });
       await tx.transaction.create({
         data: {
           transactionId: parsedData.txSignature,
@@ -2195,6 +2204,44 @@ const addMultiplePrizesTx = async (req: Request, res: Response) => {
     }
 
     transaction.partialSign(ADMIN_KEYPAIR);
+
+    try {
+      const messageV0 = new TransactionMessage({
+        payerKey: new PublicKey(userAddress),
+        recentBlockhash: blockhash,
+        instructions: transaction.instructions,
+      }).compileToV0Message();
+    
+      const versionedTx = new VersionedTransaction(messageV0);
+      
+      versionedTx.sign([ADMIN_KEYPAIR]);
+    
+      const simulation = await connection.simulateTransaction(versionedTx, {
+        sigVerify: false,
+        replaceRecentBlockhash: true,
+      });
+    
+      if (simulation.value.err) {
+        logger.error("Transaction simulation failed:", simulation.value.err);
+        logger.error("Simulation logs:", simulation.value.logs);
+        return responseHandler.error(
+          res,
+          `Transaction simulation failed: ${JSON.stringify(simulation.value.err)}`
+        );
+      }
+    
+      logger.log("Transaction simulation successful");
+      logger.log("Compute units consumed:", simulation.value.unitsConsumed);
+      if (simulation.value.logs) {
+        logger.log("Simulation logs:", simulation.value.logs);
+      }
+    } catch (simulationError) {
+      logger.error("Simulation error:", simulationError);
+      return responseHandler.error(
+        res,
+        `Transaction simulation error: ${simulationError instanceof Error ? simulationError.message : String(simulationError)}`
+      );
+    }
 
     const serializedTransaction = transaction.serialize({
       verifySignatures: false,

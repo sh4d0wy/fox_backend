@@ -45,12 +45,13 @@ model Gumball {
   maxRoi          Float?
   
   // Status & timestamps
-  status          GumballStatus   @default(NONE)
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
-  activatedAt     DateTime?
-  cancelledAt     DateTime?
-  endedAt         DateTime?
+  status                        GumballStatus   @default(NONE)
+  createdAt                     DateTime        @default(now())
+  updatedAt                     DateTime        @updatedAt
+  activatedAt                   DateTime?
+  cancelledAt                   DateTime?
+  endedAt                       DateTime?
+  ticketAmountClaimedByCreator  Boolean @default(false)
   
   // Rent info
   rentAmount      BigInt?
