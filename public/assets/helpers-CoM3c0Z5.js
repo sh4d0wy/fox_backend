@@ -1,0 +1,1 @@
+import{Ot as e}from"./index-BiZf0XOp.js";var t=e(`chevron-down`,[[`path`,{d:`m6 9 6 6 6-6`,key:`qrunsl`}]]);function n(e){let t=3600,n=24*t;return e>=n?`${Math.floor(e/n)}d`:e>=t?`${Math.floor(e/t)}h`:e>=60?`${Math.floor(e/60)}m`:`${e}s`}export{t as n,n as t};
