@@ -2,7 +2,7 @@ node_modules
 .env*
 dist
 package-lock.json
-
+public/uploads/*
 /prisma/schema.prisma
 
 /src/generated/prisma
