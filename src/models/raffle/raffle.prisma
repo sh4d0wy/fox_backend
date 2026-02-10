@@ -12,6 +12,7 @@ model Raffle {
   raffle                       String?     @unique //raffle address to be fetched later
   createdAt                    DateTime    @default(now())
   endsAt                       DateTime
+  endedAt                      DateTime?
   state                        RaffleState @default(None)
   createdBy                    String
   ticketPrice                  Float

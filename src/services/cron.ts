@@ -300,6 +300,7 @@ async function processExpiredRaffles(): Promise<void> {
             data: {
               state: "FailedEnded",
               winnerPicked: true,
+              endedAt: now,
             },
           });
 
@@ -320,6 +321,7 @@ async function processExpiredRaffles(): Promise<void> {
             data: {
               state: "FailedEnded",
               winnerPicked: true,
+              endedAt: now,
             },
           });
 
@@ -351,6 +353,7 @@ async function processExpiredRaffles(): Promise<void> {
                   walletAddress: address,
                 })),
               },
+              endedAt: now,
             },
           });
 
